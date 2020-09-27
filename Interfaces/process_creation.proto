@@ -1,0 +1,18 @@
+﻿syntax = "proto3";
+
+service ProcessCreationService {
+	rpc SetReplicationFactor(ReplicationFactorRequest) returns (ReplicationFactorResponse);
+	rpc CreateService(CreateServiceRequest) returns (CreateServiceResponse);
+}
+
+message ReplicationFactorRequest {
+	int32 factor = 1;
+}
+
+message ReplicationFactorResponse {}
+
+message CreateServiceRequest {
+	int32 server_id = 1;
+}
+
+message CreateServiceResponse {}
