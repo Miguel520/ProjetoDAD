@@ -2,7 +2,14 @@
 
 service ProcessCreationService {
 	rpc SetReplicationFactor(ReplicationFactorRequest) returns (ReplicationFactorResponse);
-	rpc CreateService(CreateServiceRequest) returns (CreateServiceResponse);
+	rpc CreateServer(CreateServerRequest) returns (CreateServerResponse);
+	rpc CreatePartition(CreatePartitionRequest) returns (CreatePartitionResponse);
+	rpc CreateClient(CreateClientRequest) returns (CreateClientResponse);
+	rpc Status(StatusRequest) returns (StatusResponse);
+	rpc Crash(CrashRequest) returns (CrashResponse);
+	rpc Freeze(FreezeRequest) returns (FreezeResponse);
+	rpc Unfreeze(UnfreezeRequest) returns (UnfreezeResponse);
+	rpc Wait(WaitRequest) returns (WaitResponse);
 }
 
 message ReplicationFactorRequest {
@@ -11,8 +18,55 @@ message ReplicationFactorRequest {
 
 message ReplicationFactorResponse {}
 
-message CreateServiceRequest {
+message CreateServerRequest {
+	int32 server_id = 1;
+	string url = 2;
+	int32 min_delay = 3;
+	int32 max_delay = 4;
+}
+
+message CreateServerResponse {}
+
+message CreatePartitionRequest {
+	int32 replication_factor = 1;
+	string partition_name = 2;
+	repeated int32 server_ids = 3;
+}
+
+message CreatePartitionResponse {}
+
+message CreateClientRequest {
+	string username = 1;
+	string url = 2;
+	string script = 3;
+}
+
+message CreateClientResponse {}
+
+message StatusRequest {}
+
+message StatusResponse {}
+
+message CrashRequest {
 	int32 server_id = 1;
 }
 
-message CreateServiceResponse {}
+message CrashResponse {}
+
+message FreezeRequest {
+	int32 server_id = 1;
+}
+
+message FreezeResponse {}
+
+message UnfreezeRequest {
+	int32 server_id = 1;
+}
+
+message UnfreezeResponse {}
+
+message WaitRequest {
+	int32 sleep_time = 1;
+}
+
+message WaitResponse {}
