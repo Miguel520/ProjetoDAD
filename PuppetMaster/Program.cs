@@ -1,27 +1,34 @@
 ﻿using System;
 using System.IO;
 
+using PuppetMaster.Commands;
+using static PuppetMaster.Commands.CommandParser;
+
 namespace PuppetMaster {
 
     class Program {
 
         static void Main(string[] args) {
-            using(TextReader textReader = GetInputStream(args)) {
-                string line;
-                while ((line = textReader.ReadLine()) != null) {
-                    Console.WriteLine(line);
+            using TextReader textReader = GetInputStream(args);
+            string line;
+            ICommand command;
+            while ((line = textReader.ReadLine()) != null) {
+                if (!TryParse(line, out command)) {
+                    Console.WriteLine("Invalid Command");
+                    continue;
                 }
+                Console.WriteLine(command);
             }
         }
 
         private static TextReader GetInputStream(string[] args) {
             switch (args.Length) {
                 // Read commands from Standard Input
-                case 1:
+                case 0:
                     return GetStdinStreamInput();
                 // Read commands from Configuration File
-                case 2:
-                    return GetFileStreamInput(args[1]);
+                case 1:
+                    return GetFileStreamInput(args[0]);
                 default:
                     OnInvalidNumberOfArguments();
                     Environment.Exit(1);

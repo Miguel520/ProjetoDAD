@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30517.126
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interfaces", "Interfaces\Interfaces.csproj", "{1A72A1C6-493C-4ACE-AACC-2C0B641CC27A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PuppetMaster", "PuppetMaster\PuppetMaster.csproj", "{09565226-A3B2-4A4C-A593-98BB9F1DC238}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PuppetMaster", "PuppetMaster\PuppetMaster.csproj", "{1F49AC43-1AE8-48A8-8BD9-024C3A5BB1EE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{1A72A1C6-493C-4ACE-AACC-2C0B641CC27A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A72A1C6-493C-4ACE-AACC-2C0B641CC27A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A72A1C6-493C-4ACE-AACC-2C0B641CC27A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{09565226-A3B2-4A4C-A593-98BB9F1DC238}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{09565226-A3B2-4A4C-A593-98BB9F1DC238}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{09565226-A3B2-4A4C-A593-98BB9F1DC238}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{09565226-A3B2-4A4C-A593-98BB9F1DC238}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F49AC43-1AE8-48A8-8BD9-024C3A5BB1EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F49AC43-1AE8-48A8-8BD9-024C3A5BB1EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F49AC43-1AE8-48A8-8BD9-024C3A5BB1EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F49AC43-1AE8-48A8-8BD9-024C3A5BB1EE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
