@@ -5,7 +5,7 @@ service ProcessCreationService {
 	rpc CreateServer(CreateServerRequest) returns (CreateServerResponse);
 	rpc CreatePartition(CreatePartitionRequest) returns (CreatePartitionResponse);
 	rpc CreateClient(CreateClientRequest) returns (CreateClientResponse);
-	rpc Status(StatusRequest) returns (StatusResponse);
+	rpc DisplayStatus(StatusRequest) returns (StatusResponse);
 	rpc Crash(CrashRequest) returns (CrashResponse);
 	rpc Freeze(FreezeRequest) returns (FreezeResponse);
 	rpc Unfreeze(UnfreezeRequest) returns (UnfreezeResponse);
@@ -28,7 +28,7 @@ message CreateServerRequest {
 message CreateServerResponse {}
 
 message CreatePartitionRequest {
-	int32 replication_factor = 1;
+	int32 partition_size = 1;
 	string partition_name = 2;
 	repeated int32 server_ids = 3;
 }
