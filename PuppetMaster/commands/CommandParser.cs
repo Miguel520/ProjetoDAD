@@ -18,6 +18,14 @@ namespace PuppetMaster.Commands {
         private const string UNFREEZE_COMMAND = "Unfreeze";
         private const string WAIT_COMMAND = "Wait";
 
+        /*
+         * Function to parse a Puppet Master coomand from a given line
+         * :param line: line to parse
+         * :out param command line: command to build, will be set to null
+         *                          if the line is empty or an error has occured
+         * :return: true if a command was successfully created and false
+         *          if the line was empty or an error has occurred
+         */ 
         public static bool TryParse(string line, out ICommand command) {
             command = null;
             // Clean input string of whitespace
@@ -25,7 +33,7 @@ namespace PuppetMaster.Commands {
             // RemoveEmptyEntries to remove empty input
             string[] inputTokens = line.Split(" ", StringSplitOptions.RemoveEmptyEntries);
             // Handle empty line
-            if (inputTokens.Length == 0) {
+            if (Arrays.IsEmpty(inputTokens)) {
                 return false;
             }
 
@@ -61,7 +69,7 @@ namespace PuppetMaster.Commands {
 
             if (arguments.Length != 1) return false;
 
-            if (!Int32.TryParse(arguments[0], out int numReplicas)) return false;
+            if (!int.TryParse(arguments[0], out int numReplicas)) return false;
 
             command = new ReplicationFactorCommand { ReplicationFactor = numReplicas };
             return true;
@@ -71,13 +79,13 @@ namespace PuppetMaster.Commands {
             command = null;
             if (arguments.Length != 4) return false;
 
-            if (!Int32.TryParse(arguments[0], out int serverId)) return false;
+            if (!int.TryParse(arguments[0], out int serverId)) return false;
 
             string url = arguments[1];
 
-            if (!Int32.TryParse(arguments[2], out int minDelay)) return false;
+            if (!int.TryParse(arguments[2], out int minDelay)) return false;
 
-            if (!Int32.TryParse(arguments[3], out int maxDelay)) return false;
+            if (!int.TryParse(arguments[3], out int maxDelay)) return false;
 
             command = new CreateServerCommand {
                 ServerId = serverId,
@@ -92,14 +100,14 @@ namespace PuppetMaster.Commands {
             command = null;
             if (arguments.Length < 3) return false;
 
-            if (!Int32.TryParse(arguments[0], out int numberOfReplicas)) return false;
+            if (!int.TryParse(arguments[0], out int numberOfReplicas)) return false;
 
             string partitionName = arguments[1];
 
             int[] serverIds = new int[arguments.Length - 2];
 
             for (int i = 2; i < arguments.Length; i++) {
-                if (!Int32.TryParse(arguments[i], out serverIds[i - 2])) return false;
+                if (!int.TryParse(arguments[i], out serverIds[i - 2])) return false;
             }
 
             command = new CreatePartitionCommand {
@@ -137,7 +145,7 @@ namespace PuppetMaster.Commands {
             command = null;
             if (arguments.Length != 1) return false;
 
-            if (!Int32.TryParse(arguments[0], out int serverId)) return false;
+            if (!int.TryParse(arguments[0], out int serverId)) return false;
 
             command = new CrashServerCommand { ServerId = serverId };
             return true;
@@ -147,7 +155,7 @@ namespace PuppetMaster.Commands {
             command = null;
             if (arguments.Length != 1) return false;
 
-            if (!Int32.TryParse(arguments[0], out int serverId)) return false;
+            if (!int.TryParse(arguments[0], out int serverId)) return false;
 
             command = new FreezeServerCommand { ServerId = serverId };
             return true;
@@ -157,7 +165,7 @@ namespace PuppetMaster.Commands {
             command = null;
             if (arguments.Length != 1) return false;
 
-            if (!Int32.TryParse(arguments[0], out int serverId)) return false;
+            if (!int.TryParse(arguments[0], out int serverId)) return false;
 
             command = new UnfreezeServerCommand { ServerId = serverId };
             return true;
@@ -167,7 +175,7 @@ namespace PuppetMaster.Commands {
             command = null;
             if (arguments.Length != 1) return false;
 
-            if (!Int32.TryParse(arguments[0], out int sleepTime)) return false;
+            if (!int.TryParse(arguments[0], out int sleepTime)) return false;
 
             command = new WaitCommand { SleepTime = sleepTime };
             return true;

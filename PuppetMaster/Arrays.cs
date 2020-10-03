@@ -17,5 +17,9 @@ namespace Utils {
             }
             return $"[{string.Join(", ", array)}]";
         }
+
+        public static bool IsEmpty<T>(T[] array) {
+            return array.Length == 0;
+        }
     }
 }
