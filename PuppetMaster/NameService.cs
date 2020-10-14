@@ -10,11 +10,11 @@ namespace PuppetMaster {
     public class NameService {
 
         private readonly Dictionary<int, string> servers;
-        private readonly Dictionary<int, string> clients;
+        private readonly Dictionary<string, string> clients;
 
         public NameService() {
             servers = new Dictionary<int, string>();
-            clients = new Dictionary<int, string>();
+            clients = new Dictionary<string, string>();
         }
 
         /*
@@ -40,25 +40,25 @@ namespace PuppetMaster {
         }
 
         /*
-         * Adds a client with the given id and url
+         * Adds a client with the given username and url
          * Returns true if successfull and false otherwise
-         * If the id already exists returns false and does NOT replace url
+         * If the username already exists returns false and does NOT replace url
          */
-        public bool TryAddClient(int id, string url) {
-            return clients.TryAdd(id, url);
+        public bool TryAddClient(string username, string url) {
+            return clients.TryAdd(username, url);
         }
 
         /*
-         * Trys to find the client with the given id
-         * Returns true if a client with given id exists and writes the value in string.
-         * Otherwise, returns false and url is set to null
+         * Trys to find the client with the given username
+         * Returns true if a client with given username exists and 
+         * writes the value in url. Otherwise, returns false and url is set to null
          */
-        public bool TryFindClient(int id, out string url) {
-            return clients.TryGetValue(id, out url);
+        public bool TryFindClient(string username, out string url) {
+            return clients.TryGetValue(username, out url);
         }
 
-        public void RemoveClient(int id) {
-            clients.Remove(id);
+        public void RemoveClient(string username) {
+            clients.Remove(username);
         }
     }
 }

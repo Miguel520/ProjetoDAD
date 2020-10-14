@@ -9,6 +9,7 @@ namespace PuppetMaster {
     class Program {
 
         static void Main(string[] args) {
+            PMController controller = new PMController();
             using TextReader textReader = GetInputStream(args);
             string line;
             ICommand command;
@@ -17,7 +18,7 @@ namespace PuppetMaster {
                     Console.WriteLine("Invalid Command");
                     continue;
                 }
-                Console.WriteLine(command);
+                command.Accept(controller);
             }
         }
 
