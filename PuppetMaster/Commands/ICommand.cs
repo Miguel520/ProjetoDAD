@@ -4,6 +4,6 @@
      * Base visited class for commands
      */
     public interface ICommand {
-        void Accept(CommandHandler handler);
+        void Accept(ICommandHandler handler);
     }
 }
