@@ -6,7 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="process_creation.proto" />
+    <None Remove="Protos\PCS\process_creation.proto" />
+    <None Remove="Protos\process_creation.proto" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,7 +20,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="process_creation.proto" />
+    <Protobuf Include="Protos\process_creation.proto" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Protos\" />
+    <Folder Include="Utils\" />
+  </ItemGroup>
 </Project>

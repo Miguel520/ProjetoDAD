@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace PuppetMaster {
 
@@ -31,7 +30,7 @@ namespace PuppetMaster {
          * Returns true if a server with given id exists and writes the value in string.
          * Otherwise, returns false and url is set to null
          */
-        public bool TryFindServer(int id, out string url) {
+        public bool TryLookupServer(int id, out string url) {
             return servers.TryGetValue(id, out url);
         }
 
@@ -53,7 +52,7 @@ namespace PuppetMaster {
          * Returns true if a client with given username exists and 
          * writes the value in url. Otherwise, returns false and url is set to null
          */
-        public bool TryFindClient(string username, out string url) {
+        public bool TryLookupClient(string username, out string url) {
             return clients.TryGetValue(username, out url);
         }
 

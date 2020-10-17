@@ -1,5 +1,5 @@
 ﻿using System;
-namespace Utils {
+namespace Common.Utils {
     public class Arrays {
         public static T[] Slice<T>(T[] source, int begin, int end) {
             int size = end - begin;

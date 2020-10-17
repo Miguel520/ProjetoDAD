@@ -1,7 +1,6 @@
-﻿using System;
+﻿using Common.Utils;
+using System;
 using System.Text.RegularExpressions;
-
-using Utils;
 
 namespace PuppetMaster.Commands {
     public class CommandParser {

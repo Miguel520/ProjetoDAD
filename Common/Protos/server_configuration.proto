@@ -1,0 +1,37 @@
+﻿syntax = "proto3";
+
+service ServerConfigurationService {
+    rpc JoinPartition(JoinPartitionRequest) returns (JoinPartitionResponse);
+    rpc Status(StatusResquest) returns (StatusResponse);
+    rpc Crash(CrashRequest) returns (CrashResponse);
+    rpc Freeze(FreezeRequest) returns (FreezeResponse);
+    rpc Unfreeze(UnfreezeRequest) returns (UnfreezeResponse);
+}
+
+message JoinPartitionRequest {
+    string partition_name = 1;
+    repeated Server servers = 2;
+}
+
+message JoinPartitionResponse {}
+
+message Server {
+    int32 id = 1;
+    string url = 2;
+}
+
+message StatusRequest {}
+
+message StatusResponse {}
+
+message CrashRequest {}
+
+message CrashResponse {}
+
+message FreezeRequest {}
+
+message FreezeResponse {}
+
+message UnfreezeRequest {}
+
+message UnfreezeResponse {}

@@ -1,5 +1,5 @@
 ﻿using System;
-namespace PuppetMaster {
+namespace Common.Utils {
     public class HttpURLs {
         private HttpURLs() {
         }

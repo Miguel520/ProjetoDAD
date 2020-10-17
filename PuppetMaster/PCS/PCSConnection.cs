@@ -1,4 +1,5 @@
-﻿using Grpc.Core;
+﻿using Common.Utils;
+using Grpc.Core;
 using System;
 
 using static ProcessCreationService;
@@ -51,10 +52,6 @@ namespace PuppetMaster.PCS {
                 Console.WriteLine("Error: {0} when creating client at PCS {1}", e.StatusCode, target);
                 return false;
             }
-        }
-
-        public void DisplayStatus() {
-            client.DisplayStatus(PCSMessageFactory.BuildStatusRequest());
         }
     }
 }

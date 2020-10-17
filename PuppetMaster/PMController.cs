@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Common.Utils;
+using System;
 
 using PuppetMaster.Commands;
 using PuppetMaster.PCS;

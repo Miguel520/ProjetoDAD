@@ -1,0 +1,36 @@
+﻿syntax = "proto3";
+
+service ProcessCreationService {
+	rpc CreateServer(CreateServerRequest) returns (CreateServerResponse);
+	rpc CreateClient(CreateClientRequest) returns (CreateClientResponse);
+	rpc Crash(CrashRequest) returns (CrashResponse);
+}
+
+// Create Server
+
+message CreateServerRequest {
+	int32 server_id = 1;
+	string url = 2;
+	int32 min_delay = 3;
+	int32 max_delay = 4;
+}
+
+message CreateServerResponse {}
+
+// Create Client
+
+message CreateClientRequest {
+	string username = 1;
+	string url = 2;
+	string script = 3;
+}
+
+message CreateClientResponse {}
+
+// Crash (Receives crash information to join proccess)
+
+message CrashRequest {
+	int32 server_id = 1;
+}
+
+message CrashResponse {}

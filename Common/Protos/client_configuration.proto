@@ -1,0 +1,9 @@
+﻿syntax = "proto3";
+
+service ClientConfigurationService {
+    rpc Status(StatusRequest) returns (StatusResponse);
+}
+
+message StatusRequest {}
+
+message StatusResponse {}
