@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Protobuf Include="Protos\process_creation.proto" />
+    <Protobuf Include="Protos\*" />
   </ItemGroup>
 
   <ItemGroup>

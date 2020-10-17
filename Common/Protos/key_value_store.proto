@@ -1,5 +1,7 @@
 ﻿syntax = "proto3";
 
+option csharp_namespace = "Common.Protos.KeyValueStore";
+
 service KeyValueStoreService {
     rpc Read(ReadRequest) returns (ReadResponse);
     rpc Write(WriteRequest) returns (WriteResponse);
@@ -28,6 +30,8 @@ message WriteResponse {
 message ListRequest {
     repeated StoredObject objects = 1;
 }
+
+message ListResponse {}
 
 message StoredObject {
     string value = 1;

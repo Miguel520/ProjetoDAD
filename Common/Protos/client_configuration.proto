@@ -1,5 +1,7 @@
 ﻿syntax = "proto3";
 
+option csharp_namespace = "Common.Protos.ClientConfiguration";
+
 service ClientConfigurationService {
     rpc Status(StatusRequest) returns (StatusResponse);
 }

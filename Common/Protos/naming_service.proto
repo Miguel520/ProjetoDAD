@@ -1,7 +1,9 @@
 ﻿syntax = "proto3";
 
+option csharp_namespace = "Common.Protos.NamingService";
+
 service NamingService {
-    rpc Lookup(LookupResquest) returns (LookupResponse);
+    rpc Lookup(LookupRequest) returns (LookupResponse);
 }
 
 message LookupRequest {

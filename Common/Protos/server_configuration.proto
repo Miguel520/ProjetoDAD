@@ -1,8 +1,10 @@
 ﻿syntax = "proto3";
 
+option csharp_namespace = "Common.Protos.ServerConfiguration";
+
 service ServerConfigurationService {
     rpc JoinPartition(JoinPartitionRequest) returns (JoinPartitionResponse);
-    rpc Status(StatusResquest) returns (StatusResponse);
+    rpc Status(StatusRequest) returns (StatusResponse);
     rpc Crash(CrashRequest) returns (CrashResponse);
     rpc Freeze(FreezeRequest) returns (FreezeResponse);
     rpc Unfreeze(UnfreezeRequest) returns (UnfreezeResponse);

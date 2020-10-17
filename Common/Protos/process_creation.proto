@@ -1,5 +1,7 @@
 ﻿syntax = "proto3";
 
+option csharp_namespace = "Common.Protos.ProcessCreation";
+
 service ProcessCreationService {
 	rpc CreateServer(CreateServerRequest) returns (CreateServerResponse);
 	rpc CreateClient(CreateClientRequest) returns (CreateClientResponse);
