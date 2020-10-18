@@ -10,5 +10,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Configuration\" />
+    <Folder Include="Storage\" />
+    <Folder Include="gRPC\" />
   </ItemGroup>
 </Project>

@@ -2,7 +2,7 @@
 using Common.Protos.ServerConfiguration;
 using Grpc.Core;
 
-namespace Server.Configuration {
+namespace Server.Grpc {
     public class ConfigurationService : ServerConfigurationService.ServerConfigurationServiceBase {
         public ConfigurationService() {
         }
