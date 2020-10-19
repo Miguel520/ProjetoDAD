@@ -12,5 +12,6 @@
     <Folder Include="Configuration\" />
     <Folder Include="Storage\" />
     <Folder Include="gRPC\" />
+    <Folder Include="Replication\" />
   </ItemGroup>
 </Project>
