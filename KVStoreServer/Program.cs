@@ -3,6 +3,7 @@ using System;
 
 using KVStoreServer.Configuration;
 using KVStoreServer.Grpc;
+using KVStoreServer.Replication;
 
 using ProtoServerConfiguration = Common.Protos.ServerConfiguration.ServerConfigurationService;
 using ProtoKeyValueStore = Common.Protos.KeyValueStore.KeyValueStoreService;
@@ -11,9 +12,14 @@ namespace KVStoreServer {
     class Program {
         static void Main(string[] args) {
             ServerConfiguration serverConfig = ParseArgs(args);
+
+            PartitionsDB partitionsDB = new PartitionsDB();
+
+            RequestsDispatcher dispatcher = new RequestsDispatcher(partitionsDB;
+
             Server server = new Server {
                 Services = {
-                    ProtoServerConfiguration.BindService(new ConfigurationService()),
+                    ProtoServerConfiguration.BindService(new ConfigurationService(dispatcher)),
                     ProtoKeyValueStore.BindService(new StorageService())
                 },
                 Ports = {
