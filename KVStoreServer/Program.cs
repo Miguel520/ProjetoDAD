@@ -15,7 +15,7 @@ namespace KVStoreServer {
 
             PartitionsDB partitionsDB = new PartitionsDB();
 
-            RequestsDispatcher dispatcher = new RequestsDispatcher(partitionsDB;
+            RequestsDispatcher dispatcher = new RequestsDispatcher(partitionsDB);
 
             Server server = new Server {
                 Services = {
