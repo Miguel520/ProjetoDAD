@@ -2,7 +2,7 @@
 using Common.Protos.KeyValueStore;
 using Grpc.Core;
 
-namespace Server.Grpc {
+namespace KVStoreServer.Grpc {
     public class StorageService : KeyValueStoreService.KeyValueStoreServiceBase {
         public StorageService() {
         }

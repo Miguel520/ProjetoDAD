@@ -4,7 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace Server.Replication {
+namespace KVStoreServer.Replication {
 
     /*
      * Class to store system partitions as well as server ids and urls

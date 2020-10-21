@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
-namespace Server.Storage {
+
+namespace KVStoreServer.Storage {
 
     /*
      * Class responsible for the storage of objects within a server

@@ -2,7 +2,7 @@
 using Common.Protos.ServerConfiguration;
 using Grpc.Core;
 
-namespace Server.Grpc {
+namespace KVStoreServer.Grpc {
     public class ConfigurationService : ServerConfigurationService.ServerConfigurationServiceBase {
         public ConfigurationService() {
         }

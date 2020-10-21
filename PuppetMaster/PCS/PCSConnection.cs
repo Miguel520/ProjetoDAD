@@ -1,8 +1,9 @@
-﻿using Common.Utils;
+﻿using Common.Protos.ProcessCreation;
+using Common.Utils;
 using Grpc.Core;
 using System;
 
-using static ProcessCreationService;
+using static Common.Protos.ProcessCreation.ProcessCreationService;
 
 namespace PuppetMaster.PCS {
 

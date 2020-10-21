@@ -1,6 +1,6 @@
 ﻿using Common.Utils;
 
-namespace Server.Configuration {
+namespace KVStoreServer.Configuration {
     public class ServerConfiguration {
         public ServerConfiguration(int serverId, string host, int port) {
             ServerId = serverId;

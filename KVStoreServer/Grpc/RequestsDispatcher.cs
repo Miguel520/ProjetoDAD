@@ -2,7 +2,7 @@
 using Common.Protos.KeyValueStore;
 using Common.Protos.ServerConfiguration;
 
-namespace Server.Grpc {
+namespace KVStoreServer.Grpc {
 
     /*
      * Class responsible to transform requests into domain classes

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace Server.Storage {
+namespace KVStoreServer.Storage {
 
     /*
      * Class responsible for the storage of a partioned key value store

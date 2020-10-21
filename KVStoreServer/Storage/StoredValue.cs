@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace Server.Storage {
+namespace KVStoreServer.Storage {
 
     /*
      * Class to store a value in a key value store

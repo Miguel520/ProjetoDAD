@@ -1,4 +1,6 @@
-﻿namespace PuppetMaster.PCS {
+﻿using Common.Protos.ProcessCreation;
+
+namespace PuppetMaster.PCS {
 
     /*
      * Factory class to build messages related to PCS communication
