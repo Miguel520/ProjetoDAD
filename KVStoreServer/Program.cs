@@ -1,6 +1,7 @@
 ﻿using Grpc.Core;
 using System;
 
+using KVStoreServer.Communications;
 using KVStoreServer.Configuration;
 using KVStoreServer.Grpc;
 using KVStoreServer.Replication;
@@ -15,19 +16,27 @@ namespace KVStoreServer {
 
             PartitionsDB partitionsDB = new PartitionsDB();
 
-            RequestsDispatcher dispatcher = new RequestsDispatcher(partitionsDB);
+            RequestsDispatcher dispatcher = new RequestsDispatcher(
+                serverConfig,
+                partitionsDB);
 
             Server server = new Server {
                 Services = {
-                    ProtoServerConfiguration.BindService(new ConfigurationService(dispatcher)),
+                    ProtoServerConfiguration.BindService(
+                        new ConfigurationService(dispatcher)),
                     ProtoKeyValueStore.BindService(new StorageService())
                 },
                 Ports = {
-                    new ServerPort(serverConfig.Host, serverConfig.Port, ServerCredentials.Insecure)
+                    new ServerPort(
+                        serverConfig.Host,
+                        serverConfig.Port,
+                        ServerCredentials.Insecure)
                 }
             };
             server.Start();
-            Console.WriteLine($"Server with id {serverConfig.ServerId} started at {serverConfig.Url}");
+            Console.WriteLine(
+                $"Server with id {serverConfig.ServerId} " +
+                $"started at {serverConfig.Url}");
             Console.WriteLine("Press any key to stop the server...");
             Console.ReadKey();
 
@@ -35,15 +44,22 @@ namespace KVStoreServer {
         }
 
         private static ServerConfiguration ParseArgs(string[] args) {
-            if (args.Length != 3
+            if (args.Length != 5
                 || !int.TryParse(args[0], out int serverId)
-                || !int.TryParse(args[2], out int port)) {
+                || !int.TryParse(args[2], out int port)
+                || !int.TryParse(args[3], out int minDelay)
+                || !int.TryParse(args[4], out int maxDelay)) {
                 OnInvalidNumberOfArguments();
                 Environment.Exit(1);
                 return null;
             }
             string host = args[1];
-            return new ServerConfiguration(serverId, host, port);
+            return new ServerConfiguration(
+                serverId,
+                host,
+                port,
+                minDelay,
+                maxDelay);
         }
 
         private static void OnInvalidNumberOfArguments() {
@@ -52,7 +68,7 @@ namespace KVStoreServer {
         }
 
         private static void DisplayUsage() {
-            Console.WriteLine("Usage: Server server_id host port");
+            Console.WriteLine("Usage: Server server_id host port min_delay max_delay");
         }
     }
 }

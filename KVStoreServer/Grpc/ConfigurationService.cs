@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using KVStoreServer.Communications;
+
 using Server = Common.Protos.ServerConfiguration.Server;
 
 namespace KVStoreServer.Grpc {
@@ -15,14 +17,22 @@ namespace KVStoreServer.Grpc {
             this.dispatcher = dispatcher;
         }
 
-        public override Task<JoinPartitionResponse> JoinPartition(JoinPartitionRequest request, ServerCallContext context) {
-            (string partitionName, IEnumerable<Tuple<int, string>> servers) = ParseJoinPartition(request);
-            dispatcher.JoinPartition(partitionName, servers);
-            return Task.FromResult(new JoinPartitionResponse());
+        public override async Task<JoinPartitionResponse> JoinPartition(
+            JoinPartitionRequest request,
+            ServerCallContext context) {
+    
+            await dispatcher.JoinPartition(ParseJoinPartition(request));
+
+            return new JoinPartitionResponse();
         }
 
-        public override Task<StatusResponse> Status(StatusRequest request, ServerCallContext context) {
-            return base.Status(request, context);
+        public override async Task<StatusResponse> Status(
+            StatusRequest request,
+            ServerCallContext context) {
+
+            await dispatcher.Status();
+
+            return new StatusResponse();
         }
 
         public override Task<CrashResponse> Crash(CrashRequest request, ServerCallContext context) {
@@ -37,14 +47,20 @@ namespace KVStoreServer.Grpc {
             return base.Unfreeze(request, context);
         }
 
-        private (string, IEnumerable<Tuple<int, string>>) ParseJoinPartition(
+        private JoinPartitionArguments ParseJoinPartition(
             JoinPartitionRequest request) {
+
             string partitionName = request.PartitionName;
+
             List<Tuple<int, string>> servers = new List<Tuple<int, string>>();
             foreach (Server server in request.Servers) {
                 servers.Add(new Tuple<int, string>(server.Id, server.Url));
             }
-            return (partitionName, servers);
+            
+            return new JoinPartitionArguments {
+                Name = partitionName,
+                Members = servers
+            };
         }
     }
 }

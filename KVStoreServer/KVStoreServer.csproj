@@ -13,5 +13,6 @@
     <Folder Include="Storage\" />
     <Folder Include="Grpc\" />
     <Folder Include="Replication\" />
+    <Folder Include="Communications\" />
   </ItemGroup>
 </Project>
