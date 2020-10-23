@@ -11,5 +11,6 @@
   <ItemGroup>
     <Folder Include="Commands\" />
     <Folder Include="PCS\" />
+    <Folder Include="KVStoreServer\" />
   </ItemGroup>
 </Project>
