@@ -1,8 +1,12 @@
-﻿using Common.Utils;
+﻿using Common.Protos.ServerConfiguration;
+using Common.Utils;
 using System;
+using System.Linq;
+using System.Collections.Generic;
 
 using PuppetMaster.Commands;
 using PuppetMaster.PCS;
+using PuppetMaster.KVStoreServer;
 
 namespace PuppetMaster {
 
@@ -19,10 +23,19 @@ namespace PuppetMaster {
         }
 
         public void OnReplicationFactorCommand(ReplicationFactorCommand command) {
+            // If replicationFactor != 0 than it was already set in previous command
             if (replicationFactor != 0) {
-                Console.Error.WriteLine("Replication Factor already set to {0}", replicationFactor);
+                Console.Error.WriteLine(
+                    "Replication Factor already set to {0}",
+                    replicationFactor);
                 return;
             }
+
+            if (replicationFactor < 0) {
+                Console.Error.WriteLine("Replication Factor must be greater than 0");
+                return;
+            }
+
             replicationFactor = command.ReplicationFactor;
         }
 
@@ -44,7 +57,46 @@ namespace PuppetMaster {
         }
 
         public void OnCreatePartitionCommand(CreatePartitionCommand command) {
-            throw new NotImplementedException();
+            int numReplicas = command.NumberOfReplicas;
+            string partitionName = command.PartitionName;
+            int[] serverIds = command.ServerIds;
+
+            // Check if wanted number of replicas matches replication factor
+            if (numReplicas != replicationFactor) {
+                Console.Error.WriteLine(
+                    $"Invalid Number of Servers for Partition: " +
+                    $"{replicationFactor} expected");
+                return;
+            }
+
+            // Number of parsed servers must be the same as replication factor
+            if (serverIds.Length != replicationFactor) {
+                Console.Error.WriteLine(
+                    $"Invalid number of server ids: " +
+                    $"{replicationFactor} expected");
+                return;
+            }
+
+            // Lookup servers urls
+            IEnumerable<Tuple<int, string>> servers = serverIds.Select(id => {
+                nameService.TryLookupServer(id, out string url);
+                return new Tuple<int, string>(id, url);
+            });
+
+            // Check if all servers already existed
+            if (!servers.All(server => server.Item2 != null)) {
+                Console.WriteLine("Unknown server ids");
+                return;
+            }
+
+            foreach ((int id, string url) in servers) {
+                ServerConfigurationConnection connection =
+                    new ServerConfigurationConnection(url);
+                // FIXME: Revoke already created partitions
+                if(!connection.JoinPartition(partitionName, servers, serverIds[0])) {
+                    return;
+                }
+            }
         }
 
         public void OnCreateClientCommand(CreateClientCommand command) {
