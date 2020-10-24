@@ -51,6 +51,7 @@ namespace KVStoreServer.Grpc {
             JoinPartitionRequest request) {
 
             string partitionName = request.PartitionName;
+            int masterId = request.MasterId;
 
             List<Tuple<int, string>> servers = new List<Tuple<int, string>>();
             foreach (Server server in request.Servers) {
@@ -59,7 +60,8 @@ namespace KVStoreServer.Grpc {
             
             return new JoinPartitionArguments {
                 Name = partitionName,
-                Members = servers
+                Members = servers,
+                MasterId = masterId
             };
         }
     }
