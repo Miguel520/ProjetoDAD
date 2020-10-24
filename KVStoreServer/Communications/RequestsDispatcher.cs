@@ -47,7 +47,7 @@ namespace KVStoreServer.Communications {
         public async Task JoinPartition(JoinPartitionArguments args) {
             WaitFreeze();
             await WaitDelay();
-            partitionsDB.AddPartition(args.Name, args.Members);
+            partitionsDB.AddPartition(args.Name, args.Members, args.MasterId);
         }
 
         public async Task Status() {

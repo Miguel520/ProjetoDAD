@@ -17,5 +17,6 @@ namespace KVStoreServer.Communications {
     public class JoinPartitionArguments {
         public string Name;
         public IEnumerable<Tuple<int, string>> Members;
+        public int MasterId;
     }
 }
