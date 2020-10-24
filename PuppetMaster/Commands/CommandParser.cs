@@ -80,15 +80,18 @@ namespace PuppetMaster.Commands {
 
             if (!int.TryParse(arguments[0], out int serverId)) return false;
 
-            string url = arguments[1];
+            string URL = arguments[1];
 
             if (!int.TryParse(arguments[2], out int minDelay)) return false;
 
             if (!int.TryParse(arguments[3], out int maxDelay)) return false;
 
+            if (!HttpURLs.TryParseHostAndPort(URL, out string host, out int port)) return false;
+
             command = new CreateServerCommand {
                 ServerId = serverId,
-                URL = url,
+                Host = host,
+                Port = port,
                 MinDelay = minDelay,
                 MaxDelay = maxDelay
             };
@@ -122,12 +125,16 @@ namespace PuppetMaster.Commands {
             if (arguments.Length != 3) return false;
 
             string username = arguments[0];
-            string url = arguments[1];
+            string URL = arguments[1];
+
             string scriptFile = arguments[2];
+
+            if (!HttpURLs.TryParseHostAndPort(URL, out string host, out int port)) return false;
 
             command = new CreateClientCommand {
                 Username = username,
-                URL = url,
+                Host = host,
+                Port = port,
                 ScriptFile = scriptFile
             };
             return true;

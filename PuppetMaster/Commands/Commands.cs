@@ -15,7 +15,8 @@ namespace PuppetMaster.Commands {
 
     public sealed class CreateServerCommand : ICommand {
         public int ServerId;
-        public string URL;
+        public string Host;
+        public int Port;
         // Delays for the servers in milliseconds
         public int MinDelay, MaxDelay;
 
@@ -36,7 +37,8 @@ namespace PuppetMaster.Commands {
 
     public sealed class CreateClientCommand : ICommand {
         public string Username;
-        public string URL;
+        public string Host;
+        public int Port;
         public string ScriptFile;
 
         public void Accept(ICommandHandler handler) {

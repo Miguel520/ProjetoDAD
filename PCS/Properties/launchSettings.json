@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "PCS": {
+      "commandName": "Project",
+      "commandLineArgs": "localhost"
+    }
+  }
+}

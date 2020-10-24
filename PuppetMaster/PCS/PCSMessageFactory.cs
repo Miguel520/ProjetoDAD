@@ -10,22 +10,31 @@ namespace PuppetMaster.PCS {
         }
 
         public static CreateServerRequest BuildCreateServerRequest(
-            int serverId, string url, int minDelay, int maxDelay
-        ) {
+            int serverId,
+            string host,
+            int port,
+            int minDelay,
+            int maxDelay) {
+
             return new CreateServerRequest {
                 ServerId = serverId,
-                Url = url,
+                Host = host,
+                Port = port,
                 MinDelay = minDelay,
                 MaxDelay = maxDelay
             };
         }
 
         public static CreateClientRequest BuildCreateClientRequest(
-            string username, string url, string scriptFile
-        ) {
+            string username,
+            string host,
+            int port,
+            string scriptFile) {
+
             return new CreateClientRequest {
                 Username = username,
-                Url = url,
+                Host = host,
+                Port = port,
                 Script = scriptFile
             };
         }

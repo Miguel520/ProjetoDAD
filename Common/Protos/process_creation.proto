@@ -12,9 +12,10 @@ service ProcessCreationService {
 
 message CreateServerRequest {
 	int32 server_id = 1;
-	string url = 2;
-	int32 min_delay = 3;
-	int32 max_delay = 4;
+	string host = 2;
+	int32 port = 3;
+	int32 min_delay = 4;
+	int32 max_delay = 5;
 }
 
 message CreateServerResponse {}
@@ -23,8 +24,9 @@ message CreateServerResponse {}
 
 message CreateClientRequest {
 	string username = 1;
-	string url = 2;
-	string script = 3;
+	string host = 2;
+	int32 port = 3;
+	string script = 4;
 }
 
 message CreateClientResponse {}
