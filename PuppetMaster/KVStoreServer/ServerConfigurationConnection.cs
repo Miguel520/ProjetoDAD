@@ -1,5 +1,6 @@
 ﻿using Common.Protos.ServerConfiguration;
 using Grpc.Core;
+using Grpc.Net.Client;
 using System;
 using System.Collections.Generic;
 
@@ -9,12 +10,12 @@ namespace PuppetMaster.KVStoreServer {
     public class ServerConfigurationConnection {
 
         private readonly string target;
-        private readonly Channel channel;
+        private readonly GrpcChannel channel;
         private readonly ServerConfigurationServiceClient client;
 
         public ServerConfigurationConnection(string url) {
             target = url;
-            channel = new Channel(target, ChannelCredentials.Insecure);
+            channel = GrpcChannel.ForAddress(target);
             client = new ServerConfigurationServiceClient(channel);
             Console.WriteLine("Established connection to {0}", target);
         }
@@ -42,6 +43,22 @@ namespace PuppetMaster.KVStoreServer {
             catch (RpcException e) {
                 Console.WriteLine(
                     "Error: {0} when joining partition at server {1}",
+                    e.StatusCode,
+                    target);
+                return false;
+            }
+        }
+
+        public bool Status() {
+            StatusRequest request = new StatusRequest { };
+
+            try {
+                client.Status(request);
+                return true;
+            }
+            catch (RpcException e) {
+                Console.WriteLine(
+                    "Error: {0} with status operation at server {1}",
                     e.StatusCode,
                     target);
                 return false;

@@ -21,7 +21,7 @@ namespace KVStoreServer.Communications {
 
         private readonly Random random = new Random();
 
-        private bool freezed;
+        private bool freezed = false;
         private readonly object freezeLock = new object();
 
         public RequestsDispatcher(
@@ -47,7 +47,7 @@ namespace KVStoreServer.Communications {
         public async Task JoinPartition(JoinPartitionArguments args) {
             WaitFreeze();
             await WaitDelay();
-            partitionsDB.AddPartition(args.Name, args.Members);
+            partitionsDB.AddPartition(args.Name, args.Members, args.MasterId);
         }
 
         public async Task Status() {
@@ -56,7 +56,7 @@ namespace KVStoreServer.Communications {
             Console.WriteLine(
                 $"Server with id {config.ServerId} " +
                 $"running at {config.Url}: " +
-                $"{freezed: \"Freezed\" : \"Unfreezed\"}");
+                $"{(freezed ? "Freezed" : "Unfreezed")}");
         }
 
         public void Freeze() {
@@ -84,13 +84,11 @@ namespace KVStoreServer.Communications {
         }
 
         private async Task WaitDelay() {
-
             if (config.MinDelay != 0 || config.MaxDelay != 0) {
 
                 int delay = random.Next(
                     config.MinDelay,
-                    config.MaxDelay);
-
+                    config.MaxDelay) * 1000;
                 await Task.Delay(delay);
             }
         }

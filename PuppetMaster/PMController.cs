@@ -1,9 +1,10 @@
-﻿using Common.Protos.ServerConfiguration;
-using Common.Utils;
+﻿using Common.Utils;
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 
+using PuppetMaster.Client;
 using PuppetMaster.Commands;
 using PuppetMaster.PCS;
 using PuppetMaster.KVStoreServer;
@@ -41,13 +42,7 @@ namespace PuppetMaster {
 
         public void OnCreateServerCommand(CreateServerCommand command) {
             int serverId = command.ServerId;
-            string url = command.URL;
-
-            // URL should be in the form http://<PCS host>:<Server Port>
-            if (!HttpURLs.TryParseHost(url, out string PCSHost)) {
-                Console.Error.WriteLine("Invalid Host in URL '{0}'", url);
-                return;
-            }
+            string url = HttpURLs.FromHostAndPort(command.Host, command.Port);
 
             // Check if server already exists
             if (!nameService.TryAddServer(serverId, url)) {
@@ -55,8 +50,8 @@ namespace PuppetMaster {
                 return;
             }
 
-            PCSConnection connection = new PCSConnection(PCSHost);
-            if (!connection.CreateServer(serverId, command.MinDelay, command.MaxDelay)) {
+            PCSConnection connection = new PCSConnection(command.Host);
+            if (!connection.CreateServer(serverId, command.Port, command.MinDelay, command.MaxDelay)) {
                 // Remove inserted id if operation failed
                 nameService.RemoveServer(serverId);
             }
@@ -107,13 +102,7 @@ namespace PuppetMaster {
 
         public void OnCreateClientCommand(CreateClientCommand command) {
             string username = command.Username;
-            string url = command.URL;
-
-            // URL should be in the form http://<PCS host>:<Client Port>
-            if (!HttpURLs.TryParseHost(url, out string PCSHost)) {
-                Console.Error.WriteLine("Invalid Host in URL '{0}'", url);
-                return;
-            }
+            string url = HttpURLs.FromHostAndPort(command.Host, command.Port);
 
             // Check if client already exists
             if (!nameService.TryAddClient(username, url)) {
@@ -121,15 +110,29 @@ namespace PuppetMaster {
                 return;
             }
 
-            PCSConnection connection = new PCSConnection(PCSHost);
-            if (!connection.CreateClient(username, command.ScriptFile)) {
+            PCSConnection connection = new PCSConnection(command.Host);
+            if (!connection.CreateClient(username, command.Port, command.ScriptFile)) {
                 // Remove inserted username if operation failed
                 nameService.RemoveClient(username);
             }
         }
 
         public void OnStatusCommand(StatusCommand command) {
-            throw new NotImplementedException();
+
+            ImmutableList<string> serverUrls = nameService.ListServers();
+            ImmutableList<string> clientUrls = nameService.ListClients();
+
+            serverUrls.ForEach(url => {
+                ServerConfigurationConnection connection =
+                    new ServerConfigurationConnection(url);
+                connection.Status();
+            });
+
+            clientUrls.ForEach(url => {
+                ClientConfigurationConnection connection =
+                    new ClientConfigurationConnection(url);
+                connection.Status();
+            });
         }
 
         public void OnCrashServerCommand(CrashServerCommand command) {

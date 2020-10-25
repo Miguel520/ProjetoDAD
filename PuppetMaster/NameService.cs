@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace PuppetMaster {
 
@@ -38,6 +39,12 @@ namespace PuppetMaster {
             servers.Remove(id);
         }
 
+        public ImmutableList<string> ListServers() {
+            lock(servers) {
+                return ImmutableList.ToImmutableList(servers.Values);
+            }
+        }
+
         /*
          * Adds a client with the given username and url
          * Returns true if successfull and false otherwise
@@ -58,6 +65,12 @@ namespace PuppetMaster {
 
         public void RemoveClient(string username) {
             clients.Remove(username);
+        }
+
+        public ImmutableList<string> ListClients() {
+            lock(clients) {
+                return ImmutableList.ToImmutableList(clients.Values);
+            }
         }
     }
 }
