@@ -30,6 +30,8 @@ namespace KVStoreServer.Grpc {
             StatusRequest request,
             ServerCallContext context) {
 
+            Console.WriteLine("Received Status Request");
+
             await dispatcher.Status();
 
             return new StatusResponse();

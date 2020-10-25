@@ -1,9 +1,10 @@
-﻿using Common.Protos.ServerConfiguration;
-using Common.Utils;
+﻿using Common.Utils;
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 
+using PuppetMaster.Client;
 using PuppetMaster.Commands;
 using PuppetMaster.PCS;
 using PuppetMaster.KVStoreServer;
@@ -117,7 +118,21 @@ namespace PuppetMaster {
         }
 
         public void OnStatusCommand(StatusCommand command) {
-            throw new NotImplementedException();
+
+            ImmutableList<string> serverUrls = nameService.ListServers();
+            ImmutableList<string> clientUrls = nameService.ListClients();
+
+            serverUrls.ForEach(url => {
+                ServerConfigurationConnection connection =
+                    new ServerConfigurationConnection(url);
+                connection.Status();
+            });
+
+            clientUrls.ForEach(url => {
+                ClientConfigurationConnection connection =
+                    new ClientConfigurationConnection(url);
+                connection.Status();
+            });
         }
 
         public void OnCrashServerCommand(CrashServerCommand command) {
