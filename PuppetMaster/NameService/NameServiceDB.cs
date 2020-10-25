@@ -1,18 +1,18 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace PuppetMaster {
+namespace PuppetMaster.NameService {
 
     /*
      * Class responsible for the storage of (id, url) pairs
      * in orther to facilitate discovery of servers and clients
      */
-    public class NameService {
+    public class NameServiceDB {
 
         private readonly Dictionary<int, string> servers;
         private readonly Dictionary<string, string> clients;
 
-        public NameService() {
+        public NameServiceDB() {
             servers = new Dictionary<int, string>();
             clients = new Dictionary<string, string>();
         }
@@ -37,6 +37,12 @@ namespace PuppetMaster {
 
         public void RemoveServer(int id) {
             servers.Remove(id);
+        }
+
+        public ImmutableDictionary<int, string> ServersMapping() {
+            lock(servers) {
+                return ImmutableDictionary.ToImmutableDictionary(servers);
+            }
         }
 
         public ImmutableList<string> ListServers() {

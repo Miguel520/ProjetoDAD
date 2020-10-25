@@ -1,16 +1,34 @@
 ﻿using System;
 using System.IO;
-
+using Grpc.Core;
 using PuppetMaster.Commands;
+using PuppetMaster.Configuration;
+using PuppetMaster.NameService;
 using static PuppetMaster.Commands.CommandParser;
+
+using NamingServiceProto = Common.Protos.NamingService.NamingService;
 
 namespace PuppetMaster {
 
     class Program {
 
         static void Main(string[] args) {
-            PMController controller = new PMController();
-            using TextReader textReader = GetInputStream(args);
+            PMConfiguration config = ParseArgs(args);
+            NameServiceDB nameServiceDB = new NameServiceDB();
+            PMController controller = new PMController(nameServiceDB);
+            Server server = new Server {
+                Services = {
+                    NamingServiceProto.BindService(new NamingService(nameServiceDB))
+                },
+                Ports = {
+                    new ServerPort(
+                        config.Host, 
+                        config.Port, 
+                        ServerCredentials.Insecure)
+                }
+            };
+            server.Start();
+            using TextReader textReader = config.InputSource;
             string line;
             ICommand command;
             while ((line = textReader.ReadLine()) != null) {
@@ -20,16 +38,30 @@ namespace PuppetMaster {
                 }
                 command.Accept(controller);
             }
+            server.ShutdownAsync().Wait();
         }
 
-        private static TextReader GetInputStream(string[] args) {
+        private static PMConfiguration ParseArgs(string[] args) {
+            if (args.Length < 2
+                || !int.TryParse(args[1], out int port)) {
+                OnInvalidNumberOfArguments();
+                Environment.Exit(1);
+                return null;
+            }
+            
+            PMConfiguration config = new PMConfiguration {
+                Host = args[0],
+                Port = port
+            };
             switch (args.Length) {
                 // Read commands from Standard Input
-                case 0:
-                    return GetStdinStreamInput();
+                case 2:
+                    config.InputSource = GetStdinStreamInput();
+                    return config;
                 // Read commands from Configuration File
-                case 1:
-                    return GetFileStreamInput(args[0]);
+                case 3:
+                    config.InputSource = GetFileStreamInput(args[0]);
+                    return config;
                 default:
                     OnInvalidNumberOfArguments();
                     Environment.Exit(1);
@@ -60,7 +92,7 @@ namespace PuppetMaster {
         }
 
         private static void DisplayUsage() {
-            Console.WriteLine("Usage: PuppetMaster [fileName]");
+            Console.WriteLine("Usage: PuppetMaster name_server_host name_server_port [fileName]");
         }
     }
 }

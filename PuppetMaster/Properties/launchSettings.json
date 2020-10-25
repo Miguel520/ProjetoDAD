@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "PuppetMaster": {
+      "commandName": "Project",
+      "commandLineArgs": "localhost 50000"
+    }
+  }
+}
