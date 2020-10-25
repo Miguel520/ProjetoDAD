@@ -1,4 +1,6 @@
 ﻿
+using System;
+using System.Threading;
 using System.Collections.Generic;
 
 namespace Client.Naming {
@@ -20,7 +22,9 @@ namespace Client.Naming {
             NamingServiceConnection connection =
                 new NamingServiceConnection(serverHost, serverPort);
 
-            url = connection.Lookup(id);
+            if (connection.Lookup(id, out url))
+                knownServers.Add(id, url);
+
             return (url != null);
         }
     }

@@ -9,6 +9,7 @@ using PuppetMaster.Commands;
 using PuppetMaster.KVStoreServer;
 using PuppetMaster.NameService;
 using PuppetMaster.PCS;
+using PuppetMaster.Configuration;
 
 namespace PuppetMaster {
 
@@ -19,9 +20,11 @@ namespace PuppetMaster {
     public class PMController : ICommandHandler {
 
         private int replicationFactor = 0;
+        private readonly PMConfiguration config;
         private readonly NameServiceDB nameServiceDB;
 
-        public PMController(NameServiceDB nameServiceDB) {
+        public PMController(PMConfiguration config, NameServiceDB nameServiceDB) {
+            this.config = config;
             this.nameServiceDB = nameServiceDB;
         }
 
@@ -113,7 +116,13 @@ namespace PuppetMaster {
             }
 
             PCSConnection connection = new PCSConnection(command.Host);
-            if (!connection.CreateClient(username, command.Port, command.ScriptFile)) {
+            if (!connection.CreateClient(
+                username, 
+                command.Port, 
+                command.ScriptFile, 
+                config.Host, 
+                config.Port)) {
+
                 // Remove inserted username if operation failed
                 nameServiceDB.RemoveClient(username);
             }

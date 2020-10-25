@@ -29,13 +29,17 @@ namespace PuppetMaster.PCS {
             string username,
             string host,
             int port,
-            string scriptFile) {
+            string scriptFile,
+            string nameServerHost,
+            int nameServerPort) {
 
             return new CreateClientRequest {
                 Username = username,
                 Host = host,
                 Port = port,
-                Script = scriptFile
+                Script = scriptFile,
+                ServerHost = nameServerHost,
+                ServerPort = nameServerPort
             };
         }
     }

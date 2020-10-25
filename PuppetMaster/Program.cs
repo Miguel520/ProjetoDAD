@@ -13,9 +13,14 @@ namespace PuppetMaster {
     class Program {
 
         static void Main(string[] args) {
+
+            AppContext.SetSwitch(
+                "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport",
+                true);
+
             PMConfiguration config = ParseArgs(args);
             NameServiceDB nameServiceDB = new NameServiceDB();
-            PMController controller = new PMController(nameServiceDB);
+            PMController controller = new PMController(config, nameServiceDB);
             Server server = new Server {
                 Services = {
                     NamingServiceProto.BindService(new NamingService(nameServiceDB))

@@ -2,7 +2,7 @@
 using System.IO;
 
 namespace PuppetMaster.Configuration {
-    class PMConfiguration {
+    public class PMConfiguration {
 
         public string Host { get; set; }
         public int Port { get; set; }

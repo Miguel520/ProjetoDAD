@@ -23,12 +23,6 @@ namespace PuppetMaster.PCS {
         public PCSConnection(string PCSHost) {
             host = PCSHost;
             target = HttpURLs.FromHostAndPort(PCSHost, PCS_PORT);
-           
-            //Configuring HTTP for client connections
-            //TODO remove this from here and put it in a file with global context
-            AppContext.SetSwitch(
-                "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport",
-                true);
             channel = GrpcChannel.ForAddress(target);
             client = new ProcessCreationServiceClient(channel);
             Console.WriteLine("Established connection to {0}", target);
@@ -47,15 +41,26 @@ namespace PuppetMaster.PCS {
                 Console.WriteLine("Server started at {0}:{1}", host, port);
                 return true;
             } catch (RpcException e) {
-                Console.WriteLine(e.ToString());
                 Console.WriteLine("Error: {0} when creating server at PCS {1}", e.StatusCode, target);
                 return false;
             }
         }
 
-        public bool CreateClient(string username, int port, string scriptFile) {
+        public bool CreateClient(
+            string username, 
+            int port, 
+            string scriptFile, 
+            string nameServerHost, 
+            int nameServerPort) {
+
             CreateClientRequest request =
-                PCSMessageFactory.BuildCreateClientRequest(username, host, port, scriptFile);
+                PCSMessageFactory.BuildCreateClientRequest(
+                    username, 
+                    host, 
+                    port, 
+                    scriptFile, 
+                    nameServerHost, 
+                    nameServerPort);
             try {
                 client.CreateClient(request);
                 Console.WriteLine("Client started at {0}:{1}", host, port);

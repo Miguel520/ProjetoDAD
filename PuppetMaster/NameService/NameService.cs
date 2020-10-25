@@ -1,5 +1,6 @@
 ﻿using Common.Protos.NamingService;
 using Grpc.Core;
+using System;
 using System.Threading.Tasks;
 using static Common.Protos.NamingService.NamingService;
 

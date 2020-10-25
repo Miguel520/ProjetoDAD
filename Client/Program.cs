@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Threading;
 using Grpc.Core;
 using Client.Configuration;
 using ProtoClientConfiguration = Common.Protos.ClientConfiguration.ClientConfigurationService;
@@ -8,12 +9,14 @@ using Client.Grpc;
 
 using Client.Naming;
 
-namespace Client
-{
-    class Program
-    {
-        static void Main(string[] args)
-        {
+namespace Client {
+    class Program {
+        static void Main(string[] args) {
+
+            AppContext.SetSwitch(
+                "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport",
+                true);
+
             ClientController controller = new ClientController();
             ClientConfiguration clientConfig = ParseArgs(args);
 
@@ -22,10 +25,6 @@ namespace Client
                 clientConfig.ServerPort);
 
             //TODO add file read
-
-            //TODO remove test line
-            namingService.Lookup(1, out string url);
-            Console.WriteLine("Naming Service: {0}", url);
 
             RequestsDispatcher dispatcher = new RequestsDispatcher(clientConfig);
 
