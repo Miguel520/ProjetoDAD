@@ -6,7 +6,7 @@
 namespace PuppetMaster.Commands {
 
     public class ReplicationFactorCommand : ICommand {
-        public int ReplicationFactor;
+        public int ReplicationFactor { get; set; }
 
         public void Accept(ICommandHandler handler) {
             handler.OnReplicationFactorCommand(this);
@@ -14,11 +14,12 @@ namespace PuppetMaster.Commands {
     }
 
     public sealed class CreateServerCommand : ICommand {
-        public int ServerId;
-        public string Host;
-        public int Port;
+        public int ServerId { get; set; }
+        public string Host { get; set; }
+        public int Port { get; set; }
         // Delays for the servers in milliseconds
-        public int MinDelay, MaxDelay;
+        public int MinDelay { get; set; }
+        public int MaxDelay { get; set; }
 
         public void Accept(ICommandHandler handler) {
             handler.OnCreateServerCommand(this);
@@ -26,9 +27,9 @@ namespace PuppetMaster.Commands {
     }
 
     public sealed class CreatePartitionCommand : ICommand {
-        public int NumberOfReplicas;
-        public string PartitionName;
-        public int[] ServerIds;
+        public int NumberOfReplicas { get; set; }
+        public string PartitionName { get; set; }
+        public int[] ServerIds { get; set; }
 
         public void Accept(ICommandHandler handler) {
             handler.OnCreatePartitionCommand(this);
@@ -36,10 +37,10 @@ namespace PuppetMaster.Commands {
     }
 
     public sealed class CreateClientCommand : ICommand {
-        public string Username;
-        public string Host;
-        public int Port;
-        public string ScriptFile;
+        public string Username { get; set; }
+        public string Host { get; set; }
+        public int Port { get; set; }
+        public string ScriptFile { get; set; }
 
         public void Accept(ICommandHandler handler) {
             handler.OnCreateClientCommand(this);
@@ -54,7 +55,7 @@ namespace PuppetMaster.Commands {
     }
 
     public sealed class CrashServerCommand : ICommand {
-        public int ServerId;
+        public int ServerId { get; set; }
 
         public void Accept(ICommandHandler handler) {
             handler.OnCrashServerCommand(this);
@@ -62,7 +63,7 @@ namespace PuppetMaster.Commands {
     }
 
     public sealed class FreezeServerCommand : ICommand {
-        public int ServerId;
+        public int ServerId { get; set; }
 
         public void Accept(ICommandHandler handler) {
             handler.OnFreezeServerCommand(this);
@@ -70,7 +71,7 @@ namespace PuppetMaster.Commands {
     }
 
     public sealed class UnfreezeServerCommand : ICommand {
-        public int ServerId;
+        public int ServerId { get; set; }
 
         public void Accept(ICommandHandler handler) {
             handler.OnUnfreezeServerCommand(this);
@@ -79,7 +80,7 @@ namespace PuppetMaster.Commands {
 
     public sealed class WaitCommand : ICommand {
         // Time for the PuppetMaster to sleep in milliseconds
-        public int SleepTime;
+        public int SleepTime { get; set; }
 
         public void Accept(ICommandHandler handler) {
             handler.OnWaitCommand(this);

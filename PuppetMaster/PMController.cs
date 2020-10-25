@@ -6,8 +6,9 @@ using System.Linq;
 
 using PuppetMaster.Client;
 using PuppetMaster.Commands;
-using PuppetMaster.PCS;
 using PuppetMaster.KVStoreServer;
+using PuppetMaster.NameService;
+using PuppetMaster.PCS;
 
 namespace PuppetMaster {
 
@@ -18,9 +19,10 @@ namespace PuppetMaster {
     public class PMController : ICommandHandler {
 
         private int replicationFactor = 0;
-        private readonly NameService nameService = new NameService();
+        private readonly NameServiceDB nameServiceDB;
 
-        public PMController() {
+        public PMController(NameServiceDB nameServiceDB) {
+            this.nameServiceDB = nameServiceDB;
         }
 
         public void OnReplicationFactorCommand(ReplicationFactorCommand command) {
@@ -45,7 +47,7 @@ namespace PuppetMaster {
             string url = HttpURLs.FromHostAndPort(command.Host, command.Port);
 
             // Check if server already exists
-            if (!nameService.TryAddServer(serverId, url)) {
+            if (!nameServiceDB.TryAddServer(serverId, url)) {
                 Console.Error.WriteLine("Server with id {0} already exists", serverId);
                 return;
             }
@@ -53,7 +55,7 @@ namespace PuppetMaster {
             PCSConnection connection = new PCSConnection(command.Host);
             if (!connection.CreateServer(serverId, command.Port, command.MinDelay, command.MaxDelay)) {
                 // Remove inserted id if operation failed
-                nameService.RemoveServer(serverId);
+                nameServiceDB.RemoveServer(serverId);
             }
         }
 
@@ -80,7 +82,7 @@ namespace PuppetMaster {
 
             // Lookup servers urls
             IEnumerable<Tuple<int, string>> servers = serverIds.Select(id => {
-                nameService.TryLookupServer(id, out string url);
+                nameServiceDB.TryLookupServer(id, out string url);
                 return new Tuple<int, string>(id, url);
             });
 
@@ -105,7 +107,7 @@ namespace PuppetMaster {
             string url = HttpURLs.FromHostAndPort(command.Host, command.Port);
 
             // Check if client already exists
-            if (!nameService.TryAddClient(username, url)) {
+            if (!nameServiceDB.TryAddClient(username, url)) {
                 Console.Error.WriteLine("Client with username {0} already exists", username);
                 return;
             }
@@ -113,14 +115,14 @@ namespace PuppetMaster {
             PCSConnection connection = new PCSConnection(command.Host);
             if (!connection.CreateClient(username, command.Port, command.ScriptFile)) {
                 // Remove inserted username if operation failed
-                nameService.RemoveClient(username);
+                nameServiceDB.RemoveClient(username);
             }
         }
 
         public void OnStatusCommand(StatusCommand command) {
 
-            ImmutableList<string> serverUrls = nameService.ListServers();
-            ImmutableList<string> clientUrls = nameService.ListClients();
+            ImmutableList<string> serverUrls = nameServiceDB.ListServers();
+            ImmutableList<string> clientUrls = nameServiceDB.ListClients();
 
             serverUrls.ForEach(url => {
                 ServerConfigurationConnection connection =
