@@ -27,15 +27,18 @@ namespace PCS.Communications {
         public string Host { get; set; }
         public int Port{ get; set; }
         public string Script { get; set; }
+        public string ServerHost { get; set; }
+        public int ServerPort { get;  set; }
 
-        //TODO not implemented in client yet
-        //arguments: username host port script_path
+        //arguments: username host port script_path server_host_name server_host_port
         public string CollapseArguments() {
             string[] args = { 
                 Username,
                 Host,
                 Port.ToString(),
-                Script};
+                Script,
+                ServerHost,
+                ServerPort.ToString()};
 
             return string.Join(" ", args);
         }

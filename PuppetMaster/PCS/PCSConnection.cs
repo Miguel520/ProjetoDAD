@@ -25,6 +25,7 @@ namespace PuppetMaster.PCS {
             target = HttpURLs.FromHostAndPort(PCSHost, PCS_PORT);
            
             //Configuring HTTP for client connections
+            //TODO remove this from here and put it in a file with global context
             AppContext.SetSwitch(
                 "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport",
                 true);
