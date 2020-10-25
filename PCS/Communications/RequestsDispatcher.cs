@@ -1,5 +1,4 @@
 ﻿
-using System.Threading.Tasks;
 using System.Diagnostics;
 using System;
 
@@ -32,6 +31,8 @@ namespace PCS.Communications {
         public static bool CreateClientProcess(CreateClientArguments args) {
             System.Console.WriteLine("Starting Client {0} in URL {1}:{2}",
                     args.Username, args.Host, args.Port.ToString());
+            System.Console.WriteLine("Naming server at {0}:{1}",
+                args.ServerHost, args.ServerPort);
 
             string rootDirectory = AppDomain.CurrentDomain.BaseDirectory;
             string path = rootDirectory + "..\\..\\..\\..\\Client\\bin\\Debug\\netcoreapp3.1\\Client.exe";

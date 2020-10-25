@@ -1,12 +1,12 @@
 ﻿
 using System;
 using Grpc.Core;
-
 using Client.Configuration;
-
 using ProtoClientConfiguration = Common.Protos.ClientConfiguration.ClientConfigurationService;
 using Client.Communications;
 using Client.Grpc;
+
+using Client.Naming;
 
 namespace Client
 {
@@ -15,9 +15,17 @@ namespace Client
         static void Main(string[] args)
         {
             ClientController controller = new ClientController();
-
             ClientConfiguration clientConfig = ParseArgs(args);
+
+            NamingService namingService = new NamingService(
+                clientConfig.ServerHost,
+                clientConfig.ServerPort);
+
             //TODO add file read
+
+            //TODO remove test line
+            namingService.Lookup(1, out string url);
+            Console.WriteLine("Naming Service: {0}", url);
 
             RequestsDispatcher dispatcher = new RequestsDispatcher(clientConfig);
 
@@ -47,8 +55,9 @@ namespace Client
         }
 
         private static ClientConfiguration ParseArgs(string[] args) {
-            if (args.Length != 4 || 
-                !int.TryParse(args[2], out int port)) {
+            if (args.Length != 6 
+                || !int.TryParse(args[2], out int port)
+                || !int.TryParse(args[5], out int serverPort)) {
                 OnInvalidArguments();
                 Environment.Exit(1);
                 return null;
@@ -57,12 +66,15 @@ namespace Client
             string username = args[0];
             string host = args[1];
             string script = args[3];
+            string serverHost = args[4];
 
             return new ClientConfiguration(
                 username,
                 host,
                 port,
-                script);
+                script,
+                serverHost,
+                serverPort);
         }
 
         private static void OnInvalidArguments() {
@@ -71,7 +83,7 @@ namespace Client
         }
 
         private static void DisplayUsage() {
-            Console.WriteLine("Usage: Client username host port script_file_name");
+            Console.WriteLine("Usage: Client username host port script_file_name server_host_name server_port_name");
         }
     }
 }

@@ -42,7 +42,9 @@ namespace PCS.Grpc {
                 Username = request.Username,
                 Host = request.Host,
                 Port = request.Port,
-                Script = request.Script
+                Script = request.Script,
+                ServerHost = request.ServerHost,
+                ServerPort = request.ServerPort
             };
         }
     }
