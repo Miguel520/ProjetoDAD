@@ -29,9 +29,25 @@ namespace PCS.Communications {
             return true;
         }
 
-        public Task CreateClientProcess(CreateClientArguments args) {
-           //TODO implement in client first to run
-            return null;
+        public static bool CreateClientProcess(CreateClientArguments args) {
+            System.Console.WriteLine("Starting Client {0} in URL {1}:{2}",
+                    args.Username, args.Host, args.Port.ToString());
+
+            string rootDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string path = rootDirectory + "..\\..\\..\\..\\Client\\bin\\Debug\\netcoreapp3.1\\Client.exe";
+
+            ProcessStartInfo startInfo = new ProcessStartInfo(path) {
+                WindowStyle = ProcessWindowStyle.Normal,
+                CreateNoWindow = false,
+                UseShellExecute = true,
+                Arguments = args.CollapseArguments()
+            };
+
+            if (Process.Start(startInfo) == null) {
+                //TODO throw here an exception
+                return false;
+            }
+            return true;
         }
 
     }
