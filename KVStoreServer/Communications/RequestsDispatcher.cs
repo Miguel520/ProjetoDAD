@@ -55,8 +55,10 @@ namespace KVStoreServer.Communications {
             await WaitDelay();
             Console.WriteLine(
                 $"Server with id {config.ServerId} " +
-                $"running at {config.Url}: " +
-                $"{(freezed ? "Freezed" : "Unfreezed")}");
+                $"running at {config.Url}");
+            Console.WriteLine(
+                $"  Partitions: {string.Join(", ", partitionsDB.ListPartitions())}");
+            Console.WriteLine($"  Status: {(freezed ? "Freezed" : "Unfreezed")}");
         }
 
         public void Freeze() {
