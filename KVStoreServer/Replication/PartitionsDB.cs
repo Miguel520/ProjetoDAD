@@ -95,6 +95,12 @@ namespace KVStoreServer.Replication {
             return partitionMasters.TryGetValue(partitionName, out masterId);
         }
 
+        public ImmutableList<string> ListPartitions() {
+            lock(partitions) {
+                return ImmutableList.ToImmutableList(partitions.Keys);
+            }
+        }
+
         private ImmutableHashSet<int> BuildPartition(IEnumerable<Tuple<int, string>> members) {
             ImmutableHashSet<int>.Builder builder = ImmutableHashSet.CreateBuilder<int>();
             foreach ((int serverId, _) in members) {

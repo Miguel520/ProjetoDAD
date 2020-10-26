@@ -43,6 +43,7 @@ namespace PuppetMaster {
             }
 
             replicationFactor = command.ReplicationFactor;
+            Console.WriteLine($"Replication Factor set to {replicationFactor}");
         }
 
         public void OnCreateServerCommand(CreateServerCommand command) {
@@ -103,6 +104,8 @@ namespace PuppetMaster {
                     return;
                 }
             }
+
+            Console.WriteLine($"Partition '{partitionName}' created");
         }
 
         public void OnCreateClientCommand(CreateClientCommand command) {
