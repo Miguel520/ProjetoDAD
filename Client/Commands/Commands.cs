@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Client.Commands
+﻿namespace Client.Commands
 {
     public class ReadCommand : ICommand {
-        public string partition_id;
-        public string object_id;
-        public string server_id;
+        public string partitionId;
+        public string objectId;
+        public string serverId;
 
         public void Accept(ICommandHandler handler) {
             handler.OnReadCommand(this);
@@ -15,8 +11,8 @@ namespace Client.Commands
     }
 
     public class WriteCommand : ICommand {
-        public string partition_id;
-        public string object_id;
+        public string partitionId;
+        public string objectId;
         public string value;
 
         public void Accept(ICommandHandler handler) {
@@ -25,7 +21,7 @@ namespace Client.Commands
     }
 
     public class ListServerCommand : ICommand {
-        public string server_id;
+        public string serverId;
 
         public void Accept(ICommandHandler handler) {
             handler.OnListServerCommand(this);
