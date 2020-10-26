@@ -15,8 +15,8 @@ namespace Client.Naming {
         private readonly NamingServiceClient client;
         private readonly string target;
 
-        public NamingServiceConnection(string serverHost, int serverPort) {
-            target = HttpURLs.FromHostAndPort(serverHost, serverPort);
+        public NamingServiceConnection(string url) {
+            target = url;
             channel = GrpcChannel.ForAddress(target);
             client = new NamingServiceClient(channel);
             Console.WriteLine("Established connection to {0}", target);

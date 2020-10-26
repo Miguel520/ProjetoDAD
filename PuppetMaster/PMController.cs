@@ -123,8 +123,7 @@ namespace PuppetMaster {
                 username, 
                 command.Port, 
                 command.ScriptFile, 
-                config.Host, 
-                config.Port)) {
+                nameServiceDB.ListServers())) {
 
                 // Remove inserted username if operation failed
                 nameServiceDB.RemoveClient(username);

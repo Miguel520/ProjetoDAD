@@ -27,8 +27,7 @@ message CreateClientRequest {
 	string host = 2;
 	int32 port = 3;
 	string script = 4;
-	string server_host = 5;
-	int32 server_port = 6;
+	repeated string naming_servers_urls = 5;
 }
 
 message CreateClientResponse {}

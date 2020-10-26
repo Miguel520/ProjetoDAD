@@ -3,6 +3,7 @@ using Common.Utils;
 using Grpc.Core;
 using Grpc.Net.Client;
 using System;
+using System.Collections.Generic;
 
 using static Common.Protos.ProcessCreation.ProcessCreationService;
 
@@ -50,8 +51,7 @@ namespace PuppetMaster.PCS {
             string username, 
             int port, 
             string scriptFile, 
-            string nameServerHost, 
-            int nameServerPort) {
+            IEnumerable<string> nameServersUrls) {
 
             CreateClientRequest request =
                 PCSMessageFactory.BuildCreateClientRequest(
@@ -59,8 +59,7 @@ namespace PuppetMaster.PCS {
                     host, 
                     port, 
                     scriptFile, 
-                    nameServerHost, 
-                    nameServerPort);
+                    nameServersUrls);
             try {
                 client.CreateClient(request);
                 Console.WriteLine("Client started at {0}:{1}", host, port);

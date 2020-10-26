@@ -24,7 +24,9 @@ namespace KVStoreServer.Replication {
         private readonly ConcurrentDictionary<string, int> partitionMasters =
             new ConcurrentDictionary<string, int>();
 
-        public PartitionsDB() {}
+        public PartitionsDB(int selfId, string selfUrl) {
+            urls.TryAdd(selfId, selfUrl);
+        }
 
         /*
          * Creates a partition with the given name. Also stores all server ids and urls

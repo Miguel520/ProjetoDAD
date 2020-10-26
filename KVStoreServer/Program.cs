@@ -8,13 +8,18 @@ using KVStoreServer.Replication;
 
 using ProtoServerConfiguration = Common.Protos.ServerConfiguration.ServerConfigurationService;
 using ProtoKeyValueStore = Common.Protos.KeyValueStore.KeyValueStoreService;
+using NamingServiceProto = Common.Protos.NamingService.NamingService;
+using Common.Utils;
 
 namespace KVStoreServer {
     class Program {
         static void Main(string[] args) {
             ServerConfiguration serverConfig = ParseArgs(args);
 
-            PartitionsDB partitionsDB = new PartitionsDB();
+            // Add self id so that server knows itself
+            PartitionsDB partitionsDB = new PartitionsDB(
+                serverConfig.ServerId,
+                HttpURLs.FromHostAndPort(serverConfig.Host, serverConfig.Port));
 
             RequestsDispatcher dispatcher = new RequestsDispatcher(
                 serverConfig,
@@ -24,7 +29,8 @@ namespace KVStoreServer {
                 Services = {
                     ProtoServerConfiguration.BindService(
                         new ConfigurationService(dispatcher)),
-                    ProtoKeyValueStore.BindService(new StorageService())
+                    ProtoKeyValueStore.BindService(new StorageService()),
+                    NamingServiceProto.BindService(new NamingService(partitionsDB))
                 },
                 Ports = {
                     new ServerPort(
