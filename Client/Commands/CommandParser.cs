@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Client.Commands
 {
-    class CommandParser
+    public class CommandParser
     {
         private const string READ_COMMAND = "read";
         private const string WRITE_COMMAND = "write";
