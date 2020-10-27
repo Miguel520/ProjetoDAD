@@ -9,7 +9,7 @@ namespace KVStoreServer.Communications {
     }
 
     public class WriteArguments {
-        public int PartitionId { get; set; }
+        public string PartitionName { get; set; }
         public int ObjectId { get; set; }
         public string ObjectValue { get; set; }
     }

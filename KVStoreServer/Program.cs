@@ -14,6 +14,11 @@ using Common.Utils;
 namespace KVStoreServer {
     class Program {
         static void Main(string[] args) {
+
+            AppContext.SetSwitch(
+               "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport",
+               true);
+
             ServerConfiguration serverConfig = ParseArgs(args);
 
             // Add self id so that server knows itself
@@ -21,15 +26,20 @@ namespace KVStoreServer {
                 serverConfig.ServerId,
                 HttpURLs.FromHostAndPort(serverConfig.Host, serverConfig.Port));
 
+            ReplicationService replicationService = new ReplicationService(
+                partitionsDB,
+                new ReplicationConnectionFactory());
+
             RequestsDispatcher dispatcher = new RequestsDispatcher(
                 serverConfig,
+                replicationService,
                 partitionsDB);
 
             Server server = new Server {
                 Services = {
                     ProtoServerConfiguration.BindService(
                         new ConfigurationService(dispatcher)),
-                    ProtoKeyValueStore.BindService(new StorageService()),
+                    ProtoKeyValueStore.BindService(new StorageService(dispatcher)),
                     NamingServiceProto.BindService(new NamingService(partitionsDB))
                 },
                 Ports = {
