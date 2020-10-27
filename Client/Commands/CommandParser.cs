@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Client.Commands
 {
-    class CommandParser
+    public class CommandParser
     {
         private const string READ_COMMAND = "read";
         private const string WRITE_COMMAND = "write";
@@ -54,9 +54,9 @@ namespace Client.Commands
             string serverId = arguments[2];
 
             command = new ReadCommand {
-                partition_id = partitionId,
-                object_id = objectId,
-                server_id = serverId
+                partitionId = partitionId,
+                objectId = objectId,
+                serverId = serverId
             };
 
             return true;
@@ -72,8 +72,8 @@ namespace Client.Commands
             string value = arguments[2];
 
             command = new WriteCommand {
-                partition_id = partitionId,
-                object_id = objectId,
+                partitionId = partitionId,
+                objectId = objectId,
                 value = value
             };
 
@@ -88,7 +88,7 @@ namespace Client.Commands
             string serverId = arguments[0];
 
             command = new ListServerCommand {
-                server_id = serverId
+                serverId = serverId
             };
 
             return true;

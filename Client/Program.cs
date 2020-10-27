@@ -1,4 +1,3 @@
-﻿
 using System;
 using System.Threading;
 using Grpc.Core;
@@ -6,10 +5,12 @@ using Client.Configuration;
 using ProtoClientConfiguration = Common.Protos.ClientConfiguration.ClientConfigurationService;
 using Client.Communications;
 using Client.Grpc;
+using static Client.Commands.CommandParser;
 
 using Client.Naming;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using Client.Commands;
 
 namespace Client {
     class Program {
@@ -23,8 +24,6 @@ namespace Client {
             ClientConfiguration clientConfig = ParseArgs(args);
 
             NamingService namingService = new NamingService(clientConfig.NamingServersUrls);
-
-            //TODO add file read
 
             RequestsDispatcher dispatcher = new RequestsDispatcher(clientConfig);
 
@@ -48,6 +47,17 @@ namespace Client {
                $"with script called {clientConfig.Script}");
             Console.WriteLine("Press any key to stop the client...");
             Console.ReadKey();
+
+            string[] lines = System.IO.File.ReadAllLines(clientConfig.Script);
+
+            ICommand command;
+            foreach (string line in lines) {
+                if(!TryParse(line, out command)) {
+                    Console.WriteLine("Invalid Command");
+                    continue;
+                }
+                command.Accept(controller);
+            }
 
             client.ShutdownAsync().Wait();
 
