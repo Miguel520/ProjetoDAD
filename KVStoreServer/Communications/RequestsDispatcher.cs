@@ -95,7 +95,7 @@ namespace KVStoreServer.Communications {
 
                 int delay = random.Next(
                     config.MinDelay,
-                    config.MaxDelay) * 1000;
+                    config.MaxDelay);
                 await Task.Delay(delay);
             }
         }
