@@ -9,7 +9,7 @@ service KeyValueStoreService {
 }
 
 message ReadRequest {
-    int32 partition_id = 1;
+    string partition_name = 1;
     int32 object_id = 2;
 }
 
@@ -18,7 +18,7 @@ message ReadResponse {
 }
 
 message WriteRequest {
-    int32 partition_id = 1;
+    string partition_name = 1;
     int32 object_id = 2;
     string object_value = 3;
 }

@@ -17,6 +17,7 @@ namespace KVStoreServer.Communications {
     public class RequestsDispatcher {
 
         private readonly ServerConfiguration config;
+        private readonly ReplicationService replicationService;
         private readonly PartitionsDB partitionsDB;
 
         private readonly Random random = new Random();
@@ -26,9 +27,11 @@ namespace KVStoreServer.Communications {
 
         public RequestsDispatcher(
             ServerConfiguration serverConfiguration,
+            ReplicationService replicationService,
             PartitionsDB partitionsDB) {
 
             this.config = serverConfiguration;
+            this.replicationService = replicationService;
             this.partitionsDB = partitionsDB;
         }
 
@@ -36,8 +39,10 @@ namespace KVStoreServer.Communications {
             return null;
         }
 
-        public Task Write(WriteArguments args) {
-            return null;
+        public async Task Write(WriteArguments args) {
+            WaitFreeze();
+            await WaitDelay();
+            replicationService.Write(args);
         }
 
         public Task<IEnumerable<Tuple<string, bool>>> List() {
