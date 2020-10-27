@@ -29,10 +29,14 @@ namespace PCS.Communications {
         }
 
         public static bool CreateClientProcess(CreateClientArguments args) {
-            System.Console.WriteLine("Starting Client {0} in URL {1}:{2}",
-                    args.Username, args.Host, args.Port.ToString());
-            System.Console.WriteLine("Naming server at {0}:{1}",
-                args.ServerHost, args.ServerPort);
+            System.Console.WriteLine(
+                "Starting Client {0} in URL {1}:{2}",
+                args.Username, 
+                args.Host, 
+                args.Port);
+            System.Console.WriteLine(
+                "Naming servers at {0}",
+                string.Join(", ", args.NameServersUrls));
 
             string rootDirectory = AppDomain.CurrentDomain.BaseDirectory;
             string path = rootDirectory + "..\\..\\..\\..\\Client\\bin\\Debug\\netcoreapp3.1\\Client.exe";

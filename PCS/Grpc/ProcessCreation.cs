@@ -3,6 +3,7 @@ using Common.Protos.ProcessCreation;
 using PCS.Communications;
 using Grpc.Core;
 using System;
+using System.Linq;
 
 namespace PCS.Grpc {
     class ProcessCreation : ProcessCreationService.ProcessCreationServiceBase {
@@ -43,8 +44,7 @@ namespace PCS.Grpc {
                 Host = request.Host,
                 Port = request.Port,
                 Script = request.Script,
-                ServerHost = request.ServerHost,
-                ServerPort = request.ServerPort
+                NameServersUrls = request.NamingServersUrls.ToList()
             };
         }
     }

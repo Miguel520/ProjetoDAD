@@ -1,4 +1,3 @@
-﻿
 using System;
 using System.Threading;
 using Grpc.Core;
@@ -9,6 +8,8 @@ using Client.Grpc;
 using static Client.Commands.CommandParser;
 
 using Client.Naming;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using Client.Commands;
 
 namespace Client {
@@ -22,9 +23,7 @@ namespace Client {
             ClientController controller = new ClientController();
             ClientConfiguration clientConfig = ParseArgs(args);
 
-            NamingService namingService = new NamingService(
-                clientConfig.ServerHost,
-                clientConfig.ServerPort);
+            NamingService namingService = new NamingService(clientConfig.NamingServersUrls);
 
             RequestsDispatcher dispatcher = new RequestsDispatcher(clientConfig);
 
@@ -65,9 +64,8 @@ namespace Client {
         }
 
         private static ClientConfiguration ParseArgs(string[] args) {
-            if (args.Length != 6 
-                || !int.TryParse(args[2], out int port)
-                || !int.TryParse(args[5], out int serverPort)) {
+            if (args.Length < 5 
+                || !int.TryParse(args[2], out int port)) {
                 OnInvalidArguments();
                 Environment.Exit(1);
                 return null;
@@ -76,15 +74,20 @@ namespace Client {
             string username = args[0];
             string host = args[1];
             string script = args[3];
-            string serverHost = args[4];
+
+            // All the arguments after script are name servers the client can use
+            ImmutableList<string>.Builder builder = ImmutableList.CreateBuilder<string>();
+
+            for (int i = 4; i < args.Length; i++) {
+                builder.Add(args[i]);
+            }
 
             return new ClientConfiguration(
                 username,
                 host,
                 port,
                 script,
-                serverHost,
-                serverPort);
+                builder.ToImmutable());
         }
 
         private static void OnInvalidArguments() {

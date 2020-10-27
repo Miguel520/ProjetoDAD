@@ -1,4 +1,5 @@
 ﻿using Common.Protos.ProcessCreation;
+using System.Collections.Generic;
 
 namespace PuppetMaster.PCS {
 
@@ -30,16 +31,14 @@ namespace PuppetMaster.PCS {
             string host,
             int port,
             string scriptFile,
-            string nameServerHost,
-            int nameServerPort) {
+            IEnumerable<string> namingServersUrls) {
 
             return new CreateClientRequest {
                 Username = username,
                 Host = host,
                 Port = port,
                 Script = scriptFile,
-                ServerHost = nameServerHost,
-                ServerPort = nameServerPort
+                NamingServersUrls = { namingServersUrls }
             };
         }
     }

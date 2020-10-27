@@ -1,4 +1,5 @@
-﻿using Common.Protos.ProcessCreation;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace PCS.Communications {
 
@@ -27,8 +28,8 @@ namespace PCS.Communications {
         public string Host { get; set; }
         public int Port{ get; set; }
         public string Script { get; set; }
-        public string ServerHost { get; set; }
-        public int ServerPort { get;  set; }
+
+        public List<string> NameServersUrls { get; set; }
 
         //arguments: username host port script_path server_host_name server_host_port
         public string CollapseArguments() {
@@ -36,11 +37,9 @@ namespace PCS.Communications {
                 Username,
                 Host,
                 Port.ToString(),
-                Script,
-                ServerHost,
-                ServerPort.ToString()};
+                Script };
 
-            return string.Join(" ", args);
+            return string.Join(" ", args.Concat(NameServersUrls));
         }
     }
 }

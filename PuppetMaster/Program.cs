@@ -1,12 +1,9 @@
 ﻿using System;
 using System.IO;
-using Grpc.Core;
 using PuppetMaster.Commands;
 using PuppetMaster.Configuration;
 using PuppetMaster.NameService;
 using static PuppetMaster.Commands.CommandParser;
-
-using NamingServiceProto = Common.Protos.NamingService.NamingService;
 
 namespace PuppetMaster {
 
@@ -21,18 +18,7 @@ namespace PuppetMaster {
             PMConfiguration config = ParseArgs(args);
             NameServiceDB nameServiceDB = new NameServiceDB();
             PMController controller = new PMController(config, nameServiceDB);
-            Server server = new Server {
-                Services = {
-                    NamingServiceProto.BindService(new NamingService(nameServiceDB))
-                },
-                Ports = {
-                    new ServerPort(
-                        config.Host, 
-                        config.Port, 
-                        ServerCredentials.Insecure)
-                }
-            };
-            server.Start();
+
             using TextReader textReader = config.InputSource;
             string line;
             ICommand command;
@@ -43,7 +29,6 @@ namespace PuppetMaster {
                 }
                 command.Accept(controller);
             }
-            server.ShutdownAsync().Wait();
         }
 
         private static PMConfiguration ParseArgs(string[] args) {
