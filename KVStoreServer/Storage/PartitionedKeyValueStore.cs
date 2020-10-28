@@ -8,8 +8,8 @@ namespace KVStoreServer.Storage {
      */
     public class PartitionedKeyValueStore {
 
-        public readonly ConcurrentDictionary<int, SingleKeyValueStore> stores =
-            new ConcurrentDictionary<int, SingleKeyValueStore>();
+        public readonly ConcurrentDictionary<string, SingleKeyValueStore> stores =
+            new ConcurrentDictionary<string, SingleKeyValueStore>();
 
         public PartitionedKeyValueStore() {
         }
@@ -17,7 +17,7 @@ namespace KVStoreServer.Storage {
         /*
          * Locks the object with the given partition and key
          */
-        public void Lock(int partition, int key) {
+        public void Lock(string partition, int key) {
             SingleKeyValueStore partitionStore = GetOrAddStore(partition);
             partitionStore.LockValue(key);
         }
@@ -28,7 +28,7 @@ namespace KVStoreServer.Storage {
          * Throws InvalidOpertationException if the object is not previously
          * locked
          */
-        public void AddOrUpdate(int partition, int key, string value) {
+        public void AddOrUpdate(string partition, int key, string value) {
             SingleKeyValueStore partitionStore = GetOrAddStore(partition);
             partitionStore.AddOrUpdate(key, value);
         }
@@ -38,12 +38,12 @@ namespace KVStoreServer.Storage {
          * If the object exists and has a value, returns true and out value is
          * updated, otherwise returns false and out value = null
          */
-        public bool TryGet(int partition, int key, out string value) {
+        public bool TryGet(string partition, int key, out string value) {
             SingleKeyValueStore partitionStore = GetOrAddStore(partition);
             return partitionStore.TryGet(key, out value);
         }
 
-        private SingleKeyValueStore GetOrAddStore(int partition) {
+        private SingleKeyValueStore GetOrAddStore(string partition) {
             return stores.GetOrAdd(partition, (partition) => new SingleKeyValueStore());
         }
     }

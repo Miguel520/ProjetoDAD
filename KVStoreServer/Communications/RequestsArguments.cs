@@ -19,4 +19,18 @@ namespace KVStoreServer.Communications {
         public IEnumerable<Tuple<int, string>> Members { get; set; }
         public int MasterId { get; set; }
     }
+
+
+    /* Arguments for internal replication */
+
+    public class LockArguments {
+        public string PartitionName { get; set; }
+        public int ObjectId { get; set; }
+    }
+
+    public class WriteObjectArguments {
+        public string PartitionName { get; set; }
+        public int ObjectId { get; set; }
+        public string ObjectValue { get; set; }
+    }
 }
