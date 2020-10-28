@@ -155,17 +155,25 @@ namespace PuppetMaster {
 
             ImmutableList<string> serverUrls = nameServiceDB.ListServers();
             ImmutableList<string> clientUrls = nameServiceDB.ListClients();
-
+            
             serverUrls.ForEach(url => {
                 ServerConfigurationConnection connection =
                     new ServerConfigurationConnection(url);
-                connection.Status();
+                connection.StatusAsync().ContinueWith(antecedent => {
+                    if (antecedent.Result) {
+                        Console.WriteLine("Status sent to server {0}", url);
+                    }
+                });
             });
 
             clientUrls.ForEach(url => {
                 ClientConfigurationConnection connection =
                     new ClientConfigurationConnection(url);
-                connection.Status();
+                connection.StatusAsync().ContinueWith(antecedent => {
+                    if (antecedent.Result) {
+                        Console.WriteLine("Status sent to client {0}", url);
+                    }
+                });
             });
         }
 

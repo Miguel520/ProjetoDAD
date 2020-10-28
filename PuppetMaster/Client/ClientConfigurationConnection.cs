@@ -2,7 +2,7 @@
 using Grpc.Core;
 using Grpc.Net.Client;
 using System;
-
+using System.Threading.Tasks;
 using static Common.Protos.ClientConfiguration.ClientConfigurationService;
 
 namespace PuppetMaster.Client {
@@ -19,11 +19,11 @@ namespace PuppetMaster.Client {
             Console.WriteLine("Established connection to {0}", target);
         }
 
-        public bool Status() {
+        public async Task<bool> StatusAsync() {
             StatusRequest request = new StatusRequest { };
 
             try {
-                client.Status(request);
+                await client.StatusAsync(request);
                 return true;
             }
             catch (RpcException e) {

@@ -3,7 +3,7 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using System;
 using System.Collections.Generic;
-
+using System.Threading.Tasks;
 using static Common.Protos.ServerConfiguration.ServerConfigurationService;
 
 namespace PuppetMaster.KVStoreServer {
@@ -49,11 +49,11 @@ namespace PuppetMaster.KVStoreServer {
             }
         }
 
-        public bool Status() {
+        public async Task<bool> StatusAsync() {
             StatusRequest request = new StatusRequest { };
 
             try {
-                client.Status(request);
+                await client.StatusAsync(request);
                 return true;
             }
             catch (RpcException e) {
