@@ -79,6 +79,18 @@ namespace KVStoreServer.Communications {
             }
         }
 
+        public async Task Lock(LockArguments args) {
+            WaitFreeze();
+            await WaitDelay();
+            replicationService.Lock(args);
+        }
+
+        public async Task WriteObject(WriteObjectArguments args) {
+            WaitFreeze();
+            await WaitDelay();
+            replicationService.WriteObject(args);
+        }
+
         private void WaitFreeze() {
             lock(freezeLock) {
                 // If the server is frozen then all threads must wait

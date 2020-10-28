@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using KVStoreServer.Communications;
+using KVStoreServer.Storage;
 
 namespace KVStoreServer.Replication {
     
@@ -17,6 +18,8 @@ namespace KVStoreServer.Replication {
 
         private readonly IReplicationConnectionFactory factory;
         private readonly PartitionsDB partitionsDB;
+        private readonly PartitionedKeyValueStore store =
+            new PartitionedKeyValueStore();
 
         public ReplicationService(
             PartitionsDB partitionsDB,
@@ -45,15 +48,41 @@ namespace KVStoreServer.Replication {
                     con => con.Lock(arguments.PartitionName, arguments.ObjectId))
                     .ToArray();
 
+                store.Lock(
+                    arguments.PartitionName,
+                    arguments.ObjectId);
+
                 Task.WaitAll(tasks);
                 // Write object in all replicas
                 tasks = partitionConnections.Select(
-                    con => con.Write(arguments.PartitionName, arguments.ObjectId, arguments.ObjectValue))
+                    con => con.Write(
+                        arguments.PartitionName, 
+                        arguments.ObjectId, 
+                        arguments.ObjectValue))
                     .ToArray();
 
                 Task.WaitAll(tasks);
+
+                // Write value
+                store.AddOrUpdate(
+                    arguments.PartitionName,
+                    arguments.ObjectId,
+                    arguments.ObjectValue);
             }
 
+        }
+
+        /* Internal operations for replication */
+
+        public void Lock(LockArguments arguments) {
+            store.Lock(arguments.PartitionName, arguments.ObjectId);
+        }
+
+        public void WriteObject(WriteObjectArguments arguments) {
+            store.AddOrUpdate(
+                arguments.PartitionName,
+                arguments.ObjectId,
+                arguments.ObjectValue);
         }
     }
 }
