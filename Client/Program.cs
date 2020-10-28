@@ -9,6 +9,7 @@ using static Client.Commands.CommandParser;
 using Client.Naming;
 using System.Collections.Immutable;
 using Client.Commands;
+using System.Threading;
 
 namespace Client {
     class Program {
@@ -18,10 +19,10 @@ namespace Client {
                 "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport",
                 true);
 
-            ClientController controller = new ClientController();
             ClientConfiguration clientConfig = ParseArgs(args);
-
             NamingService namingService = new NamingService(clientConfig.NamingServersUrls);
+            ClientController controller = new ClientController(namingService);
+
 
             RequestsDispatcher dispatcher = new RequestsDispatcher(clientConfig);
 
@@ -43,10 +44,11 @@ namespace Client {
                $"Client with username {clientConfig.Username} " +
                $"is running at {clientConfig.Url} " +
                $"with script called {clientConfig.Script}");
-            Console.WriteLine("Press any key to stop the client...");
-            Console.ReadKey();
 
-            string[] lines = System.IO.File.ReadAllLines(clientConfig.Script);
+            string rootDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string scriptsDirectory = rootDirectory + "..\\..\\..\\Scripts\\";
+
+            string[] lines = System.IO.File.ReadAllLines(scriptsDirectory + clientConfig.Script);
 
             ICommand command;
             foreach (string line in lines) {
@@ -57,8 +59,10 @@ namespace Client {
                 command.Accept(controller);
             }
 
-            client.ShutdownAsync().Wait();
+            Console.WriteLine("Press any key to stop the client...");
+            Console.ReadKey();
 
+            client.ShutdownAsync().Wait();
         }
 
         private static ClientConfiguration ParseArgs(string[] args) {

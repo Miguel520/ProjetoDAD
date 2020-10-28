@@ -4,6 +4,7 @@ using Grpc.Net.Client;
 using System.Threading.Tasks;
 
 using static Common.Protos.Replication.ReplicationService;
+using System;
 
 namespace KVStoreServer.Grpc {
     public class ReplicationConnection : IReplicationConnection {
@@ -14,6 +15,7 @@ namespace KVStoreServer.Grpc {
         public ReplicationConnection(string url) {
             channel = GrpcChannel.ForAddress(url);
             client = new ReplicationServiceClient(channel);
+            Console.WriteLine("Replication connection url {0}", url);
         }
 
         ~ReplicationConnection() {

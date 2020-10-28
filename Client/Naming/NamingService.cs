@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace Client.Naming {
-    class NamingService {
+    public class NamingService {
 
         private readonly ImmutableList<string> nameServersUrls;
         private readonly Dictionary<int, string> knownServers;

@@ -2,8 +2,8 @@
 {
     public class ReadCommand : ICommand {
         public string partitionId;
-        public string objectId;
-        public string serverId;
+        public int objectId;
+        public int serverId;
 
         public void Accept(ICommandHandler handler) {
             handler.OnReadCommand(this);
@@ -12,7 +12,7 @@
 
     public class WriteCommand : ICommand {
         public string partitionId;
-        public string objectId;
+        public int objectId;
         public string value;
 
         public void Accept(ICommandHandler handler) {

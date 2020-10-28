@@ -9,6 +9,8 @@ using KVStoreServer.Replication;
 using ProtoServerConfiguration = Common.Protos.ServerConfiguration.ServerConfigurationService;
 using ProtoKeyValueStore = Common.Protos.KeyValueStore.KeyValueStoreService;
 using NamingServiceProto = Common.Protos.NamingService.NamingService;
+using ReplicationServiceProto = Common.Protos.Replication.ReplicationService;
+
 using Common.Utils;
 
 namespace KVStoreServer {
@@ -28,7 +30,8 @@ namespace KVStoreServer {
 
             ReplicationService replicationService = new ReplicationService(
                 partitionsDB,
-                new ReplicationConnectionFactory());
+                new ReplicationConnectionFactory(),
+                serverConfig);
 
             RequestsDispatcher dispatcher = new RequestsDispatcher(
                 serverConfig,
@@ -40,7 +43,9 @@ namespace KVStoreServer {
                     ProtoServerConfiguration.BindService(
                         new ConfigurationService(dispatcher)),
                     ProtoKeyValueStore.BindService(new StorageService(dispatcher)),
-                    NamingServiceProto.BindService(new NamingService(partitionsDB))
+                    NamingServiceProto.BindService(new NamingService(partitionsDB)),
+                    ReplicationServiceProto.BindService(new PartitionReplicationService(dispatcher))
+                    
                 },
                 Ports = {
                     new ServerPort(

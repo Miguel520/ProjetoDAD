@@ -55,7 +55,7 @@ namespace Client.Naming {
             }
             catch (RpcException e) {
                 Console.WriteLine(
-                    "Error {0} when searching partiotion master for {1}", 
+                    "Error {0} when searching partition master for {1}", 
                     e.StatusCode, 
                     partitionName);
                 return false;

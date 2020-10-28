@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace KVStoreServer.Communications {
 
     public class ReadArguments {
-        public int PartitionId { get; set; }
+        public string PartitionName { get; set; }
         public int ObjectId { get; set; }
     }
 

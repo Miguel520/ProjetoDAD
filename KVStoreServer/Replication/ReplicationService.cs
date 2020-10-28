@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
 using KVStoreServer.Communications;
+using KVStoreServer.Configuration;
 using KVStoreServer.Storage;
 
 namespace KVStoreServer.Replication {
@@ -20,13 +22,21 @@ namespace KVStoreServer.Replication {
         private readonly PartitionsDB partitionsDB;
         private readonly PartitionedKeyValueStore store =
             new PartitionedKeyValueStore();
+        private readonly ServerConfiguration config;
 
         public ReplicationService(
             PartitionsDB partitionsDB,
-            IReplicationConnectionFactory factory) {
+            IReplicationConnectionFactory factory,
+            ServerConfiguration config) {
 
             this.partitionsDB = partitionsDB;
             this.factory = factory;
+            this.config = config;
+        }
+
+        public string Read(ReadArguments arguments) {
+            store.TryGet(arguments.PartitionName, arguments.ObjectId, out string value);
+            return value;
         }
 
         public void Write(WriteArguments arguments) {
@@ -37,11 +47,12 @@ namespace KVStoreServer.Replication {
                 partitionsDB.TryGetPartition(arguments.PartitionName, out ImmutableHashSet<int> partitionIds);
 
                 IEnumerable<IReplicationConnection> partitionConnections = 
-                    partitionIds.Select(serverId => {
-                        partitionsDB.TryGetUrl(serverId, out string url);
-                        return url;
-                    })
-                    .Select(url => factory.ForUrl(url));
+                    partitionIds.Where(id => id != config.ServerId)
+                        .Select(serverId => {
+                            partitionsDB.TryGetUrl(serverId, out string url);
+                            return url;
+                        })
+                        .Select(url => factory.ForUrl(url));
 
                 // Lock object in all replicas
                 Task[] tasks = partitionConnections.Select(
@@ -53,6 +64,7 @@ namespace KVStoreServer.Replication {
                     arguments.ObjectId);
 
                 Task.WaitAll(tasks);
+
                 // Write object in all replicas
                 tasks = partitionConnections.Select(
                     con => con.Write(
@@ -69,7 +81,6 @@ namespace KVStoreServer.Replication {
                     arguments.ObjectId,
                     arguments.ObjectValue);
             }
-
         }
 
         /* Internal operations for replication */

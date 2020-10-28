@@ -50,7 +50,7 @@ namespace PuppetMaster {
                     return config;
                 // Read commands from Configuration File
                 case 3:
-                    config.InputSource = GetFileStreamInput(args[0]);
+                    config.InputSource = GetFileStreamInput(args[2]);
                     return config;
                 default:
                     OnInvalidNumberOfArguments();
@@ -66,11 +66,15 @@ namespace PuppetMaster {
 
         private static TextReader GetFileStreamInput(string fileName) {
             Console.WriteLine("Reading Configuration from {0}", fileName);
+
+            string rootDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string scriptsDirectory = rootDirectory + "..\\..\\..\\Scripts\\";
+
             try {
-                return new StreamReader(fileName);
+                return new StreamReader(scriptsDirectory + fileName);
             }
             catch (FileNotFoundException) {
-                Console.Error.WriteLine("{0}: File not found", fileName);
+                Console.Error.WriteLine("{0}: File not found", scriptsDirectory + fileName);
                 Environment.Exit(1);
                 return null;
             }
