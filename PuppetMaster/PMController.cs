@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 
 using PuppetMaster.Client;
 using PuppetMaster.Commands;
@@ -57,10 +58,23 @@ namespace PuppetMaster {
             }
 
             PCSConnection connection = new PCSConnection(command.Host);
-            if (!connection.CreateServer(serverId, command.Port, command.MinDelay, command.MaxDelay)) {
-                // Remove inserted id if operation failed
-                nameServiceDB.RemoveServer(serverId);
-            }
+            connection.CreateServerAsync(
+                serverId,
+                command.Port,
+                command.MinDelay,
+                command.MaxDelay)
+            .ContinueWith(antecedent => {
+                if (antecedent.Result) {
+                    Console.WriteLine(
+                        "Server started at {0}:{1}",
+                        command.Host,
+                        command.Port);
+                }
+                else {
+                    // Remove inserted id if operation failed
+                    nameServiceDB.RemoveServer(serverId);
+                }
+            });
         }
 
         public void OnCreatePartitionCommand(CreatePartitionCommand command) {
@@ -119,15 +133,22 @@ namespace PuppetMaster {
             }
 
             PCSConnection connection = new PCSConnection(command.Host);
-            if (!connection.CreateClient(
-                username, 
-                command.Port, 
-                command.ScriptFile, 
-                nameServiceDB.ListServers())) {
-
-                // Remove inserted username if operation failed
-                nameServiceDB.RemoveClient(username);
-            }
+            Console.WriteLine("Creating client");
+            connection.CreateClientAsync(
+                username,
+                command.Port,
+                command.ScriptFile,
+                nameServiceDB.ListServers())
+            .ContinueWith(antecedent => {
+                if (antecedent.Result) {
+                    Console.WriteLine("Client started at {0}:{1}", command.Host, command.Port);
+                }
+                else {
+                    // Remove inserted username if operation failed
+                    nameServiceDB.RemoveClient(username);
+                }
+            });
+        
         }
 
         public void OnStatusCommand(StatusCommand command) {
@@ -161,7 +182,7 @@ namespace PuppetMaster {
         }
 
         public void OnWaitCommand(WaitCommand command) {
-            throw new NotImplementedException();
+            Thread.Sleep(command.SleepTime);
         }
     }
 }
