@@ -13,5 +13,13 @@ namespace Client.Naming {
                 ServerId = id
             };
         }
+
+        public static LookupMasterRequest BuildLookupMasterRequest(
+            string partitionName) {
+
+            return new LookupMasterRequest {
+                PartitionName = partitionName
+            };
+        }
     }
 }

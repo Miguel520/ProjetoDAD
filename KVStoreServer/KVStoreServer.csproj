@@ -10,6 +10,8 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Configuration\" />
+	<Folder Include="Replication\" />
+	<Folder Include="Grpc\" />
     <Folder Include="Storage\" />
     <Folder Include="Communications\" />
   </ItemGroup>

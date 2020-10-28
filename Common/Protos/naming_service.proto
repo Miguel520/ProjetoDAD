@@ -4,6 +4,7 @@ option csharp_namespace = "Common.Protos.NamingService";
 
 service NamingService {
     rpc Lookup(LookupRequest) returns (LookupResponse);
+    rpc LookupMaster(LookupMasterRequest) returns (LookupMasterResponse);
 }
 
 message LookupRequest {
@@ -12,4 +13,12 @@ message LookupRequest {
 
 message LookupResponse {
     string server_url = 1;
+}
+
+message LookupMasterRequest {
+    string partition_name = 1;
+}
+
+message LookupMasterResponse {
+    string master_url = 2;
 }

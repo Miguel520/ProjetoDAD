@@ -22,5 +22,18 @@ namespace KVStoreServer.Grpc {
             }
             throw new RpcException(new Status(StatusCode.NotFound, "No Such Id"));
         }
+
+        public override Task<LookupMasterResponse> LookupMaster
+            (LookupMasterRequest request, 
+            ServerCallContext context) {
+            
+            string partitionName = request.PartitionName;
+            if (dB.TryGetMaster(partitionName, out int masterId)
+                && dB.TryGetUrl(masterId, out string masterUrl)) {
+
+                return Task.FromResult(new LookupMasterResponse { MasterUrl = masterUrl });
+            }
+            throw new RpcException(new Status(StatusCode.NotFound, "No Such Partition"));
+        }
     }
 }
