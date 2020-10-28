@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using KVStoreServer.Communications;
 
 using static Common.Protos.Replication.ReplicationService;
+using System;
 
 namespace KVStoreServer.Grpc {
     class PartitionReplicationService : ReplicationServiceBase {

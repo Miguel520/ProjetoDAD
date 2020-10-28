@@ -35,8 +35,10 @@ namespace KVStoreServer.Communications {
             this.partitionsDB = partitionsDB;
         }
 
-        public Task<string> Read(ReadArguments args) {
-            return null;
+        public async Task<string> Read(ReadArguments args) {
+            WaitFreeze();
+            await WaitDelay();
+            return replicationService.Read(args);
         }
 
         public async Task Write(WriteArguments args) {

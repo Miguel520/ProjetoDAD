@@ -50,8 +50,8 @@ namespace Client.Commands
             if (arguments.Length != 3) return false;
 
             string partitionId = arguments[0];
-            string objectId = arguments[1];
-            string serverId = arguments[2];
+            if (!int.TryParse(arguments[1], out int objectId)) return false;
+            if (!int.TryParse(arguments[2], out int serverId)) return false;
 
             command = new ReadCommand {
                 partitionId = partitionId,
@@ -68,7 +68,7 @@ namespace Client.Commands
             if (arguments.Length != 3) return false;
 
             string partitionId = arguments[0];
-            string objectId = arguments[1];
+            if (!int.TryParse(arguments[1], out int objectId)) return false;
             string value = arguments[2];
 
             command = new WriteCommand {

@@ -1,0 +1,3 @@
+write p1 1 funcionei
+read p1 1 13
+read p1 1 -1

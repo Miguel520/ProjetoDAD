@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Common.Protos.KeyValueStore;
 using Grpc.Core;
 
@@ -12,8 +13,12 @@ namespace KVStoreServer.Grpc {
             this.dispatcher = dispatcher;
         }
 
-        public override Task<ReadResponse> Read(ReadRequest request, ServerCallContext context) {
-            return base.Read(request, context);
+        public override async Task<ReadResponse> Read(ReadRequest request, ServerCallContext context) {
+            string value = await dispatcher.Read(ParseReadRequest(request));
+            if (value == null) throw new RpcException(new Status(StatusCode.NotFound, "No such object"));
+            return new ReadResponse { 
+                ObjectValue = value
+            };
         }
 
         public override async Task<WriteResponse> Write(WriteRequest request, ServerCallContext context) {
@@ -23,6 +28,13 @@ namespace KVStoreServer.Grpc {
 
         public override Task<ListResponse> List(ListRequest request, ServerCallContext context) {
             return base.List(request, context);
+        }
+
+        private ReadArguments ParseReadRequest(ReadRequest request) {
+            return new ReadArguments {
+                PartitionName = request.PartitionName,
+                ObjectId = request.ObjectId
+            };
         }
 
         private WriteArguments ParseWriteRequest(WriteRequest request) {
