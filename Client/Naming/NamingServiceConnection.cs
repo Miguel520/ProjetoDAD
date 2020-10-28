@@ -1,11 +1,9 @@
 ﻿using System;
 using Grpc.Net.Client;
 using Common.Protos.NamingService;
-using Common.Utils;
 
 using static Common.Protos.NamingService.NamingService;
 using Grpc.Core;
-using System.Collections.Generic;
 
 namespace Client.Naming {
 
@@ -38,6 +36,28 @@ namespace Client.Naming {
                 return true;
             } catch (RpcException e) {
                 Console.WriteLine("Error {0} when searching for server id {1}", e.StatusCode, id);
+                return false;
+            }
+        }
+
+        public bool LookupMaster(string partitionName, out string masterUrl) {
+            masterUrl = null;
+            LookupMasterRequest request =
+                NamingServiceMessageFactory.BuildLookupMasterRequest(partitionName);
+            try {
+                LookupMasterResponse response = client.LookupMaster(request);
+                Console.WriteLine(
+                    "Lookup found: partition {0} with master at {1}", 
+                    partitionName, 
+                    response.MasterUrl);
+                masterUrl = response.MasterUrl;
+                return true;
+            }
+            catch (RpcException e) {
+                Console.WriteLine(
+                    "Error {0} when searching partiotion master for {1}", 
+                    e.StatusCode, 
+                    partitionName);
                 return false;
             }
         }

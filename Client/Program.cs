@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using Grpc.Core;
 using Client.Configuration;
 using ProtoClientConfiguration = Common.Protos.ClientConfiguration.ClientConfigurationService;
