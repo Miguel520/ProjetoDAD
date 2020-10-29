@@ -182,11 +182,28 @@ namespace PuppetMaster {
         }
 
         public void OnFreezeServerCommand(FreezeServerCommand command) {
-            throw new NotImplementedException();
+            // Check if server exists
+            if (!nameServiceDB.TryLookupServer(command.ServerId, out string url)) {
+                Console.Error.WriteLine("Server with id {0} doesn't exist", command.ServerId);
+                return;
+            }
+
+            ServerConfigurationConnection connection = new ServerConfigurationConnection(url);
+
+            connection.Freeze();
         }
 
         public void OnUnfreezeServerCommand(UnfreezeServerCommand command) {
-            throw new NotImplementedException();
+            // Check if server exists
+            if (!nameServiceDB.TryLookupServer(command.ServerId, out string url))
+            {
+                Console.Error.WriteLine("Server with id {0} doesn't exist", command.ServerId);
+                return;
+            }
+
+            ServerConfigurationConnection connection = new ServerConfigurationConnection(url);
+
+            connection.UnFreeze();
         }
 
         public void OnWaitCommand(WaitCommand command) {
