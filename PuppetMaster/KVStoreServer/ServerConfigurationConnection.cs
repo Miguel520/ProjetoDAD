@@ -64,5 +64,33 @@ namespace PuppetMaster.KVStoreServer {
                 return false;
             }
         }
+
+        public bool Freeze() {
+            FreezeRequest request = new FreezeRequest { };
+
+            try {
+                client.Freeze(request);
+                return true;
+            }
+            catch (RpcException e) {
+                Console.WriteLine("Error: {0} with status operation at server {1}",
+                    e.StatusCode, target);
+                return false;
+            }
+        }
+
+        public bool UnFreeze() {
+            UnfreezeRequest request = new UnfreezeRequest { };
+
+            try {
+                client.Unfreeze(request);
+                return true;
+            }
+            catch (RpcException e) {
+                Console.WriteLine("Error: {0} with status operation at server {1}",
+                    e.StatusCode, target);
+                return false;
+            }
+        }
     }
 }
