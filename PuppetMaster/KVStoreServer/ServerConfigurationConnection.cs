@@ -25,7 +25,7 @@ namespace PuppetMaster.KVStoreServer {
             channel.ShutdownAsync().Wait();
         }
 
-        public bool JoinPartition(
+        public async Task<bool> JoinPartitionAsync(
             string partitionName,
             IEnumerable<Tuple<int, string>> servers,
             int master) {
@@ -37,7 +37,7 @@ namespace PuppetMaster.KVStoreServer {
                     master);
 
             try {
-                client.JoinPartition(request);
+                await client.JoinPartitionAsync(request);
                 return true;
             }
             catch (RpcException e) {
@@ -65,29 +65,41 @@ namespace PuppetMaster.KVStoreServer {
             }
         }
 
-        public bool Freeze() {
+        /*
+         * Async method to crash server
+         * Does noy return since the server will not respond
+         */
+        public async void CrashAsync() {
+            CrashRequest request = new CrashRequest { };
+
+            client.CrashAsync(request);
+        }
+
+        public async Task<bool> FreezeAsync() {
             FreezeRequest request = new FreezeRequest { };
 
             try {
-                client.Freeze(request);
+                await client.FreezeAsync(request);
                 return true;
             }
             catch (RpcException e) {
-                Console.WriteLine("Error: {0} with status operation at server {1}",
+                Console.WriteLine(
+                    "Error: {0} with freeze operation at server {1}",
                     e.StatusCode, target);
                 return false;
             }
         }
 
-        public bool UnFreeze() {
+        public async Task<bool> UnFreezeAsync() {
             UnfreezeRequest request = new UnfreezeRequest { };
 
             try {
-                client.Unfreeze(request);
+                await client.UnfreezeAsync(request);
                 return true;
             }
             catch (RpcException e) {
-                Console.WriteLine("Error: {0} with status operation at server {1}",
+                Console.WriteLine(
+                    "Error: {0} with unfreeze operation at server {1}",
                     e.StatusCode, target);
                 return false;
             }

@@ -2,3 +2,4 @@ ReplicationFactor 1
 Server 12 http://localhost:13456 0 0
 Partition 1 p1 12
 Client cli http://localhost:12346 WriteTest.txt
+Wait 10000

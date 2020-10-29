@@ -11,6 +11,7 @@ using PuppetMaster.KVStoreServer;
 using PuppetMaster.NameService;
 using PuppetMaster.PCS;
 using PuppetMaster.Configuration;
+using System.Threading.Tasks;
 
 namespace PuppetMaster {
 
@@ -110,16 +111,19 @@ namespace PuppetMaster {
                 return;
             }
 
+            List<Task> joinPartitionTasks = new List<Task>();
+
             foreach ((int id, string url) in servers) {
                 ServerConfigurationConnection connection =
                     new ServerConfigurationConnection(url);
-                // FIXME: Revoke already created partitions
-                if(!connection.JoinPartition(partitionName, servers, serverIds[0])) {
-                    return;
-                }
+
+                joinPartitionTasks.Add(
+                    connection.JoinPartitionAsync(partitionName, servers, serverIds[0]));
             }
 
-            Console.WriteLine($"Partition '{partitionName}' created");
+            Task.WhenAll(joinPartitionTasks.ToArray()).ContinueWith((antecedent) => {
+                Console.WriteLine($"Partition '{partitionName}' created");
+            });
         }
 
         public void OnCreateClientCommand(CreateClientCommand command) {
@@ -178,7 +182,16 @@ namespace PuppetMaster {
         }
 
         public void OnCrashServerCommand(CrashServerCommand command) {
-            throw new NotImplementedException();
+            // Check if server exists
+            if (!nameServiceDB.TryLookupServer(command.ServerId, out string url)) {
+                Console.Error.WriteLine("Server with id {0} doesn't exist", command.ServerId);
+                return;
+            }
+
+            ServerConfigurationConnection connection = new ServerConfigurationConnection(url);
+
+            connection.CrashAsync();
+            Console.WriteLine("Crash request sent to server with id {0}", command.ServerId);
         }
 
         public void OnFreezeServerCommand(FreezeServerCommand command) {
@@ -190,20 +203,27 @@ namespace PuppetMaster {
 
             ServerConfigurationConnection connection = new ServerConfigurationConnection(url);
 
-            connection.Freeze();
+            connection.FreezeAsync().ContinueWith((antecedent) => {
+                if (antecedent.Result) {
+                    Console.WriteLine("Server with id {0} freezed", command.ServerId);
+                }
+            });
         }
 
         public void OnUnfreezeServerCommand(UnfreezeServerCommand command) {
             // Check if server exists
-            if (!nameServiceDB.TryLookupServer(command.ServerId, out string url))
-            {
+            if (!nameServiceDB.TryLookupServer(command.ServerId, out string url)) {
                 Console.Error.WriteLine("Server with id {0} doesn't exist", command.ServerId);
                 return;
             }
 
             ServerConfigurationConnection connection = new ServerConfigurationConnection(url);
 
-            connection.UnFreeze();
+            connection.UnFreezeAsync().ContinueWith((antecedent) => {
+                if (antecedent.Result) {
+                    Console.WriteLine("Server with id {0} unfreezed", command.ServerId);
+                }
+            });
         }
 
         public void OnWaitCommand(WaitCommand command) {
