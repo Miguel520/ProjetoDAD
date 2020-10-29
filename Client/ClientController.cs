@@ -1,8 +1,11 @@
 ﻿using Client.Commands;
 using Client.KVStoreServer;
 using Client.Naming;
+using Common.Protos.KeyValueStore;
+using Google.Protobuf.Collections;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading;
 
 namespace Client {
@@ -45,6 +48,30 @@ namespace Client {
             if (insideLoop) {
                 loopCommands.Add(command);
                 return;
+            }
+
+            if (!namingService.Lookup(command.serverId, out string url)) {
+                Console.WriteLine("Error: server id {0} cannot be found", command.serverId);
+                return;
+            }
+
+            KVStoreConnection connection = new KVStoreConnection(url);
+
+            bool success = connection.ListServer(
+                command.serverId,
+                out ImmutableList<StoredObject> storedObjects);
+
+            if (!success) {
+                Console.WriteLine("Error listing server id {0} ", command.serverId);
+                return;
+            }
+
+            foreach(StoredObject obj in storedObjects) {
+                Console.WriteLine($"Object id: {obj.ObjectId}" +
+                    $" {(obj.IsLocked ? "is Locked" : $" has the value {obj.Value}")} " +
+                    $" from partition  {obj.PartitionName}" +
+                    $" and server {command.serverId}" +
+                    $" {(obj.IsMaster ? "is" : "is not")} the master of this partition.");
             }
         }
 
@@ -114,8 +141,6 @@ namespace Client {
             if (namingService.LookupMaster(
                 command.partitionId,
                 out string url)) {
-
-                Console.WriteLine("URL IS " + url);
 
                 KVStoreConnection connection =
                     new KVStoreConnection(url);

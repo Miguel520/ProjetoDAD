@@ -46,5 +46,13 @@ namespace KVStoreServer.Storage {
                 locked = true;
             }
         }
+
+        //just for debug purposes
+        public StoredValueDto GetStoredValueDto() {
+            return new StoredValueDto { 
+                IsLocked = locked,
+                Value = value 
+            };
+        }
     }
 }
