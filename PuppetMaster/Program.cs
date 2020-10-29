@@ -9,6 +9,8 @@ namespace PuppetMaster {
 
     class Program {
 
+        private static readonly int PORT = 10001;
+
         static void Main(string[] args) {
 
             AppContext.SetSwitch(
@@ -32,8 +34,7 @@ namespace PuppetMaster {
         }
 
         private static PMConfiguration ParseArgs(string[] args) {
-            if (args.Length < 2
-                || !int.TryParse(args[1], out int port)) {
+            if (args.Length < 1) {
                 OnInvalidNumberOfArguments();
                 Environment.Exit(1);
                 return null;
@@ -41,16 +42,16 @@ namespace PuppetMaster {
             
             PMConfiguration config = new PMConfiguration {
                 Host = args[0],
-                Port = port
+                Port = PORT
             };
             switch (args.Length) {
                 // Read commands from Standard Input
-                case 2:
+                case 1:
                     config.InputSource = GetStdinStreamInput();
                     return config;
                 // Read commands from Configuration File
-                case 3:
-                    config.InputSource = GetFileStreamInput(args[2]);
+                case 2:
+                    config.InputSource = GetFileStreamInput(args[1]);
                     return config;
                 default:
                     OnInvalidNumberOfArguments();

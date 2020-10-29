@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 
 using PuppetMaster.Client;
 using PuppetMaster.Commands;
@@ -10,6 +11,7 @@ using PuppetMaster.KVStoreServer;
 using PuppetMaster.NameService;
 using PuppetMaster.PCS;
 using PuppetMaster.Configuration;
+using System.Threading.Tasks;
 
 namespace PuppetMaster {
 
@@ -57,10 +59,23 @@ namespace PuppetMaster {
             }
 
             PCSConnection connection = new PCSConnection(command.Host);
-            if (!connection.CreateServer(serverId, command.Port, command.MinDelay, command.MaxDelay)) {
-                // Remove inserted id if operation failed
-                nameServiceDB.RemoveServer(serverId);
-            }
+            connection.CreateServerAsync(
+                serverId,
+                command.Port,
+                command.MinDelay,
+                command.MaxDelay)
+            .ContinueWith(antecedent => {
+                if (antecedent.Result) {
+                    Console.WriteLine(
+                        "Server started at {0}:{1}",
+                        command.Host,
+                        command.Port);
+                }
+                else {
+                    // Remove inserted id if operation failed
+                    nameServiceDB.RemoveServer(serverId);
+                }
+            });
         }
 
         public void OnCreatePartitionCommand(CreatePartitionCommand command) {
@@ -96,16 +111,19 @@ namespace PuppetMaster {
                 return;
             }
 
+            List<Task> joinPartitionTasks = new List<Task>();
+
             foreach ((int id, string url) in servers) {
                 ServerConfigurationConnection connection =
                     new ServerConfigurationConnection(url);
-                // FIXME: Revoke already created partitions
-                if(!connection.JoinPartition(partitionName, servers, serverIds[0])) {
-                    return;
-                }
+
+                joinPartitionTasks.Add(
+                    connection.JoinPartitionAsync(partitionName, servers, serverIds[0]));
             }
 
-            Console.WriteLine($"Partition '{partitionName}' created");
+            Task.WhenAll(joinPartitionTasks.ToArray()).ContinueWith((antecedent) => {
+                Console.WriteLine($"Partition '{partitionName}' created");
+            });
         }
 
         public void OnCreateClientCommand(CreateClientCommand command) {
@@ -119,37 +137,61 @@ namespace PuppetMaster {
             }
 
             PCSConnection connection = new PCSConnection(command.Host);
-            if (!connection.CreateClient(
-                username, 
-                command.Port, 
-                command.ScriptFile, 
-                nameServiceDB.ListServers())) {
-
-                // Remove inserted username if operation failed
-                nameServiceDB.RemoveClient(username);
-            }
+            Console.WriteLine("Creating client");
+            connection.CreateClientAsync(
+                username,
+                command.Port,
+                command.ScriptFile,
+                nameServiceDB.ListServers())
+            .ContinueWith(antecedent => {
+                if (antecedent.Result) {
+                    Console.WriteLine("Client started at {0}:{1}", command.Host, command.Port);
+                }
+                else {
+                    // Remove inserted username if operation failed
+                    nameServiceDB.RemoveClient(username);
+                }
+            });
+        
         }
 
         public void OnStatusCommand(StatusCommand command) {
 
             ImmutableList<string> serverUrls = nameServiceDB.ListServers();
             ImmutableList<string> clientUrls = nameServiceDB.ListClients();
-
+            
             serverUrls.ForEach(url => {
                 ServerConfigurationConnection connection =
                     new ServerConfigurationConnection(url);
-                connection.Status();
+                connection.StatusAsync().ContinueWith(antecedent => {
+                    if (antecedent.Result) {
+                        Console.WriteLine("Status sent to server {0}", url);
+                    }
+                });
             });
 
             clientUrls.ForEach(url => {
                 ClientConfigurationConnection connection =
                     new ClientConfigurationConnection(url);
-                connection.Status();
+                connection.StatusAsync().ContinueWith(antecedent => {
+                    if (antecedent.Result) {
+                        Console.WriteLine("Status sent to client {0}", url);
+                    }
+                });
             });
         }
 
         public void OnCrashServerCommand(CrashServerCommand command) {
-            throw new NotImplementedException();
+            // Check if server exists
+            if (!nameServiceDB.TryLookupServer(command.ServerId, out string url)) {
+                Console.Error.WriteLine("Server with id {0} doesn't exist", command.ServerId);
+                return;
+            }
+
+            ServerConfigurationConnection connection = new ServerConfigurationConnection(url);
+
+            connection.CrashAsync();
+            Console.WriteLine("Crash request sent to server with id {0}", command.ServerId);
         }
 
         public void OnFreezeServerCommand(FreezeServerCommand command) {
@@ -161,24 +203,31 @@ namespace PuppetMaster {
 
             ServerConfigurationConnection connection = new ServerConfigurationConnection(url);
 
-            connection.Freeze();
+            connection.FreezeAsync().ContinueWith((antecedent) => {
+                if (antecedent.Result) {
+                    Console.WriteLine("Server with id {0} freezed", command.ServerId);
+                }
+            });
         }
 
         public void OnUnfreezeServerCommand(UnfreezeServerCommand command) {
             // Check if server exists
-            if (!nameServiceDB.TryLookupServer(command.ServerId, out string url))
-            {
+            if (!nameServiceDB.TryLookupServer(command.ServerId, out string url)) {
                 Console.Error.WriteLine("Server with id {0} doesn't exist", command.ServerId);
                 return;
             }
 
             ServerConfigurationConnection connection = new ServerConfigurationConnection(url);
 
-            connection.UnFreeze();
+            connection.UnFreezeAsync().ContinueWith((antecedent) => {
+                if (antecedent.Result) {
+                    Console.WriteLine("Server with id {0} unfreezed", command.ServerId);
+                }
+            });
         }
 
         public void OnWaitCommand(WaitCommand command) {
-            throw new NotImplementedException();
+            Thread.Sleep(command.SleepTime);
         }
     }
 }
