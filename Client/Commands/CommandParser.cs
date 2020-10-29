@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text;
+﻿using System.Linq;
 
 namespace Client.Commands
 {
@@ -85,7 +81,7 @@ namespace Client.Commands
 
             if (arguments.Length != 1) return false;
 
-            string serverId = arguments[0];
+            if (!int.TryParse(arguments[0], out int serverId)) return false;
 
             command = new ListServerCommand {
                 serverId = serverId

@@ -26,13 +26,17 @@ message WriteRequest {
 message WriteResponse {
 }
 
-message ListRequest {}
+message ListRequest {
+}
 
 message ListResponse {
     repeated StoredObject objects = 1;
 }
 
 message StoredObject {
-    string value = 1;
-    bool is_master = 2;
+    string partition_name = 1;
+    int32 object_id = 2;
+    string value = 3;
+    bool is_master = 4;
+    bool is_Locked = 5;
 }

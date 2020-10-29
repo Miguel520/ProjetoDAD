@@ -1,4 +1,7 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace KVStoreServer.Storage {
 
@@ -45,6 +48,21 @@ namespace KVStoreServer.Storage {
 
         private SingleKeyValueStore GetOrAddStore(string partition) {
             return stores.GetOrAdd(partition, (partition) => new SingleKeyValueStore());
+        }
+
+        public void TryGetAllObjects(out List<StoredValueDto> objects) {
+            objects = new List<StoredValueDto>();
+
+            foreach (KeyValuePair<string, SingleKeyValueStore> stored in stores) {
+                
+                stored.Value.TryGetAllObjects(
+                    out List<StoredValueDto> allObjectsInPartition);
+
+                foreach (StoredValueDto obj in allObjectsInPartition) {
+                    obj.PartitionName = stored.Key;
+                    objects.Add(obj);
+                }
+            }
         }
     }
 }

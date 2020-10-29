@@ -16,7 +16,7 @@ namespace KVStoreServer.Replication {
         private readonly ConcurrentDictionary<string, ImmutableHashSet<int>> partitions =
             new ConcurrentDictionary<string, ImmutableHashSet<int>>();
 
-        // Mappings for server ids and urils
+        // Mappings for server ids and urls
         private readonly ConcurrentDictionary<int, string> urls =
             new ConcurrentDictionary<int, string>();
 
@@ -24,8 +24,11 @@ namespace KVStoreServer.Replication {
         private readonly ConcurrentDictionary<string, int> partitionMasters =
             new ConcurrentDictionary<string, int>();
 
+        private int selfId;
+
         public PartitionsDB(int selfId, string selfUrl) {
             urls.TryAdd(selfId, selfUrl);
+            this.selfId = selfId;
         }
 
         /*
@@ -109,6 +112,22 @@ namespace KVStoreServer.Replication {
                 builder.Add(serverId);
             }
             return builder.ToImmutableHashSet();
+        }
+
+        public bool IsPartitionMaster(string partitionName, out bool isMaster) {
+            isMaster = false;
+            bool success = partitionMasters.TryGetValue(
+                partitionName,
+                out int serverId);
+
+            if (!success) {
+                Console.WriteLine($"Error in finding partition {partitionName}");
+                return false;
+            }
+
+            isMaster = serverId == selfId;
+
+            return true;
         }
     }
 }

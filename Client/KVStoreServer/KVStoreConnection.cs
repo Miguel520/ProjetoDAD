@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using Common.Protos.KeyValueStore;
-using Common.Utils;
+using Google.Protobuf.Collections;
 using Grpc.Core;
 using Grpc.Net.Client;
 
@@ -62,6 +64,26 @@ namespace Client.KVStoreServer {
             catch (RpcException e) {
                 Console.WriteLine(
                     "Error: {0} when sending read request to KVStore Server {1}",
+                    e.StatusCode,
+                    target);
+                return false;
+            }
+        }
+
+        public bool ListServer(int serverId, out ImmutableList<StoredObject> storedObjects) {
+            storedObjects = null;
+
+            ListRequest request = KVStoreMessageFactory.BuildListRequest();
+
+            try {
+                ListResponse response = client.List(request);
+                Console.WriteLine("Listing server with id {0}", serverId);
+                storedObjects = response.Objects.ToImmutableList();
+                return true;
+            } 
+            catch (RpcException e) {
+                Console.WriteLine(
+                    "Error: {0} when sending list request to KVStore Server {1}",
                     e.StatusCode,
                     target);
                 return false;

@@ -9,7 +9,7 @@ using KVStoreServer.Configuration;
 using KVStoreServer.Storage;
 
 namespace KVStoreServer.Replication {
-    
+
     /**
      * Class responsible for replication related operation
      * such as writing and reading operations
@@ -46,7 +46,7 @@ namespace KVStoreServer.Replication {
                 // Get partition replicas urls
                 partitionsDB.TryGetPartition(arguments.PartitionName, out ImmutableHashSet<int> partitionIds);
 
-                IEnumerable<IReplicationConnection> partitionConnections = 
+                IEnumerable<IReplicationConnection> partitionConnections =
                     partitionIds.Where(id => id != config.ServerId)
                         .Select(serverId => {
                             partitionsDB.TryGetUrl(serverId, out string url);
@@ -68,8 +68,8 @@ namespace KVStoreServer.Replication {
                 // Write object in all replicas
                 tasks = partitionConnections.Select(
                     con => con.Write(
-                        arguments.PartitionName, 
-                        arguments.ObjectId, 
+                        arguments.PartitionName,
+                        arguments.ObjectId,
                         arguments.ObjectValue))
                     .ToArray();
 
@@ -94,6 +94,15 @@ namespace KVStoreServer.Replication {
                 arguments.PartitionName,
                 arguments.ObjectId,
                 arguments.ObjectValue);
+        }
+
+        public void TryGetAllObjects(out List<StoredValueDto> objects) {
+            store.TryGetAllObjects(out objects);
+            foreach (StoredValueDto stored in objects) {
+                partitionsDB.IsPartitionMaster(stored.PartitionName, out bool isMaster);
+                stored.IsMaster = isMaster;
+            }
+
         }
     }
 }

@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Threading.Tasks;
 using Common.Protos.KeyValueStore;
 using Grpc.Core;
 
 using KVStoreServer.Communications;
+using KVStoreServer.Storage;
 
 namespace KVStoreServer.Grpc {
     public class StorageService : KeyValueStoreService.KeyValueStoreServiceBase {
@@ -26,8 +30,25 @@ namespace KVStoreServer.Grpc {
             return new WriteResponse();
         }
 
-        public override Task<ListResponse> List(ListRequest request, ServerCallContext context) {
-            return base.List(request, context);
+        public override async Task<ListResponse> List(ListRequest request, ServerCallContext context) {
+            IEnumerable<StoredValueDto> list = await dispatcher.List();
+            return new ListResponse {
+                Objects = { BuildStoredObjects(list) }
+                };
+        }
+
+        private static IEnumerable<StoredObject> BuildStoredObjects(
+           IEnumerable<StoredValueDto> storedObjects) {
+
+            return storedObjects.Select(obj => {
+                return new StoredObject {
+                    PartitionName = obj.PartitionName,
+                    ObjectId = obj.ObjectId,
+                    Value =  obj.Value,
+                    IsMaster = obj.IsMaster,
+                    IsLocked = obj.IsLocked
+                };
+            });
         }
 
         private ReadArguments ParseReadRequest(ReadRequest request) {

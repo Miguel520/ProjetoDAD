@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
-
 using KVStoreServer.Configuration;
 using KVStoreServer.Replication;
+using KVStoreServer.Storage;
 
 namespace KVStoreServer.Communications {
 
@@ -26,11 +27,11 @@ namespace KVStoreServer.Communications {
         private readonly object freezeLock = new object();
 
         public RequestsDispatcher(
-            ServerConfiguration serverConfiguration,
+            ServerConfiguration config,
             ReplicationService replicationService,
             PartitionsDB partitionsDB) {
 
-            this.config = serverConfiguration;
+            this.config = config;
             this.replicationService = replicationService;
             this.partitionsDB = partitionsDB;
         }
@@ -47,8 +48,11 @@ namespace KVStoreServer.Communications {
             replicationService.Write(args);
         }
 
-        public Task<IEnumerable<Tuple<string, bool>>> List() {
-            return null;
+        public async Task<ImmutableList<StoredValueDto>> List() {
+            WaitFreeze();
+            await WaitDelay();
+            replicationService.TryGetAllObjects(out List<StoredValueDto> objects);
+            return objects.ToImmutableList(); ;
         }
 
         public async Task JoinPartition(JoinPartitionArguments args) {

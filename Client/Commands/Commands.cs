@@ -21,7 +21,7 @@
     }
 
     public class ListServerCommand : ICommand {
-        public string serverId;
+        public int serverId;
 
         public void Accept(ICommandHandler handler) {
             handler.OnListServerCommand(this);
