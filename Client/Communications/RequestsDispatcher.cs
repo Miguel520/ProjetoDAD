@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using Client.Configuration;
 
 namespace Client.Communications {

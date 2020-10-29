@@ -1,0 +1,7 @@
+write p1 1 funcionei1
+write p2 2 funcionei2
+write p3 3 funcionei3
+write p1 4 funcionei4
+read p1 1 12
+listServer 12
+listServer 13

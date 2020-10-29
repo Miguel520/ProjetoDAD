@@ -1,0 +1,7 @@
+ReplicationFactor 2
+Server 12 http://localhost:13456 0 0
+Server 13 http://localhost:13457 0 0
+Partition 2 p1 12 13
+Partition 2 p2 12 13
+Partition 2 p3 13 12
+Client cli http://localhost:12346 ListTest.txt

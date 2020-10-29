@@ -20,7 +20,6 @@ namespace KVStoreServer.Communications {
         public int MasterId { get; set; }
     }
 
-
     /* Arguments for internal replication */
 
     public class LockArguments {

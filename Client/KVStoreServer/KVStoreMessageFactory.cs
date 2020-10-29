@@ -1,5 +1,4 @@
-﻿using System;
-using Common.Protos.KeyValueStore;
+﻿using Common.Protos.KeyValueStore;
 
 namespace Client.KVStoreServer {
     class KVStoreMessageFactory {
@@ -27,6 +26,10 @@ namespace Client.KVStoreServer {
                 PartitionName = partitionName,
                 ObjectId = objectId
             };
+        }
+
+        public static ListRequest BuildListRequest() {
+            return new ListRequest {};
         }
     }
 }
