@@ -1,4 +1,4 @@
-﻿using Common.Utils;
+using Common.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -105,6 +105,21 @@ namespace KVStoreServer.Replication {
                 return ImmutableList.ToImmutableList(partitions.Keys);
             }
         }
+
+        public ImmutableList<PartitionServersDto> ListPartitionsWithServerIds() {
+            lock (partitions) {
+                List<PartitionServersDto> list = new List<PartitionServersDto>();
+                foreach (var partition in partitions) {
+                    PartitionServersDto part = new PartitionServersDto();
+                    part.PartitionName = partition.Key;
+                    foreach (var server in partition.Key) {
+                        part.ServerIds.Add(server);
+                    }
+                }
+
+                return list.ToImmutableList();
+            }
+        }        
 
         private ImmutableHashSet<int> BuildPartition(IEnumerable<Tuple<int, string>> members) {
             ImmutableHashSet<int>.Builder builder = ImmutableHashSet.CreateBuilder<int>();
