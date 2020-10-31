@@ -89,5 +89,24 @@ namespace Client.KVStoreServer {
                 return false;
             }
         }
+
+        public bool ListIds(out ImmutableList<Identifier> ids) {
+            ids = null;
+
+            ListIdsRequest request = new ListIdsRequest { };
+
+            try {
+                ListIdsResponse response = client.ListIds(request);
+                ids = response.Ids.ToImmutableList();
+                return true;
+            }
+            catch (RpcException e) {
+                Console.WriteLine(
+                    "Error: {0} when sending list ids request to KVStore Server {1}",
+                    e.StatusCode,
+                    target);
+                return false;
+            }
+        }
     }
 }

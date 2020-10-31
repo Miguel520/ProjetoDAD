@@ -80,10 +80,7 @@ namespace Client.Naming {
                     ImmutableHashSet<int> serverIds = ImmutableHashSet.CreateRange(
                         partition.ServerIds);
 
-                    Console.WriteLine(
-                        "Found partition {0} with ids: {1}",
-                        name,
-                        serverIds.ToString());
+                    Console.WriteLine("Found partition {0}", name);
 
                     builder.Add(name, serverIds);
                 }

@@ -2,10 +2,10 @@
 using Client.KVStoreServer;
 using Client.Naming;
 using Common.Protos.KeyValueStore;
-using Google.Protobuf.Collections;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading;
 
 namespace Client {
@@ -30,17 +30,53 @@ namespace Client {
         }
 
         public void OnEndRepeatCommand(EndRepeatCommand command) {
+            insideLoop = false;
+            numReps = 0;
             for (int i = 0; i < numReps; i++) {
                 loopCommands.ForEach(command => command.Accept(this));
             }
-            insideLoop = false;
-            numReps = 0;
         }
 
         public void OnListGlobalCommand(ListGlobalCommand command) {
             if (insideLoop) {
                 loopCommands.Add(command);
                 return;
+            }
+
+            // Sort partitions by name for better display
+            foreach ((string name, ImmutableHashSet<int> serversIds) in
+                namingService.Partitions.OrderBy(pair => pair.Key)) {
+
+                bool partitionPrinted = false;
+                Random rng = new Random();
+                // Randomly iterate set values to distribute load ammong servers
+                foreach (int serverId in serversIds.OrderBy(id => rng.Next())) {
+                    if (!namingService.Lookup(serverId, out string url)) {
+                        continue;
+                    }
+
+                    KVStoreConnection connection = new KVStoreConnection(url);
+
+                    if (connection.ListIds(out ImmutableList<Identifier> objectsIds)) {
+                        foreach (Identifier objectId in
+                            objectsIds.OrderBy(objectId => objectId.ObjectId)) {
+
+                            Console.WriteLine(
+                                "{0}:{1}",
+                                objectId.PartitionName,
+                                objectId.ObjectId);
+
+                        }
+                        partitionPrinted = true;
+                        break;
+                    }
+                }
+
+                if (!partitionPrinted) {
+                    Console.WriteLine(
+                        "Unable to print partition {0}: Servers are not responding",
+                        name);
+                }
             }
         }
 
