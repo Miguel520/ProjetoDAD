@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Common.Protos.KeyValueStore;
 using Grpc.Core;
@@ -37,6 +38,13 @@ namespace KVStoreServer.Grpc {
                 };
         }
 
+        public override async Task<ListIdsResponse> ListIds(ListIdsRequest request, ServerCallContext context) {
+            IEnumerable<StoredValueDto> list = await dispatcher.ListGlobal(ParseListIdsrequest(request));
+            return new ListIdsResponse {
+                Ids = { BuildIdentifierObjects(list) }
+            };
+        }
+
         private static IEnumerable<StoredObject> BuildStoredObjects(
            IEnumerable<StoredValueDto> storedObjects) {
 
@@ -47,6 +55,15 @@ namespace KVStoreServer.Grpc {
                     Value =  obj.Value,
                     IsMaster = obj.IsMaster,
                     IsLocked = obj.IsLocked
+                };
+            });
+        }
+
+        private static IEnumerable<Identifier> BuildIdentifierObjects(IEnumerable<StoredValueDto> storedObjects) {
+            return storedObjects.Select(obj => {
+                return new Identifier {
+                    PartitionName = obj.PartitionName,
+                    ObjectId = obj.ObjectId
                 };
             });
         }
@@ -63,6 +80,12 @@ namespace KVStoreServer.Grpc {
                 PartitionName = request.PartitionName,
                 ObjectId = request.ObjectId,
                 ObjectValue = request.ObjectValue
+            };
+        }
+
+        private ListIdsArguments ParseListIdsrequest(ListIdsRequest request) {
+            return new ListIdsArguments {
+                PartitionName = request.PartitionName
             };
         }
     }

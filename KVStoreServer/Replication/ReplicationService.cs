@@ -104,5 +104,16 @@ namespace KVStoreServer.Replication {
             }
 
         }
+
+        public void TryGetAllObjectsThisPartition(out List<StoredValueDto> objects, ListIdsArguments arguments) {
+            List<StoredValueDto> tempObjects = new List<StoredValueDto>();
+            objects = new List<StoredValueDto>();
+            store.TryGetAllObjects(out tempObjects);
+            foreach (StoredValueDto stored in tempObjects) {
+                if (stored.PartitionName.Equals(arguments.PartitionName)) {
+                    objects.Add(stored);
+                }
+            }
+        }
     }
 }

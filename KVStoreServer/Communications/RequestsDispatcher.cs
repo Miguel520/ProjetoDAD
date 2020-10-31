@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
+using Common.Protos.KeyValueStore;
 using KVStoreServer.Configuration;
 using KVStoreServer.Replication;
 using KVStoreServer.Storage;
@@ -53,6 +54,13 @@ namespace KVStoreServer.Communications {
             await WaitDelay();
             replicationService.TryGetAllObjects(out List<StoredValueDto> objects);
             return objects.ToImmutableList(); ;
+        }
+
+        public async Task<ImmutableList<StoredValueDto>> ListGlobal(ListIdsArguments args) {
+            WaitFreeze();
+            await WaitDelay();
+            replicationService.TryGetAllObjectsThisPartition(out List<StoredValueDto> objects, args);
+            return objects.ToImmutableList();
         }
 
         public async Task JoinPartition(JoinPartitionArguments args) {
