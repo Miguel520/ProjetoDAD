@@ -1,9 +1,10 @@
-﻿using System;
+﻿using Common.Protos.NamingService;
+using Grpc.Core;
 using Grpc.Net.Client;
-using Common.Protos.NamingService;
+using System;
+using System.Collections.Immutable;
 
 using static Common.Protos.NamingService.NamingService;
-using Grpc.Core;
 
 namespace Client.Naming {
 
@@ -58,6 +59,41 @@ namespace Client.Naming {
                     "Error {0} when searching partition master for {1}", 
                     e.StatusCode, 
                     partitionName);
+                return false;
+            }
+        }
+
+        public bool ListPartitions(
+            out ImmutableDictionary<string, ImmutableHashSet<int>> partitions) {
+            
+            partitions = null;
+
+            try {
+                ListPartitionsResponse response = client.ListPartitions(
+                    new ListPartitionsRequest { });
+
+                ImmutableDictionary<string, ImmutableHashSet<int>>.Builder builder =
+                    ImmutableDictionary.CreateBuilder<string, ImmutableHashSet<int>>();
+
+                foreach (Partition partition in response.Partitions) {
+                    string name = partition.PartitionName;
+                    ImmutableHashSet<int> serverIds = ImmutableHashSet.CreateRange(
+                        partition.ServerIds);
+
+                    Console.WriteLine(
+                        "Found partition {0} with ids: {1}",
+                        name,
+                        serverIds.ToString());
+
+                    builder.Add(name, serverIds);
+                }
+                partitions = builder.ToImmutable();
+                return true;
+            }
+            catch (RpcException e) {
+                Console.WriteLine(
+                    "Error {0} when listing partitions",
+                    e.StatusCode);
                 return false;
             }
         }
