@@ -113,7 +113,9 @@ namespace PuppetMaster {
 
             List<Task> joinPartitionTasks = new List<Task>();
 
-            foreach ((int id, string url) in servers) {
+            // Send to all servers, even those not in the partition
+            // so that everyone knowns the state of the system
+            foreach (string url in nameServiceDB.ListServers()) {
                 ServerConfigurationConnection connection =
                     new ServerConfigurationConnection(url);
 

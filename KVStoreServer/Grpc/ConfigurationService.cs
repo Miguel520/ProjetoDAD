@@ -23,7 +23,7 @@ namespace KVStoreServer.Grpc {
     
             await dispatcher.JoinPartition(ParseJoinPartition(request));
 
-            Console.WriteLine($"Joined Partition {request.PartitionName}");
+            Console.WriteLine($"Received Partition {request.PartitionName}");
 
             return new JoinPartitionResponse();
         }

@@ -20,7 +20,6 @@ namespace PCS.Grpc {
         }
 
         public CreateServerArguments GetServerArguments(CreateServerRequest request) {
-            Console.WriteLine("request: " + request);
             return new CreateServerArguments {
                 ServerId = request.ServerId,
                 Host = request.Host,
