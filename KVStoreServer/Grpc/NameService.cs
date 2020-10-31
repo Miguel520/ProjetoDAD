@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 using KVStoreServer.Replication;
 
 using static Common.Protos.NamingService.NamingService;
+using System.Collections.Generic;
+using System.Linq;
+using KVStoreServer.Communications;
 
 namespace KVStoreServer.Grpc {
     class NamingService : NamingServiceBase {
@@ -34,6 +37,25 @@ namespace KVStoreServer.Grpc {
                 return Task.FromResult(new LookupMasterResponse { MasterUrl = masterUrl });
             }
             throw new RpcException(new Status(StatusCode.NotFound, "No Such Partition"));
+        }
+
+        public override Task<ListPartitionsResponse> ListPartitions(ListPartitionsRequest request, ServerCallContext context) {
+            IEnumerable<PartitionServersDto> listPartitions = dB.ListPartitionsWithServerIds();
+            return Task.FromResult(new ListPartitionsResponse
+            {
+                Partitions = { BuildPartition(listPartitions) }
+            });
+        }
+
+        private static IEnumerable<Partition> BuildPartition(IEnumerable<PartitionServersDto> listPartitions) {
+            return listPartitions.Select(obj => {
+                Partition p = new Partition
+                {
+                    PartitionName = obj.PartitionName,
+                };
+                p.ServerIds.AddRange(obj.ServerIds);
+                return p;
+            });
         }
     }
 }
