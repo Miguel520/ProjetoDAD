@@ -110,13 +110,15 @@ namespace KVStoreServer.Replication {
             lock (partitions) {
                 List<PartitionServersDto> list = new List<PartitionServersDto>();
                 foreach (var partition in partitions) {
-                    PartitionServersDto part = new PartitionServersDto();
-                    part.PartitionName = partition.Key;
+                    PartitionServersDto part = new PartitionServersDto {
+                        PartitionName = partition.Key,
+                        ServerIds = new HashSet<int>()
+                    };
                     foreach (var server in partition.Key) {
                         part.ServerIds.Add(server);
                     }
+                    list.Add(part);
                 }
-
                 return list.ToImmutableList();
             }
         }        

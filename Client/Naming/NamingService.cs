@@ -10,6 +10,12 @@ namespace Client.Naming {
         private readonly Dictionary<string, string> knownMasters;
         private readonly ImmutableDictionary<string, ImmutableHashSet<int>> partitions;
 
+        public ImmutableDictionary<string, ImmutableHashSet<int>> Partitions { 
+            get {
+                return partitions;
+            } 
+        }
+
         public NamingService(ImmutableList<string> nameServersUrls) {
             this.nameServersUrls = nameServersUrls;
             knownServers = new Dictionary<int, string>();
@@ -54,6 +60,6 @@ namespace Client.Naming {
             }
 
             return (url != null);
-        }     
+        }
     }
 }
