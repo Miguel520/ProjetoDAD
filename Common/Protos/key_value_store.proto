@@ -43,6 +43,7 @@ message StoredObject {
 }
 
 message ListIdsRequest {
+    string partition_name = 1;
 }
 
 message ListIdsResponse {

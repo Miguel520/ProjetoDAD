@@ -57,7 +57,7 @@ namespace Client {
 
                     KVStoreConnection connection = new KVStoreConnection(url);
 
-                    if (connection.ListIds(out ImmutableList<Identifier> objectsIds)) {
+                    if (connection.ListIds(out ImmutableList<Identifier> objectsIds, name)) {
                         foreach (Identifier objectId in
                             objectsIds.OrderBy(objectId => objectId.ObjectId)) {
 

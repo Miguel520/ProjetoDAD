@@ -90,10 +90,10 @@ namespace Client.KVStoreServer {
             }
         }
 
-        public bool ListIds(out ImmutableList<Identifier> ids) {
+        public bool ListIds(out ImmutableList<Identifier> ids, string partitionName) {
             ids = null;
 
-            ListIdsRequest request = new ListIdsRequest { };
+            ListIdsRequest request = new ListIdsRequest { PartitionName = partitionName };
 
             try {
                 ListIdsResponse response = client.ListIds(request);
