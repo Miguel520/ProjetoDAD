@@ -28,13 +28,13 @@ namespace KVStoreServer.Grpc {
             return new JoinPartitionResponse();
         }
 
-        public override async Task<StatusResponse> Status(
+        public override Task<StatusResponse> Status(
             StatusRequest request,
             ServerCallContext context) {
 
-            await dispatcher.Status();
+            dispatcher.Status();
 
-            return new StatusResponse();
+            return Task.FromResult(new StatusResponse());
         }
 
         public override Task<CrashResponse> Crash(CrashRequest request, ServerCallContext context) {
@@ -42,11 +42,13 @@ namespace KVStoreServer.Grpc {
         }
 
         public override Task<FreezeResponse> Freeze(FreezeRequest request, ServerCallContext context) {
-            return base.Freeze(request, context);
+            dispatcher.Freeze();
+            return Task.FromResult(new FreezeResponse { });
         }
 
         public override Task<UnfreezeResponse> Unfreeze(UnfreezeRequest request, ServerCallContext context) {
-            return base.Unfreeze(request, context);
+            dispatcher.Unfreeze();
+            return Task.FromResult(new UnfreezeResponse { });
         }
 
         private JoinPartitionArguments ParseJoinPartition(

@@ -69,28 +69,40 @@ namespace KVStoreServer.Communications {
             partitionsDB.AddPartition(args.Name, args.Members, args.MasterId);
         }
 
-        public async Task Status() {
-            WaitFreeze();
-            await WaitDelay();
+        public void Status() {
+            // Sstatus should not wait for debug purposes
+            // WaitFreeze();
+            // await WaitDelay();
             Console.WriteLine(
-                $"Server with id {config.ServerId} " +
-                $"running at {config.Url}");
+                "[{0}] Server with id {1} running at {2}",
+                 DateTime.Now.ToString("HH:mm:ss"),
+                 config.ServerId, 
+                 config.Url);
+            
             Console.WriteLine(
-                $"  Partitions: {string.Join(", ", partitionsDB.ListPartitions())}");
-            Console.WriteLine($"  Status: {(freezed ? "Freezed" : "Unfreezed")}");
+                "[{0}]  Partitions: {1}",
+                DateTime.Now.ToString("HH:mm:ss"),
+                string.Join(", ", partitionsDB.ListPartitions()));
+            
+            Console.WriteLine(
+                "[{0}]  Status: {1}",
+                DateTime.Now.ToString("HH:mm:ss"), 
+                freezed ? "Freezed" : "Unfreezed");
         }
 
         public void Freeze() {
             lock(freezeLock) {
                 freezed = true;
             }
+            Console.WriteLine("[{0}] Server Freezed", DateTime.Now.ToString("HH:mm:ss"));
         }
 
         public void Unfreeze() {
             lock(freezeLock) {
                 freezed = false;
-                Monitor.PulseAll(this);
+                Monitor.PulseAll(freezeLock);
             }
+            Console.WriteLine("[{0}] Server Unfreezed", DateTime.Now.ToString("HH:mm:ss"));
         }
 
         public async Task Lock(LockArguments args) {
@@ -111,7 +123,7 @@ namespace KVStoreServer.Communications {
                 // while it is unfrozen and the requests are no longer
                 // processed
                 while (freezed) {
-                    Monitor.Wait(this);
+                    Monitor.Wait(freezeLock);
                 }
             }
         }

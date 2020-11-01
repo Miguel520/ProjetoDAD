@@ -1,0 +1,4 @@
+﻿write P1 1 funcionei
+wait 10000
+write P1 1 funcionei
+read P1 1 1
