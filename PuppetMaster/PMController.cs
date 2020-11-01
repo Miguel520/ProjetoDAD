@@ -203,7 +203,10 @@ namespace PuppetMaster {
             ServerConfigurationConnection connection = new ServerConfigurationConnection(url);
 
             connection.CrashAsync();
-            Console.WriteLine("Crash request sent to server with id {0}", command.ServerId);
+            Console.WriteLine(
+                "[{0}] Crash request sent to server with id {1}",
+                DateTime.Now.ToString("HH:mm:ss"),
+                command.ServerId);
         }
 
         public void OnFreezeServerCommand(FreezeServerCommand command) {
