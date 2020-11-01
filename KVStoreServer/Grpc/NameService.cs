@@ -8,6 +8,7 @@ using static Common.Protos.NamingService.NamingService;
 using System.Collections.Generic;
 using System.Linq;
 using KVStoreServer.Communications;
+using System;
 
 namespace KVStoreServer.Grpc {
     class NamingService : NamingServiceBase {

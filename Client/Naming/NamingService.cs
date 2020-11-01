@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
@@ -50,6 +51,7 @@ namespace Client.Naming {
             if (knownMasters.TryGetValue(partitionName, out url)) return true;
 
             foreach (string nameServerUrl in nameServersUrls) {
+                Console.WriteLine(nameServerUrl);
                 NamingServiceConnection connection =
                     new NamingServiceConnection(nameServerUrl);
 

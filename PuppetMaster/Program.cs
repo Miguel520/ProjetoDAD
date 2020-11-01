@@ -31,6 +31,9 @@ namespace PuppetMaster {
                 }
                 command.Accept(controller);
             }
+
+            Console.WriteLine("[{0}] Instructions Completed. Press any key to exit...");
+            Console.ReadKey();
         }
 
         private static PMConfiguration ParseArgs(string[] args) {

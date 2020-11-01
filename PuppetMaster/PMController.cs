@@ -45,7 +45,10 @@ namespace PuppetMaster {
             }
 
             replicationFactor = command.ReplicationFactor;
-            Console.WriteLine($"Replication Factor set to {replicationFactor}");
+            Console.WriteLine(
+                "[{0}] Replication Factor set to {1}",
+                DateTime.Now.ToString("HH:mm:ss"),
+                replicationFactor);
         }
 
         public void OnCreateServerCommand(CreateServerCommand command) {
@@ -67,7 +70,8 @@ namespace PuppetMaster {
             .ContinueWith(antecedent => {
                 if (antecedent.Result) {
                     Console.WriteLine(
-                        "Server started at {0}:{1}",
+                        "[{0}] Server started at {1}:{2}",
+                        DateTime.Now.ToString("HH:mm:ss"),
                         command.Host,
                         command.Port);
                 }
@@ -124,7 +128,10 @@ namespace PuppetMaster {
             }
 
             Task.WhenAll(joinPartitionTasks.ToArray()).ContinueWith((antecedent) => {
-                Console.WriteLine($"Partition '{partitionName}' created");
+                Console.WriteLine(
+                    "[{0}] Partition '{1}' created",
+                    DateTime.Now.ToString("HH:mm:ss"),
+                    partitionName);
             });
         }
 
@@ -139,7 +146,6 @@ namespace PuppetMaster {
             }
 
             PCSConnection connection = new PCSConnection(command.Host);
-            Console.WriteLine("Creating client");
             connection.CreateClientAsync(
                 username,
                 command.Port,
@@ -147,7 +153,11 @@ namespace PuppetMaster {
                 nameServiceDB.ListServers())
             .ContinueWith(antecedent => {
                 if (antecedent.Result) {
-                    Console.WriteLine("Client started at {0}:{1}", command.Host, command.Port);
+                    Console.WriteLine(
+                        "[{0}] Client started at {1}:{2}",
+                        DateTime.Now.ToString("HH:mm:ss"),
+                        command.Host, 
+                        command.Port);
                 }
                 else {
                     // Remove inserted username if operation failed
@@ -207,7 +217,10 @@ namespace PuppetMaster {
 
             connection.FreezeAsync().ContinueWith((antecedent) => {
                 if (antecedent.Result) {
-                    Console.WriteLine("Server with id {0} freezed", command.ServerId);
+                    Console.WriteLine(
+                        "[{0}] Server with id {1} freezed",
+                        DateTime.Now.ToString("HH:mm:ss"),
+                        command.ServerId);
                 }
             });
         }
@@ -223,7 +236,10 @@ namespace PuppetMaster {
 
             connection.UnFreezeAsync().ContinueWith((antecedent) => {
                 if (antecedent.Result) {
-                    Console.WriteLine("Server with id {0} unfreezed", command.ServerId);
+                    Console.WriteLine(
+                        "[{0}] Server with id {1} unfreezed",
+                        DateTime.Now.ToString("HH:mm:ss"),
+                        command.ServerId);
                 }
             });
         }

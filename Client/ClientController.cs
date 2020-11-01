@@ -188,8 +188,11 @@ namespace Client {
 
                 if (success) {
                     Console.WriteLine(
-                        "Sucess in writing object {0}",
-                        command.objectId);
+                        "[{0}] Write object <{1},{2}> with value {3} successfull",
+                        DateTime.Now.ToString("HH:mm:ss"),
+                        command.partitionId,
+                        command.objectId,
+                        command.value);
                 } else {
                     Console.WriteLine(
                         "Write object {0} was not sucessful",
@@ -199,6 +202,7 @@ namespace Client {
                 Console.WriteLine("Error on writing command: " +
                     "Master doesn't exist.");
             }
+            Thread.Sleep(10000);
         }
     }
 }

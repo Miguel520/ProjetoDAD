@@ -17,11 +17,9 @@ namespace PuppetMaster.KVStoreServer {
             target = url;
             channel = GrpcChannel.ForAddress(target);
             client = new ServerConfigurationServiceClient(channel);
-            Console.WriteLine("Established connection to {0}", target);
         }
 
         ~ServerConfigurationConnection() {
-            Console.WriteLine("Shutting down connection to {0}", target);
             channel.ShutdownAsync().Wait();
         }
 

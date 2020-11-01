@@ -18,11 +18,9 @@ namespace Client.Naming {
             target = url;
             channel = GrpcChannel.ForAddress(target);
             client = new NamingServiceClient(channel);
-            Console.WriteLine("Established connection to {0}", target);
         }
 
         ~NamingServiceConnection() {
-            Console.WriteLine("Shutting down connection to {0}", target);
             channel.ShutdownAsync().Wait();
         }
 
@@ -80,7 +78,10 @@ namespace Client.Naming {
                     ImmutableHashSet<int> serverIds = ImmutableHashSet.CreateRange(
                         partition.ServerIds);
 
-                    Console.WriteLine("Found partition {0}", name);
+                    Console.WriteLine(
+                        "[{0}] Found partition {1}", 
+                        DateTime.Now.ToString("HH:mm:ss"), 
+                        name);
 
                     builder.Add(name, serverIds);
                 }

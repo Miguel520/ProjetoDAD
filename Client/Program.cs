@@ -20,9 +20,16 @@ namespace Client {
                 true);
 
             ClientConfiguration clientConfig = ParseArgs(args);
+
+            Console.WriteLine(
+                "[{0}] Client {1} executing script {2} at {3}",
+                DateTime.Now.ToString("HH:mm:ss"),
+                clientConfig.Username,
+                clientConfig.Script,
+                clientConfig.Url);
+
             NamingService namingService = new NamingService(clientConfig.NamingServersUrls);
             ClientController controller = new ClientController(namingService);
-
 
             RequestsDispatcher dispatcher = new RequestsDispatcher(clientConfig);
 
@@ -40,10 +47,6 @@ namespace Client {
             };
 
             client.Start();
-            Console.WriteLine(
-               $"Client with username {clientConfig.Username} " +
-               $"is running at {clientConfig.Url} " +
-               $"with script called {clientConfig.Script}");
 
             string rootDirectory = AppDomain.CurrentDomain.BaseDirectory;
             string scriptsDirectory = rootDirectory + "..\\..\\..\\Scripts\\";
