@@ -1,0 +1,10 @@
+﻿ReplicationFactor 3
+Server server1 http://localhost:13456 0 0
+Server server2 http://localhost:13457 0 0
+Server server3 http://localhost:13458 0 0
+Partition 3 part1 server1 server2 server3
+Partition 3 part2 server2 server1 server3
+Partition 3 part3 server3 server1 server2
+Wait 1000
+Client cli http://localhost:12346 DollarITest.txt
+Wait 10000

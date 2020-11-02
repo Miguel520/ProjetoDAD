@@ -105,7 +105,7 @@ namespace Client.Commands
 
             if (arguments.Length != 1) return false;
 
-            if (!int.TryParse(arguments[0], out int time)) return false;
+            string time = arguments[0];
 
             command = new WaitCommand {
                 Time = time
