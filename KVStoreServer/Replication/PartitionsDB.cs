@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace KVStoreServer.Replication {
 
@@ -13,8 +14,8 @@ namespace KVStoreServer.Replication {
     public class PartitionsDB {
 
         // Mappings for partition names and server ids
-        private readonly ConcurrentDictionary<string, ImmutableHashSet<int>> partitions =
-            new ConcurrentDictionary<string, ImmutableHashSet<int>>();
+        private readonly ConcurrentDictionary<string, HashSet<int>> partitions =
+            new ConcurrentDictionary<string, HashSet<int>>();
 
         // Mappings for server ids and urls
         private readonly ConcurrentDictionary<int, string> urls =
@@ -44,7 +45,7 @@ namespace KVStoreServer.Replication {
             IEnumerable<Tuple<int, string>> members,
             int masterId) {
 
-            ImmutableHashSet<int> partition = BuildPartition(members);
+            HashSet<int> partition = BuildPartition(members);
             lock(this) {
                 
                 Conditions.AssertArgument(!partitions.ContainsKey(name));
@@ -81,7 +82,14 @@ namespace KVStoreServer.Replication {
          * otherwise returns false and partition is set to null
          */
         public bool TryGetPartition(string partitionName, out ImmutableHashSet<int> partition) {
-            return partitions.TryGetValue(partitionName, out partition);
+            if (partitions.TryGetValue(partitionName, out HashSet<int> storedPartition)) {
+                partition = ImmutableHashSet.CreateRange(storedPartition);
+                return true;
+            }
+            else {
+                partition = null;
+                return false;
+            }
         }
 
         /*
@@ -123,12 +131,12 @@ namespace KVStoreServer.Replication {
             }
         }        
 
-        private ImmutableHashSet<int> BuildPartition(IEnumerable<Tuple<int, string>> members) {
-            ImmutableHashSet<int>.Builder builder = ImmutableHashSet.CreateBuilder<int>();
+        private HashSet<int> BuildPartition(IEnumerable<Tuple<int, string>> members) {
+            HashSet<int> partition = new HashSet<int>();
             foreach ((int serverId, _) in members) {
-                builder.Add(serverId);
+                partition.Add(serverId);
             }
-            return builder.ToImmutableHashSet();
+            return partition;
         }
 
         public bool IsPartitionMaster(string partitionName, out bool isMaster) {
@@ -145,6 +153,28 @@ namespace KVStoreServer.Replication {
             isMaster = serverId == selfId;
 
             return true;
+        }
+
+        /*
+         * Removes server with given url from every partition, or correspondence
+         */
+        public void RemoveUrl(string serverUrl) {
+            int serverId = urls.First(pair => pair.Value.Equals(serverUrl)).Key;
+            string partitionName = partitionMasters.FirstOrDefault(pair => pair.Value == serverId).Key;
+
+            // Remove from partitions
+            lock (this) {
+                foreach (HashSet<int> partition in partitions.Values) {
+                    partition.Remove(serverId);
+                }
+
+                // Remove from correspondences
+                urls.TryRemove(serverId, out _);
+                // Remove from masters
+                if (partitionName != null) {
+                    partitionMasters.TryRemove(partitionName, out _);
+                }
+            }
         }
     }
 }

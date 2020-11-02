@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
+﻿using Common.Exceptions;
 using Common.Protos.KeyValueStore;
 using Grpc.Core;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 using KVStoreServer.Communications;
 using KVStoreServer.Storage;
+using System;
 
 namespace KVStoreServer.Grpc {
     public class StorageService : KeyValueStoreService.KeyValueStoreServiceBase {
@@ -27,7 +26,12 @@ namespace KVStoreServer.Grpc {
         }
 
         public override async Task<WriteResponse> Write(WriteRequest request, ServerCallContext context) {
-            await dispatcher.Write(ParseWriteRequest(request));
+            try {
+                await dispatcher.Write(ParseWriteRequest(request));
+            }
+            catch (ReplicaFailureException) {
+                throw new RpcException(new Status(StatusCode.Unavailable, "Failed to connect to replica"));
+            }
             return new WriteResponse();
         }
 
