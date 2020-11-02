@@ -52,7 +52,7 @@ namespace PuppetMaster {
         }
 
         public void OnCreateServerCommand(CreateServerCommand command) {
-            int serverId = command.ServerId;
+            string serverId = command.ServerId;
             string url = HttpURLs.FromHostAndPort(command.Host, command.Port);
 
             // Check if server already exists
@@ -84,8 +84,8 @@ namespace PuppetMaster {
 
         public void OnCreatePartitionCommand(CreatePartitionCommand command) {
             int numReplicas = command.NumberOfReplicas;
-            string partitionName = command.PartitionName;
-            int[] serverIds = command.ServerIds;
+            string partitionId = command.PartitionId;
+            string[] serverIds = command.ServerIds;
 
             // Check if wanted number of replicas matches replication factor
             if (numReplicas != replicationFactor) {
@@ -104,9 +104,9 @@ namespace PuppetMaster {
             }
 
             // Lookup servers urls
-            IEnumerable<Tuple<int, string>> servers = serverIds.Select(id => {
+            IEnumerable<Tuple<string, string>> servers = serverIds.Select(id => {
                 nameServiceDB.TryLookupServer(id, out string url);
-                return new Tuple<int, string>(id, url);
+                return new Tuple<string, string>(id, url);
             });
 
             // Check if all servers already existed
@@ -124,14 +124,14 @@ namespace PuppetMaster {
                     new ServerConfigurationConnection(url);
 
                 joinPartitionTasks.Add(
-                    connection.JoinPartitionAsync(partitionName, servers, serverIds[0]));
+                    connection.JoinPartitionAsync(partitionId, servers, serverIds[0]));
             }
 
             Task.WhenAll(joinPartitionTasks.ToArray()).ContinueWith((antecedent) => {
                 Console.WriteLine(
                     "[{0}] Partition '{1}' created",
                     DateTime.Now.ToString("HH:mm:ss"),
-                    partitionName);
+                    partitionId);
             });
         }
 

@@ -20,9 +20,9 @@ namespace KVStoreServer.Storage {
         /*
          * Locks the object with the given partition and key
          */
-        public void Lock(string partition, int key) {
-            SingleKeyValueStore partitionStore = GetOrAddStore(partition);
-            partitionStore.LockValue(key);
+        public void Lock(string partitionId, string objectId) {
+            SingleKeyValueStore partitionStore = GetOrAddStore(partitionId);
+            partitionStore.LockValue(objectId);
         }
 
         /*
@@ -31,9 +31,9 @@ namespace KVStoreServer.Storage {
          * Throws InvalidOpertationException if the object is not previously
          * locked
          */
-        public void AddOrUpdate(string partition, int key, string value) {
-            SingleKeyValueStore partitionStore = GetOrAddStore(partition);
-            partitionStore.AddOrUpdate(key, value);
+        public void AddOrUpdate(string partitionId, string objectId, string value) {
+            SingleKeyValueStore partitionStore = GetOrAddStore(partitionId);
+            partitionStore.AddOrUpdate(objectId, value);
         }
 
         /*
@@ -41,13 +41,13 @@ namespace KVStoreServer.Storage {
          * If the object exists and has a value, returns true and out value is
          * updated, otherwise returns false and out value = null
          */
-        public bool TryGet(string partition, int key, out string value) {
-            SingleKeyValueStore partitionStore = GetOrAddStore(partition);
-            return partitionStore.TryGet(key, out value);
+        public bool TryGet(string partitionId, string objectId, out string value) {
+            SingleKeyValueStore partitionStore = GetOrAddStore(partitionId);
+            return partitionStore.TryGet(objectId, out value);
         }
 
-        private SingleKeyValueStore GetOrAddStore(string partition) {
-            return stores.GetOrAdd(partition, (partition) => new SingleKeyValueStore());
+        private SingleKeyValueStore GetOrAddStore(string partitionId) {
+            return stores.GetOrAdd(partitionId, (partition) => new SingleKeyValueStore());
         }
 
         public void TryGetAllObjects(out List<StoredValueDto> objects) {
@@ -59,7 +59,7 @@ namespace KVStoreServer.Storage {
                     out List<StoredValueDto> allObjectsInPartition);
 
                 foreach (StoredValueDto obj in allObjectsInPartition) {
-                    obj.PartitionName = stored.Key;
+                    obj.PartitionId = stored.Key;
                     objects.Add(obj);
                 }
             }

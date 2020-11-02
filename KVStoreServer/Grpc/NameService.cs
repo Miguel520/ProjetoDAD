@@ -1,14 +1,12 @@
 ﻿using Common.Protos.NamingService;
 using Grpc.Core;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using KVStoreServer.Replication;
 
 using static Common.Protos.NamingService.NamingService;
-using System.Collections.Generic;
-using System.Linq;
-using KVStoreServer.Communications;
-using System;
 
 namespace KVStoreServer.Grpc {
     class NamingService : NamingServiceBase {
@@ -20,7 +18,7 @@ namespace KVStoreServer.Grpc {
         }
 
         public override Task<LookupResponse> Lookup(LookupRequest request, ServerCallContext context) {
-            int serverId = request.ServerId;
+            string serverId = request.ServerId;
             if (dB.TryGetUrl(serverId, out string serverUrl)) {
                 return Task.FromResult(new LookupResponse { ServerUrl = serverUrl });
             }
@@ -31,8 +29,8 @@ namespace KVStoreServer.Grpc {
             (LookupMasterRequest request, 
             ServerCallContext context) {
             
-            string partitionName = request.PartitionName;
-            if (dB.TryGetMaster(partitionName, out int masterId)
+            string partitionName = request.PartitionId;
+            if (dB.TryGetMaster(partitionName, out string masterId)
                 && dB.TryGetUrl(masterId, out string masterUrl)) {
 
                 return Task.FromResult(new LookupMasterResponse { MasterUrl = masterUrl });
@@ -50,9 +48,8 @@ namespace KVStoreServer.Grpc {
 
         private static IEnumerable<Partition> BuildPartition(IEnumerable<PartitionServersDto> listPartitions) {
             return listPartitions.Select(obj => {
-                Partition p = new Partition
-                {
-                    PartitionName = obj.PartitionName,
+                Partition p = new Partition {
+                    PartitionId = obj.PartitionId,
                 };
                 p.ServerIds.AddRange(obj.ServerIds);
                 return p;

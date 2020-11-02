@@ -11,7 +11,7 @@ namespace PuppetMaster.PCS {
         }
 
         public static CreateServerRequest BuildCreateServerRequest(
-            int serverId,
+            string serverId,
             string host,
             int port,
             int minDelay,

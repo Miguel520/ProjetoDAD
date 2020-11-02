@@ -35,7 +35,7 @@ namespace KVStoreServer.Replication {
         }
 
         public string Read(ReadArguments arguments) {
-            store.TryGet(arguments.PartitionName, arguments.ObjectId, out string value);
+            store.TryGet(arguments.PartitionId, arguments.ObjectId, out string value);
             return value;
         }
 
@@ -44,7 +44,7 @@ namespace KVStoreServer.Replication {
             // Allow only one read at a time
             lock (writeLock) {
                 // Get partition replicas urls
-                partitionsDB.TryGetPartition(arguments.PartitionName, out ImmutableHashSet<int> partitionIds);
+                partitionsDB.TryGetPartition(arguments.PartitionId, out ImmutableHashSet<string> partitionIds);
 
                 HashSet<IReplicationConnection> partitionConnections =
                     partitionIds.Where(id => id != config.ServerId)
@@ -58,7 +58,7 @@ namespace KVStoreServer.Replication {
                 if (partitionConnections.Count > 0) {
                     // Lock object in all replicas
                     Task[] tasks = partitionConnections.Select(
-                        con => con.Lock(arguments.PartitionName, arguments.ObjectId))
+                        con => con.Lock(arguments.PartitionId, arguments.ObjectId))
                         .ToArray();
 
                     try {
@@ -81,14 +81,14 @@ namespace KVStoreServer.Replication {
                 }
                 
                 store.Lock(
-                    arguments.PartitionName,
+                    arguments.PartitionId,
                     arguments.ObjectId);
 
                 if (partitionConnections.Count > 0) {
                     // Write object in all replicas
                     Task[] tasks = partitionConnections.Select(
                         con => con.Write(
-                            arguments.PartitionName,
+                            arguments.PartitionId,
                             arguments.ObjectId,
                             arguments.ObjectValue))
                         .ToArray();
@@ -108,7 +108,7 @@ namespace KVStoreServer.Replication {
 
                 // Write value
                 store.AddOrUpdate(
-                    arguments.PartitionName,
+                    arguments.PartitionId,
                     arguments.ObjectId,
                     arguments.ObjectValue);
             }
@@ -117,12 +117,12 @@ namespace KVStoreServer.Replication {
         /* Internal operations for replication */
 
         public void Lock(LockArguments arguments) {
-            store.Lock(arguments.PartitionName, arguments.ObjectId);
+            store.Lock(arguments.PartitionId, arguments.ObjectId);
         }
 
         public void WriteObject(WriteObjectArguments arguments) {
             store.AddOrUpdate(
-                arguments.PartitionName,
+                arguments.PartitionId,
                 arguments.ObjectId,
                 arguments.ObjectValue);
         }
@@ -130,18 +130,17 @@ namespace KVStoreServer.Replication {
         public void TryGetAllObjects(out List<StoredValueDto> objects) {
             store.TryGetAllObjects(out objects);
             foreach (StoredValueDto stored in objects) {
-                partitionsDB.IsPartitionMaster(stored.PartitionName, out bool isMaster);
+                partitionsDB.IsPartitionMaster(stored.PartitionId, out bool isMaster);
                 stored.IsMaster = isMaster;
             }
 
         }
 
         public void TryGetAllObjectsThisPartition(out List<StoredValueDto> objects, ListIdsArguments arguments) {
-            List<StoredValueDto> tempObjects = new List<StoredValueDto>();
             objects = new List<StoredValueDto>();
-            store.TryGetAllObjects(out tempObjects);
+            store.TryGetAllObjects(out List<StoredValueDto> tempObjects);
             foreach (StoredValueDto stored in tempObjects) {
-                if (stored.PartitionName.Equals(arguments.PartitionName)) {
+                if (stored.PartitionId.Equals(arguments.PartitionId)) {
                     objects.Add(stored);
                 }
             }

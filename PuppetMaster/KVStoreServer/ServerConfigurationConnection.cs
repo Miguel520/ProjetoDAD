@@ -25,14 +25,14 @@ namespace PuppetMaster.KVStoreServer {
 
         public async Task<bool> JoinPartitionAsync(
             string partitionName,
-            IEnumerable<Tuple<int, string>> servers,
-            int master) {
+            IEnumerable<Tuple<string, string>> servers,
+            string masterId) {
 
             JoinPartitionRequest request =
                 ServerConfigurationMessageFactory.BuildJoinPartitionRequest(
                     partitionName,
                     servers,
-                    master);
+                    masterId);
 
             try {
                 await client.JoinPartitionAsync(request);
@@ -83,7 +83,8 @@ namespace PuppetMaster.KVStoreServer {
             catch (RpcException e) {
                 Console.WriteLine(
                     "Error: {0} with freeze operation at server {1}",
-                    e.StatusCode, target);
+                    e.StatusCode,
+                    target);
                 return false;
             }
         }
@@ -98,7 +99,8 @@ namespace PuppetMaster.KVStoreServer {
             catch (RpcException e) {
                 Console.WriteLine(
                     "Error: {0} with unfreeze operation at server {1}",
-                    e.StatusCode, target);
+                    e.StatusCode,
+                    target);
                 return false;
             }
         }

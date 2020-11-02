@@ -8,17 +8,17 @@ namespace Client.Naming {
         public NamingServiceMessageFactory() {
         }
 
-        public static LookupRequest BuildLookupRequest(int id) {
+        public static LookupRequest BuildLookupRequest(string serverId) {
             return new LookupRequest {
-                ServerId = id
+                ServerId = serverId
             };
         }
 
         public static LookupMasterRequest BuildLookupMasterRequest(
-            string partitionName) {
+            string partitionId) {
 
             return new LookupMasterRequest {
-                PartitionName = partitionName
+                PartitionId = partitionId
             };
         }
     }

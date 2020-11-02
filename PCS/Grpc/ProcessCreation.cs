@@ -1,9 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using Grpc.Core;
 using Common.Protos.ProcessCreation;
-using PCS.Communications;
-using Grpc.Core;
-using System;
 using System.Linq;
+using System.Threading.Tasks;
+
+using PCS.Communications;
 
 namespace PCS.Grpc {
     class ProcessCreation : ProcessCreationService.ProcessCreationServiceBase {

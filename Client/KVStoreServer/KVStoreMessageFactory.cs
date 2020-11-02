@@ -7,23 +7,23 @@ namespace Client.KVStoreServer {
         }
 
         public static WriteRequest BuildWriteRequest(
-            string partitionName,
-            int objectId,
+            string partitionId,
+            string objectId,
             string objectValue) {
 
             return new WriteRequest {
-                PartitionName = partitionName,
+                PartitionId = partitionId,
                 ObjectId = objectId,
                 ObjectValue = objectValue
             };
         }
 
         public static ReadRequest BuildReadRequest(
-            string partitionName,
-            int objectId) {
+            string partitionId,
+            string objectId) {
 
             return new ReadRequest {
-                PartitionName = partitionName,
+                PartitionId = partitionId,
                 ObjectId = objectId
             };
         }

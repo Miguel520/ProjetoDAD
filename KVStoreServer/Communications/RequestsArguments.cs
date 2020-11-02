@@ -4,36 +4,36 @@ using System.Collections.Generic;
 namespace KVStoreServer.Communications {
 
     public class ReadArguments {
-        public string PartitionName { get; set; }
-        public int ObjectId { get; set; }
+        public string PartitionId { get; set; }
+        public string ObjectId { get; set; }
     }
 
     public class WriteArguments {
-        public string PartitionName { get; set; }
-        public int ObjectId { get; set; }
+        public string PartitionId { get; set; }
+        public string ObjectId { get; set; }
         public string ObjectValue { get; set; }
     }
 
     public class JoinPartitionArguments {
-        public string Name { get; set; }
-        public IEnumerable<Tuple<int, string>> Members { get; set; }
-        public int MasterId { get; set; }
+        public string PartitionId { get; set; }
+        public IEnumerable<Tuple<string, string>> Members { get; set; }
+        public string MasterId { get; set; }
     }
 
     public class ListIdsArguments { 
-        public string PartitionName { get; set; }
+        public string PartitionId { get; set; }
     }
 
     /* Arguments for internal replication */
 
     public class LockArguments {
-        public string PartitionName { get; set; }
-        public int ObjectId { get; set; }
+        public string PartitionId { get; set; }
+        public string ObjectId { get; set; }
     }
 
     public class WriteObjectArguments {
-        public string PartitionName { get; set; }
-        public int ObjectId { get; set; }
+        public string PartitionId { get; set; }
+        public string ObjectId { get; set; }
         public string ObjectValue { get; set; }
     }
 }

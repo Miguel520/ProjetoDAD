@@ -3,7 +3,7 @@
 namespace KVStoreServer.Configuration {
     public class ServerConfiguration {
         public ServerConfiguration(
-            int serverId,
+            string serverId,
             string host,
             int port,
             int minDelay,
@@ -16,7 +16,7 @@ namespace KVStoreServer.Configuration {
             MaxDelay = maxDelay;
         }
 
-        public int ServerId { get; }
+        public string ServerId { get; }
         public string Host { get; }
         public int Port { get; }
         public int MinDelay { get; }

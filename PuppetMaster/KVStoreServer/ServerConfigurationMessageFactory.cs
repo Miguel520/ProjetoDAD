@@ -10,19 +10,19 @@ namespace PuppetMaster.KVStoreServer {
         }
 
         public static JoinPartitionRequest BuildJoinPartitionRequest(
-            string partitionName,
-            IEnumerable<Tuple<int,string>> servers,
-            int masterId) {
+            string partitionId,
+            IEnumerable<Tuple<string,string>> servers,
+            string masterId) {
 
             return new JoinPartitionRequest {
-                PartitionName = partitionName,
+                PartitionId = partitionId,
                 Servers = { BuildServers(servers) },
                 MasterId = masterId
             };
         }
 
         private static IEnumerable<Server> BuildServers(
-            IEnumerable<Tuple<int, string>> servers) {
+            IEnumerable<Tuple<string, string>> servers) {
 
             return servers.Select(tuple => {
                 return new Server {

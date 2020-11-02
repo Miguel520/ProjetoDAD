@@ -4,7 +4,7 @@ using System.Linq;
 namespace PCS.Communications {
 
     public class CreateServerArguments {
-        public int ServerId { get; set; }
+        public string ServerId { get; set; }
         public string Host { get; set; }
         public int Port { get; set; }
         public int MinDelay { get; set; }
@@ -13,7 +13,7 @@ namespace PCS.Communications {
         //arguments: server_id host port min_delay max_delay
         public string CollapseArguments() {
             string[] args = { 
-                ServerId.ToString(),
+                ServerId,
                 Host,
                 Port.ToString(),
                 MinDelay.ToString(),

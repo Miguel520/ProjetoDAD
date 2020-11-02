@@ -46,13 +46,13 @@ namespace Client.Commands
             if (arguments.Length != 3) return false;
 
             string partitionId = arguments[0];
-            if (!int.TryParse(arguments[1], out int objectId)) return false;
-            if (!int.TryParse(arguments[2], out int serverId)) return false;
+            string objectId = arguments[1];
+            string serverId = arguments[2];
 
             command = new ReadCommand {
-                partitionId = partitionId,
-                objectId = objectId,
-                serverId = serverId
+                PartitionId = partitionId,
+                ObjectId = objectId,
+                ServerId = serverId
             };
 
             return true;
@@ -64,13 +64,13 @@ namespace Client.Commands
             if (arguments.Length != 3) return false;
 
             string partitionId = arguments[0];
-            if (!int.TryParse(arguments[1], out int objectId)) return false;
+            string objectId = arguments[1];
             string value = arguments[2];
 
             command = new WriteCommand {
-                partitionId = partitionId,
-                objectId = objectId,
-                value = value
+                PartitionId = partitionId,
+                ObjectId = objectId,
+                Value = value
             };
 
             return true;
@@ -81,10 +81,10 @@ namespace Client.Commands
 
             if (arguments.Length != 1) return false;
 
-            if (!int.TryParse(arguments[0], out int serverId)) return false;
+            string serverId = arguments[0];
 
             command = new ListServerCommand {
-                serverId = serverId
+                ServerId = serverId
             };
 
             return true;
@@ -105,10 +105,10 @@ namespace Client.Commands
 
             if (arguments.Length != 1) return false;
 
-            if (!int.TryParse(arguments[0], out int x)) return false;
+            if (!int.TryParse(arguments[0], out int time)) return false;
 
             command = new WaitCommand {
-                x = x
+                Time = time
             };
 
             return true;
@@ -119,10 +119,10 @@ namespace Client.Commands
 
             if (arguments.Length != 1) return false;
 
-            if (!int.TryParse(arguments[0], out int x)) return false;
+            if (!int.TryParse(arguments[0], out int iterations)) return false;
 
             command = new BeginRepeatCommand {
-                x = x
+                Iterations = iterations
             };
 
             return true;

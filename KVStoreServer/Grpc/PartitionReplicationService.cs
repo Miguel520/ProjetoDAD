@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using KVStoreServer.Communications;
 
 using static Common.Protos.Replication.ReplicationService;
-using System;
 
 namespace KVStoreServer.Grpc {
     class PartitionReplicationService : ReplicationServiceBase {
@@ -27,14 +26,14 @@ namespace KVStoreServer.Grpc {
 
         private LockArguments ParseLockRequest(LockRequest request) {
             return new LockArguments {
-                PartitionName = request.PartitionName,
+                PartitionId = request.PartitionId,
                 ObjectId = request.ObjectId
             };
         }
 
         private WriteObjectArguments ParseWriteRequest(WriteRequest request) {
             return new WriteObjectArguments {
-                PartitionName = request.PartitionName,
+                PartitionId = request.PartitionId,
                 ObjectId = request.ObjectId,
                 ObjectValue = request.ObjectValue
             };

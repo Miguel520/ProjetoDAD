@@ -24,45 +24,45 @@ namespace Client.Naming {
             channel.ShutdownAsync().Wait();
         }
 
-        public bool Lookup(int id, out string url) {
-            url = null;
+        public bool Lookup(string serverId, out string serverUrl) {
+            serverUrl = null;
             LookupRequest request =
-                NamingServiceMessageFactory.BuildLookupRequest(id);
+                NamingServiceMessageFactory.BuildLookupRequest(serverId);
             try {
                 LookupResponse response = client.Lookup(request);
-                Console.WriteLine("Lookup found: server id {0} is at {1}", id, response.ServerUrl);
-                url = response.ServerUrl;
+                serverUrl = response.ServerUrl;
                 return true;
             } catch (RpcException e) {
-                Console.WriteLine("Error {0} when searching for server id {1}", e.StatusCode, id);
+                Console.WriteLine(
+                    "[{0}] Error {1} at lookup for server id {2}",
+                    DateTime.Now.ToString("HH:mm:ss"),
+                    e.StatusCode, 
+                    serverId);
                 return false;
             }
         }
 
-        public bool LookupMaster(string partitionName, out string masterUrl) {
+        public bool LookupMaster(string partitionId, out string masterUrl) {
             masterUrl = null;
             LookupMasterRequest request =
-                NamingServiceMessageFactory.BuildLookupMasterRequest(partitionName);
+                NamingServiceMessageFactory.BuildLookupMasterRequest(partitionId);
             try {
                 LookupMasterResponse response = client.LookupMaster(request);
-                Console.WriteLine(
-                    "Lookup found: partition {0} with master at {1}", 
-                    partitionName, 
-                    response.MasterUrl);
                 masterUrl = response.MasterUrl;
                 return true;
             }
             catch (RpcException e) {
                 Console.WriteLine(
-                    "Error {0} when searching partition master for {1}", 
+                    "[{0}] Error {1} at lookup for partition {2} master server",
+                    DateTime.Now.ToString("HH:mm:ss"),
                     e.StatusCode, 
-                    partitionName);
+                    partitionId);
                 return false;
             }
         }
 
         public bool ListPartitions(
-            out ImmutableDictionary<string, ImmutableHashSet<int>> partitions) {
+            out ImmutableDictionary<string, ImmutableHashSet<string>> partitions) {
             
             partitions = null;
 
@@ -70,27 +70,28 @@ namespace Client.Naming {
                 ListPartitionsResponse response = client.ListPartitions(
                     new ListPartitionsRequest { });
 
-                ImmutableDictionary<string, ImmutableHashSet<int>>.Builder builder =
-                    ImmutableDictionary.CreateBuilder<string, ImmutableHashSet<int>>();
+                ImmutableDictionary<string, ImmutableHashSet<string>>.Builder builder =
+                    ImmutableDictionary.CreateBuilder<string, ImmutableHashSet<string>>();
 
                 foreach (Partition partition in response.Partitions) {
-                    string name = partition.PartitionName;
-                    ImmutableHashSet<int> serverIds = ImmutableHashSet.CreateRange(
+                    string partitionId = partition.PartitionId;
+                    ImmutableHashSet<string> serverIds = ImmutableHashSet.CreateRange(
                         partition.ServerIds);
 
                     Console.WriteLine(
                         "[{0}] Found partition {1}", 
                         DateTime.Now.ToString("HH:mm:ss"), 
-                        name);
+                        partitionId);
 
-                    builder.Add(name, serverIds);
+                    builder.Add(partitionId, serverIds);
                 }
                 partitions = builder.ToImmutable();
                 return true;
             }
             catch (RpcException e) {
                 Console.WriteLine(
-                    "Error {0} when listing partitions",
+                    "[{0}] Error {1} when listing partitions",
+                    DateTime.Now.ToString("HH:mm:ss"),
                     e.StatusCode);
                 return false;
             }

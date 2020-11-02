@@ -3,6 +3,7 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using System;
 using System.Threading.Tasks;
+
 using static Common.Protos.ClientConfiguration.ClientConfigurationService;
 
 namespace PuppetMaster.Client {
@@ -16,7 +17,6 @@ namespace PuppetMaster.Client {
             target = url;
             channel = GrpcChannel.ForAddress(target);
             client = new ClientConfigurationServiceClient(channel);
-            Console.WriteLine("Established connection to {0}", target);
         }
 
         public async Task<bool> StatusAsync() {
@@ -28,7 +28,8 @@ namespace PuppetMaster.Client {
             }
             catch (RpcException e) {
                 Console.WriteLine(
-                    "Error: {0} with status operation at server {1}",
+                    "[{0}] Error: {1} with status operation at server {2}",
+                    DateTime.Now.ToString("HH:mm:ss"),
                     e.StatusCode,
                     target);
                 return false;

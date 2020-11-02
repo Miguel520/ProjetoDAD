@@ -23,7 +23,10 @@ namespace KVStoreServer.Grpc {
     
             await dispatcher.JoinPartition(ParseJoinPartition(request));
 
-            Console.WriteLine($"Received Partition {request.PartitionName}");
+            Console.WriteLine(
+                "[{0}] Received Partition {1}",
+                DateTime.Now.ToString("HH:mm:ss"),
+                request.PartitionId);
 
             return new JoinPartitionResponse();
         }
@@ -56,16 +59,16 @@ namespace KVStoreServer.Grpc {
         private JoinPartitionArguments ParseJoinPartition(
             JoinPartitionRequest request) {
 
-            string partitionName = request.PartitionName;
-            int masterId = request.MasterId;
+            string partitionName = request.PartitionId;
+            string masterId = request.MasterId;
 
-            List<Tuple<int, string>> servers = new List<Tuple<int, string>>();
+            List<Tuple<string, string>> servers = new List<Tuple<string, string>>();
             foreach (Server server in request.Servers) {
-                servers.Add(new Tuple<int, string>(server.Id, server.Url));
+                servers.Add(new Tuple<string, string>(server.Id, server.Url));
             }
             
             return new JoinPartitionArguments {
-                Name = partitionName,
+                PartitionId = partitionName,
                 Members = servers,
                 MasterId = masterId
             };

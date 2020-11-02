@@ -78,8 +78,7 @@ namespace PuppetMaster.Commands {
             command = null;
             if (arguments.Length != 4) return false;
 
-            if (!int.TryParse(arguments[0], out int serverId)) return false;
-
+            string serverId = arguments[0];
             string URL = arguments[1];
 
             if (!int.TryParse(arguments[2], out int minDelay)) return false;
@@ -104,17 +103,17 @@ namespace PuppetMaster.Commands {
 
             if (!int.TryParse(arguments[0], out int numberOfReplicas)) return false;
 
-            string partitionName = arguments[1];
+            string partitionId = arguments[1];
 
-            int[] serverIds = new int[arguments.Length - 2];
+            string[] serverIds = new string[arguments.Length - 2];
 
             for (int i = 2; i < arguments.Length; i++) {
-                if (!int.TryParse(arguments[i], out serverIds[i - 2])) return false;
+                serverIds[i - 2] = arguments[i];
             }
 
             command = new CreatePartitionCommand {
                 NumberOfReplicas = numberOfReplicas,
-                PartitionName = partitionName,
+                PartitionId = partitionId,
                 ServerIds = serverIds
             };
             return true;
@@ -151,7 +150,7 @@ namespace PuppetMaster.Commands {
             command = null;
             if (arguments.Length != 1) return false;
 
-            if (!int.TryParse(arguments[0], out int serverId)) return false;
+            string serverId = arguments[0];
 
             command = new CrashServerCommand { ServerId = serverId };
             return true;
@@ -161,7 +160,7 @@ namespace PuppetMaster.Commands {
             command = null;
             if (arguments.Length != 1) return false;
 
-            if (!int.TryParse(arguments[0], out int serverId)) return false;
+            string serverId = arguments[0];
 
             command = new FreezeServerCommand { ServerId = serverId };
             return true;
@@ -171,7 +170,7 @@ namespace PuppetMaster.Commands {
             command = null;
             if (arguments.Length != 1) return false;
 
-            if (!int.TryParse(arguments[0], out int serverId)) return false;
+            string serverId = arguments[0];
 
             command = new UnfreezeServerCommand { ServerId = serverId };
             return true;

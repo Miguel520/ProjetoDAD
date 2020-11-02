@@ -2,9 +2,9 @@
 namespace KVStoreServer.Storage {
     public class StoredValueDto {
     
-        public string PartitionName { get; set; }
+        public string PartitionId { get; set; }
         
-        public int ObjectId { get; set; }
+        public string ObjectId { get; set; }
 
         public string Value { get; set; }
 

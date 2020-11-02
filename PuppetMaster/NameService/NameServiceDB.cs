@@ -9,11 +9,11 @@ namespace PuppetMaster.NameService {
      */
     public class NameServiceDB {
 
-        private readonly Dictionary<int, string> servers;
+        private readonly Dictionary<string, string> servers;
         private readonly Dictionary<string, string> clients;
 
         public NameServiceDB() {
-            servers = new Dictionary<int, string>();
+            servers = new Dictionary<string, string>();
             clients = new Dictionary<string, string>();
         }
 
@@ -22,7 +22,7 @@ namespace PuppetMaster.NameService {
          * Returns true if successfull and false otherwise
          * If the id already exists returns false and does NOT replace url
          */
-        public bool TryAddServer(int id, string url) {
+        public bool TryAddServer(string id, string url) {
             return servers.TryAdd(id, url);
         }
 
@@ -31,15 +31,15 @@ namespace PuppetMaster.NameService {
          * Returns true if a server with given id exists and writes the value in string.
          * Otherwise, returns false and url is set to null
          */
-        public bool TryLookupServer(int id, out string url) {
+        public bool TryLookupServer(string id, out string url) {
             return servers.TryGetValue(id, out url);
         }
 
-        public void RemoveServer(int id) {
+        public void RemoveServer(string id) {
             servers.Remove(id);
         }
 
-        public ImmutableDictionary<int, string> ServersMapping() {
+        public ImmutableDictionary<string, string> ServersMapping() {
             lock(servers) {
                 return ImmutableDictionary.ToImmutableDictionary(servers);
             }

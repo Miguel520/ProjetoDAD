@@ -11,15 +11,15 @@ service ServerConfigurationService {
 }
 
 message JoinPartitionRequest {
-    string partition_name = 1;
+    string partition_id = 1;
     repeated Server servers = 2;
-    int32 masterId = 3;
+    string masterId = 3;
 }
 
 message JoinPartitionResponse {}
 
 message Server {
-    int32 id = 1;
+    string id = 1;
     string url = 2;
 }
 

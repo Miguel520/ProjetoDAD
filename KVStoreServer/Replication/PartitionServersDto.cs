@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace KVStoreServer.Replication
 {
     public class PartitionServersDto
     {
-        public string PartitionName { get; set; }
+        public string PartitionId { get; set; }
 
-        public HashSet<int> ServerIds { get; set; }
+        public HashSet<string> ServerIds { get; set; }
     }
 }

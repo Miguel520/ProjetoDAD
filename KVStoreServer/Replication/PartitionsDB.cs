@@ -14,20 +14,20 @@ namespace KVStoreServer.Replication {
     public class PartitionsDB {
 
         // Mappings for partition names and server ids
-        private readonly ConcurrentDictionary<string, HashSet<int>> partitions =
-            new ConcurrentDictionary<string, HashSet<int>>();
+        private readonly ConcurrentDictionary<string, HashSet<string>> partitions =
+            new ConcurrentDictionary<string, HashSet<string>>();
 
         // Mappings for server ids and urls
-        private readonly ConcurrentDictionary<int, string> urls =
-            new ConcurrentDictionary<int, string>();
+        private readonly ConcurrentDictionary<string, string> urls =
+            new ConcurrentDictionary<string, string>();
 
         // Mappings for partitions ids and master servers
-        private readonly ConcurrentDictionary<string, int> partitionMasters =
-            new ConcurrentDictionary<string, int>();
+        private readonly ConcurrentDictionary<string, string> partitionMasters =
+            new ConcurrentDictionary<string, string>();
 
-        private int selfId;
+        private string selfId;
 
-        public PartitionsDB(int selfId, string selfUrl) {
+        public PartitionsDB(string selfId, string selfUrl) {
             urls.TryAdd(selfId, selfUrl);
             this.selfId = selfId;
         }
@@ -41,17 +41,17 @@ namespace KVStoreServer.Replication {
          *                                  (should never happen)
          */
         public void AddPartition(
-            string name,
-            IEnumerable<Tuple<int, string>> members,
-            int masterId) {
+            string partitionId,
+            IEnumerable<Tuple<string, string>> members,
+            string masterId) {
 
-            HashSet<int> partition = BuildPartition(members);
+            HashSet<string> partition = BuildPartition(members);
             lock(this) {
                 
-                Conditions.AssertArgument(!partitions.ContainsKey(name));
+                Conditions.AssertArgument(!partitions.ContainsKey(partitionId));
                 Conditions.AssertArgument(partition.Contains(masterId));
 
-                foreach ((int serverId, string serverUrl) in members) {
+                foreach ((string serverId, string serverUrl) in members) {
                     bool alreadyExists = urls.TryGetValue(
                         serverId,
                         out string currentUrl);
@@ -62,11 +62,11 @@ namespace KVStoreServer.Replication {
                 }
 
                 // The following operations should never raise an error
-                Conditions.AssertState(partitions.TryAdd(name, partition));
-                Conditions.AssertState(partitionMasters.TryAdd(name, masterId));
+                Conditions.AssertState(partitions.TryAdd(partitionId, partition));
+                Conditions.AssertState(partitionMasters.TryAdd(partitionId, masterId));
 
                 // Insert servers correspondence
-                foreach ((int serverId, string serverUrl) in members) {
+                foreach ((string serverId, string serverUrl) in members) {
                     string addValue = urls.GetOrAdd(serverId, serverUrl);
                     // If first time adding then addValue is serverUrl and they are equal
                     // If not first time then addValue is the value before adding
@@ -81,8 +81,8 @@ namespace KVStoreServer.Replication {
          * Returns true if a partition with the given name exists and partition is set to the value,
          * otherwise returns false and partition is set to null
          */
-        public bool TryGetPartition(string partitionName, out ImmutableHashSet<int> partition) {
-            if (partitions.TryGetValue(partitionName, out HashSet<int> storedPartition)) {
+        public bool TryGetPartition(string partitionId, out ImmutableHashSet<string> partition) {
+            if (partitions.TryGetValue(partitionId, out HashSet<string> storedPartition)) {
                 partition = ImmutableHashSet.CreateRange(storedPartition);
                 return true;
             }
@@ -96,7 +96,7 @@ namespace KVStoreServer.Replication {
          * Returns true if a server with the given id exists and url is set to the server url,
          * otherwise returns false and url is set to null
          */
-        public bool TryGetUrl(int serverId, out string url) {
+        public bool TryGetUrl(string serverId, out string url) {
             return urls.TryGetValue(serverId, out url);
         }
 
@@ -104,8 +104,8 @@ namespace KVStoreServer.Replication {
          * Returns true if a partition with the given name exists and masterId is set to the value,
          * otherwise returns false and masterId is set to 0
          */
-        public bool TryGetMaster(string partitionName, out int masterId) {
-            return partitionMasters.TryGetValue(partitionName, out masterId);
+        public bool TryGetMaster(string partitionId, out string masterId) {
+            return partitionMasters.TryGetValue(partitionId, out masterId);
         }
 
         public ImmutableList<string> ListPartitions() {
@@ -119,10 +119,10 @@ namespace KVStoreServer.Replication {
                 List<PartitionServersDto> list = new List<PartitionServersDto>();
                 foreach (var partition in partitions) {
                     PartitionServersDto part = new PartitionServersDto {
-                        PartitionName = partition.Key,
-                        ServerIds = new HashSet<int>()
+                        PartitionId = partition.Key,
+                        ServerIds = new HashSet<string>()
                     };
-                    foreach (var server in partition.Key) {
+                    foreach (string server in partition.Value) {
                         part.ServerIds.Add(server);
                     }
                     list.Add(part);
@@ -131,22 +131,22 @@ namespace KVStoreServer.Replication {
             }
         }        
 
-        private HashSet<int> BuildPartition(IEnumerable<Tuple<int, string>> members) {
-            HashSet<int> partition = new HashSet<int>();
-            foreach ((int serverId, _) in members) {
+        private HashSet<string> BuildPartition(IEnumerable<Tuple<string, string>> members) {
+            HashSet<string> partition = new HashSet<string>();
+            foreach ((string serverId, _) in members) {
                 partition.Add(serverId);
             }
             return partition;
         }
 
-        public bool IsPartitionMaster(string partitionName, out bool isMaster) {
+        public bool IsPartitionMaster(string partitionId, out bool isMaster) {
             isMaster = false;
             bool success = partitionMasters.TryGetValue(
-                partitionName,
-                out int serverId);
+                partitionId,
+                out string serverId);
 
             if (!success) {
-                Console.WriteLine($"Error in finding partition {partitionName}");
+                Console.WriteLine($"Error in finding partition {partitionId}");
                 return false;
             }
 
@@ -159,12 +159,12 @@ namespace KVStoreServer.Replication {
          * Removes server with given url from every partition, or correspondence
          */
         public void RemoveUrl(string serverUrl) {
-            int serverId = urls.First(pair => pair.Value.Equals(serverUrl)).Key;
+            string serverId = urls.First(pair => pair.Value.Equals(serverUrl)).Key;
             string partitionName = partitionMasters.FirstOrDefault(pair => pair.Value == serverId).Key;
 
             // Remove from partitions
             lock (this) {
-                foreach (HashSet<int> partition in partitions.Values) {
+                foreach (HashSet<string> partition in partitions.Values) {
                     partition.Remove(serverId);
                 }
 

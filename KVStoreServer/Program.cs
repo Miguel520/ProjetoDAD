@@ -66,7 +66,6 @@ namespace KVStoreServer {
 
         private static ServerConfiguration ParseArgs(string[] args) {
             if (args.Length != 5
-                || !int.TryParse(args[0], out int serverId)
                 || !int.TryParse(args[2], out int port)
                 || !int.TryParse(args[3], out int minDelay)
                 || !int.TryParse(args[4], out int maxDelay)) {
@@ -74,6 +73,7 @@ namespace KVStoreServer {
                 Environment.Exit(1);
                 return null;
             }
+            string serverId = args[0];
             string host = args[1];
             return new ServerConfiguration(
                 serverId,

@@ -6,3 +6,4 @@ Wait 5000
 Partition 2 p1 1 2
 Partition 2 p2 2 3
 Partition 2 p3 3 1
+Status

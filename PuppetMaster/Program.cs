@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using PuppetMaster.Commands;
 using PuppetMaster.Configuration;
 using PuppetMaster.NameService;
@@ -71,11 +72,13 @@ namespace PuppetMaster {
         }
 
         private static TextReader GetFileStreamInput(string fileName) {
-            Console.WriteLine("Reading Configuration from {0}", fileName);
+            Console.WriteLine(
+                "[{0}] Reading Configuration from {1}",
+                DateTime.Now.ToString("HH:mm:ss"),
+                fileName);
 
             string rootDirectory = AppDomain.CurrentDomain.BaseDirectory;
             string scriptsDirectory = rootDirectory + "..\\..\\..\\Scripts\\";
-
             try {
                 return new StreamReader(scriptsDirectory + fileName);
             }

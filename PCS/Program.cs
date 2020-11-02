@@ -40,7 +40,9 @@ namespace PCS {
             }
 
             Console.WriteLine(
-                $"PCS server started at {pcsConfig.Url}");
+                "[{0}] PCS server started at {1}",
+                DateTime.Now.ToString("HH:mm:ss"),
+                pcsConfig.Url);
             Console.WriteLine("Press any key to stop the PCS server...");
             Console.ReadKey();
 

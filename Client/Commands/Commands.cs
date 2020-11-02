@@ -1,9 +1,9 @@
 ﻿namespace Client.Commands
 {
     public class ReadCommand : ICommand {
-        public string partitionId;
-        public int objectId;
-        public int serverId;
+        public string PartitionId { get; set; }
+        public string ObjectId { get; set; }
+        public string ServerId { get; set; }
 
         public void Accept(ICommandHandler handler) {
             handler.OnReadCommand(this);
@@ -11,9 +11,9 @@
     }
 
     public class WriteCommand : ICommand {
-        public string partitionId;
-        public int objectId;
-        public string value;
+        public string PartitionId { get; set; }
+        public string ObjectId { get; set; }
+        public string Value { get; set; }
 
         public void Accept(ICommandHandler handler) {
             handler.OnWriteCommand(this);
@@ -21,7 +21,7 @@
     }
 
     public class ListServerCommand : ICommand {
-        public int serverId;
+        public string ServerId { get; set; }
 
         public void Accept(ICommandHandler handler) {
             handler.OnListServerCommand(this);
@@ -35,7 +35,7 @@
     }
 
     public class WaitCommand : ICommand {
-        public int x;
+        public int Time { get; set; }
 
         public void Accept(ICommandHandler handler) {
             handler.OnWaitCommand(this);
@@ -43,7 +43,7 @@
     }
 
     public class BeginRepeatCommand : ICommand {
-        public int x;
+        public int Iterations { get; set; }
 
         public void Accept(ICommandHandler handler) {
             handler.OnBeginRepeatCommand(this);

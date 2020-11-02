@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 using KVStoreServer.Communications;
 using KVStoreServer.Storage;
-using System;
 
 namespace KVStoreServer.Grpc {
     public class StorageService : KeyValueStoreService.KeyValueStoreServiceBase {
@@ -54,7 +53,7 @@ namespace KVStoreServer.Grpc {
 
             return storedObjects.Select(obj => {
                 return new StoredObject {
-                    PartitionName = obj.PartitionName,
+                    PartitionId = obj.PartitionId,
                     ObjectId = obj.ObjectId,
                     Value =  obj.Value,
                     IsMaster = obj.IsMaster,
@@ -66,7 +65,7 @@ namespace KVStoreServer.Grpc {
         private static IEnumerable<Identifier> BuildIdentifierObjects(IEnumerable<StoredValueDto> storedObjects) {
             return storedObjects.Select(obj => {
                 return new Identifier {
-                    PartitionName = obj.PartitionName,
+                    PartitionId = obj.PartitionId,
                     ObjectId = obj.ObjectId
                 };
             });
@@ -74,14 +73,14 @@ namespace KVStoreServer.Grpc {
 
         private ReadArguments ParseReadRequest(ReadRequest request) {
             return new ReadArguments {
-                PartitionName = request.PartitionName,
+                PartitionId = request.PartitionId,
                 ObjectId = request.ObjectId
             };
         }
 
         private WriteArguments ParseWriteRequest(WriteRequest request) {
             return new WriteArguments {
-                PartitionName = request.PartitionName,
+                PartitionId = request.PartitionId,
                 ObjectId = request.ObjectId,
                 ObjectValue = request.ObjectValue
             };
@@ -89,7 +88,7 @@ namespace KVStoreServer.Grpc {
 
         private ListIdsArguments ParseListIdsrequest(ListIdsRequest request) {
             return new ListIdsArguments {
-                PartitionName = request.PartitionName
+                PartitionId = request.PartitionId
             };
         }
     }

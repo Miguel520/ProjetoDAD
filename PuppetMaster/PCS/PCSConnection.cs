@@ -36,7 +36,7 @@ namespace PuppetMaster.PCS {
          * Asynchronously creates a server
          */
         public async Task<bool> CreateServerAsync(
-            int serverId, 
+            string serverId, 
             int port, 
             int minDelay, 
             int maxDelay) {
@@ -48,7 +48,11 @@ namespace PuppetMaster.PCS {
                 return true;
             }
             catch (RpcException e) {
-                Console.WriteLine("Error: {0} when creating server at PCS {1}", e.StatusCode, target);
+                Console.WriteLine(
+                    "[{0}] Error: {1} when creating server at PCS {2}",
+                    DateTime.Now.ToString("HH:mm:ss"),
+                    e.StatusCode,
+                    target);
                 return false;
             }
         }
@@ -74,7 +78,11 @@ namespace PuppetMaster.PCS {
                 return true;
             }
             catch (RpcException e) {
-                Console.WriteLine("Error: {0} when creating client at PCS {1}", e.StatusCode, target);
+                Console.WriteLine(
+                    "[{0}] Error: {1} when creating client at PCS {2}",
+                    DateTime.Now.ToString("HH:mm:ss"),
+                    e.StatusCode,
+                    target);
                 return false;
             }
         }

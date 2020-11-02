@@ -14,8 +14,8 @@ namespace KVStoreServer.Replication {
 
         public string Url { get; }
 
-        public abstract Task Lock(string partitionName, int objectId);
+        public abstract Task Lock(string partitionId, string objectId);
 
-        public abstract Task Write(string partitionName, int objectId, string objectValue);
+        public abstract Task Write(string partitionId, string objectId, string objectValue);
     }
 }

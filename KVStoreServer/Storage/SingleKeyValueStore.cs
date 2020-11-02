@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 
 namespace KVStoreServer.Storage {
 
@@ -12,8 +11,8 @@ namespace KVStoreServer.Storage {
      */
     public class SingleKeyValueStore {
 
-        private ConcurrentDictionary<int, StoredValue> keyValuePairs =
-            new ConcurrentDictionary<int, StoredValue>();
+        private ConcurrentDictionary<string, StoredValue> keyValuePairs =
+            new ConcurrentDictionary<string, StoredValue>();
 
         public SingleKeyValueStore() {}
 
@@ -22,8 +21,8 @@ namespace KVStoreServer.Storage {
          * This operation is thread safe since multiple threads can try to lock
          * the object. The object will be locked and no threads will block.
          */
-        public void LockValue(int key) {
-            StoredValue value = keyValuePairs.GetOrAdd(key, (key) => new StoredValue());
+        public void LockValue(string objectId) {
+            StoredValue value = keyValuePairs.GetOrAdd(objectId, (key) => new StoredValue());
             value.Lock();
         }
 
@@ -32,9 +31,9 @@ namespace KVStoreServer.Storage {
          * to the received value, unlocking the object in the end.
          * Throws InvalidOperationException if the object does was not previously locked
          */
-        public void AddOrUpdate(int key, string value) {
+        public void AddOrUpdate(string objectId, string value) {
             // If the object doesn't exist than it wasn't previously locked
-            if(!keyValuePairs.TryGetValue(key, out StoredValue storedValue)) {
+            if(!keyValuePairs.TryGetValue(objectId, out StoredValue storedValue)) {
                 throw new InvalidOperationException();
             }
             storedValue.Value = value;
@@ -47,10 +46,10 @@ namespace KVStoreServer.Storage {
          * and the function returns true. Otherwise value is set 
          * to null and the function returns false.
          */
-        public bool TryGet(int key, out string value) {
+        public bool TryGet(string objectId, out string value) {
             value = null;
             // If the object doesn't exist than return false
-            if (!keyValuePairs.TryGetValue(key, out StoredValue storedValue)) {
+            if (!keyValuePairs.TryGetValue(objectId, out StoredValue storedValue)) {
                 return false;
             }
             value = storedValue.Value;
@@ -61,7 +60,7 @@ namespace KVStoreServer.Storage {
             objects = new List<StoredValueDto>();
             StoredValueDto storedValueDto;
           
-            foreach (KeyValuePair<int, StoredValue> stored in keyValuePairs) {
+            foreach (KeyValuePair<string, StoredValue> stored in keyValuePairs) {
                 storedValueDto = stored.Value.GetStoredValueDto();
                 storedValueDto.ObjectId = stored.Key;
                 objects.Add(storedValueDto);

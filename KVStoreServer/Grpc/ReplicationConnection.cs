@@ -1,12 +1,13 @@
 ﻿using Common.Exceptions;
 using Common.Protos.Replication;
-using KVStoreServer.Replication;
+using Grpc.Core;
 using Grpc.Net.Client;
+using System;
 using System.Threading.Tasks;
 
+using KVStoreServer.Replication;
+
 using static Common.Protos.Replication.ReplicationService;
-using System;
-using Grpc.Core;
 
 namespace KVStoreServer.Grpc {
     public class ReplicationConnection : IReplicationConnection {
@@ -24,10 +25,10 @@ namespace KVStoreServer.Grpc {
             channel.ShutdownAsync().Wait();
         }
 
-        public async override Task Lock(string partitionName, int objectId) {
+        public async override Task Lock(string partitionId, string objectId) {
             try {
                 await client.LockAsync(new LockRequest {
-                    PartitionName = partitionName,
+                    PartitionId = partitionId,
                     ObjectId = objectId
                 },
                 deadline: DateTime.UtcNow.AddSeconds(30));
@@ -42,10 +43,10 @@ namespace KVStoreServer.Grpc {
             }
         }
 
-        public async override Task Write(string partitionName, int objectId, string objectValue) {
+        public async override Task Write(string partitionId, string objectId, string objectValue) {
             try {
                 await client.WriteAsync(new WriteRequest {
-                    PartitionName = partitionName,
+                    PartitionId = partitionId,
                     ObjectId = objectId,
                     ObjectValue = objectValue
                 },

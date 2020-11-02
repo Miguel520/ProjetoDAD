@@ -8,8 +8,12 @@ namespace PCS.Communications {
         }
 
         public static bool CreateServerProcess(CreateServerArguments args) {
-            System.Console.WriteLine("Starting Server {0} in port {1} with the id {2}", 
-                   args.Host, args.Port.ToString(),args.ServerId.ToString());
+            Console.WriteLine(
+                "[{0}] Starting Server {1} in port {2} with the id {3}",
+                DateTime.Now.ToString("HH:mm:ss"),
+                args.Host,
+                args.Port.ToString(),
+                args.ServerId.ToString());
 
             string rootDirectory = AppDomain.CurrentDomain.BaseDirectory;
             string path = rootDirectory + "..\\..\\..\\..\\KVStoreServer\\bin\\Debug\\netcoreapp3.1\\KVStoreServer.exe";
@@ -29,14 +33,12 @@ namespace PCS.Communications {
         }
 
         public static bool CreateClientProcess(CreateClientArguments args) {
-            System.Console.WriteLine(
-                "Starting Client {0} in URL {1}:{2}",
+            Console.WriteLine(
+                "[{0}] Starting Client {1} in URL {2}:{3}",
+                DateTime.Now.ToString("HH:mm:ss"),
                 args.Username, 
                 args.Host, 
                 args.Port);
-            System.Console.WriteLine(
-                "Naming servers at {0}",
-                string.Join(", ", args.NameServersUrls));
 
             string rootDirectory = AppDomain.CurrentDomain.BaseDirectory;
             string path = rootDirectory + "..\\..\\..\\..\\Client\\bin\\Debug\\netcoreapp3.1\\Client.exe";

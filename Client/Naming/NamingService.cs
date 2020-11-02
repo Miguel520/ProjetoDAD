@@ -7,11 +7,11 @@ namespace Client.Naming {
     public class NamingService {
 
         private readonly ImmutableList<string> nameServersUrls;
-        private readonly Dictionary<int, string> knownServers;
+        private readonly Dictionary<string, string> knownServers;
         private readonly Dictionary<string, string> knownMasters;
-        private readonly ImmutableDictionary<string, ImmutableHashSet<int>> partitions;
+        private readonly ImmutableDictionary<string, ImmutableHashSet<string>> partitions;
 
-        public ImmutableDictionary<string, ImmutableHashSet<int>> Partitions { 
+        public ImmutableDictionary<string, ImmutableHashSet<string>> Partitions { 
             get {
                 return partitions;
             } 
@@ -19,7 +19,7 @@ namespace Client.Naming {
 
         public NamingService(ImmutableList<string> nameServersUrls) {
             this.nameServersUrls = nameServersUrls;
-            knownServers = new Dictionary<int, string>();
+            knownServers = new Dictionary<string, string>();
             knownMasters = new Dictionary<string, string>();
             foreach (string nameServerUrl in nameServersUrls) {
                 NamingServiceConnection connection =
@@ -31,37 +31,40 @@ namespace Client.Naming {
             }
         }
 
-        public bool Lookup(int id, out string url) {
-            if (knownServers.TryGetValue(id, out url)) return true;
+        /*
+         * Lookup for the url of the server with the given id
+         */
+        public bool Lookup(string serverId, out string serverUrl) {
+            if (knownServers.TryGetValue(serverId, out serverUrl)) return true;
 
             foreach (string nameServerUrl in nameServersUrls) {
                 NamingServiceConnection connection =
                     new NamingServiceConnection(nameServerUrl);
 
-                if (connection.Lookup(id, out url)) {
-                    knownServers.Add(id, url);
+                if (connection.Lookup(serverId, out serverUrl)) {
+                    knownServers.Add(serverId, serverUrl);
                     break;
                 }
             }
 
-            return (url != null);
+            return (serverUrl != null);
         }
 
-        public bool LookupMaster(string partitionName, out string url) {
-            if (knownMasters.TryGetValue(partitionName, out url)) return true;
+        public bool LookupMaster(string partitionId, out string masterUrl) {
+            if (knownMasters.TryGetValue(partitionId, out masterUrl)) return true;
 
             foreach (string nameServerUrl in nameServersUrls) {
                 Console.WriteLine(nameServerUrl);
                 NamingServiceConnection connection =
                     new NamingServiceConnection(nameServerUrl);
 
-                if (connection.LookupMaster(partitionName, out url)) {
-                    knownMasters.Add(partitionName, url);
+                if (connection.LookupMaster(partitionId, out masterUrl)) {
+                    knownMasters.Add(partitionId, masterUrl);
                     break;
                 }
             }
 
-            return (url != null);
+            return (masterUrl != null);
         }
     }
 }

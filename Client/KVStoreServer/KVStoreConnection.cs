@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using Common.Protos.KeyValueStore;
-using Google.Protobuf.Collections;
+﻿using Common.Protos.KeyValueStore;
 using Grpc.Core;
 using Grpc.Net.Client;
+using System;
+using System.Collections.Immutable;
 
 using static Common.Protos.KeyValueStore.KeyValueStoreService;
 
@@ -27,11 +25,11 @@ namespace Client.KVStoreServer {
             channel.ShutdownAsync().Wait();
         }
 
-        public bool Write(string partitionName, int objectId, string value) {
+        public bool Write(string partitionId, string objectId, string value) {
 
             WriteRequest request =
                 KVStoreMessageFactory.BuildWriteRequest(
-                    partitionName,
+                    partitionId,
                     objectId,
                     value);
             try {
@@ -48,12 +46,12 @@ namespace Client.KVStoreServer {
             }
         }
 
-        public bool Read(string partitionName, int objectId, out string value) {
+        public bool Read(string partitionId, string objectId, out string value) {
             value = null;
 
             ReadRequest request =
                 KVStoreMessageFactory.BuildReadRequest(
-                    partitionName,
+                    partitionId,
                     objectId);
             try {
                 ReadResponse response = client.Read(request);
@@ -70,7 +68,7 @@ namespace Client.KVStoreServer {
             }
         }
 
-        public bool ListServer(int serverId, out ImmutableList<StoredObject> storedObjects) {
+        public bool ListServer(string serverId, out ImmutableList<StoredObject> storedObjects) {
             storedObjects = null;
 
             ListRequest request = KVStoreMessageFactory.BuildListRequest();
@@ -90,10 +88,10 @@ namespace Client.KVStoreServer {
             }
         }
 
-        public bool ListIds(out ImmutableList<Identifier> ids, string partitionName) {
+        public bool ListIds(out ImmutableList<Identifier> ids, string partitionId) {
             ids = null;
 
-            ListIdsRequest request = new ListIdsRequest { PartitionName = partitionName };
+            ListIdsRequest request = new ListIdsRequest { PartitionId = partitionId };
 
             try {
                 ListIdsResponse response = client.ListIds(request);
