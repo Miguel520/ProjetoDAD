@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace KVStoreServer.Replication {
 
@@ -9,10 +6,16 @@ namespace KVStoreServer.Replication {
      * Interface defines technology agnostic methods 
      * required for a connection that support replication
      */
-    public interface IReplicationConnection {
+    public abstract class IReplicationConnection {
 
-        public Task Lock(string partitionName, int objectId);
+        public IReplicationConnection(string url) {
+            Url = url;
+        }
 
-        public Task Write(string partitionName, int objectId, string objectValue);
+        public string Url { get; }
+
+        public abstract Task Lock(string partitionName, int objectId);
+
+        public abstract Task Write(string partitionName, int objectId, string objectValue);
     }
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-
+using Common.Exceptions;
 using KVStoreServer.Communications;
 using KVStoreServer.Configuration;
 using KVStoreServer.Storage;
@@ -46,34 +46,65 @@ namespace KVStoreServer.Replication {
                 // Get partition replicas urls
                 partitionsDB.TryGetPartition(arguments.PartitionName, out ImmutableHashSet<int> partitionIds);
 
-                IEnumerable<IReplicationConnection> partitionConnections =
+                HashSet<IReplicationConnection> partitionConnections =
                     partitionIds.Where(id => id != config.ServerId)
                         .Select(serverId => {
                             partitionsDB.TryGetUrl(serverId, out string url);
                             return url;
                         })
-                        .Select(url => factory.ForUrl(url));
+                        .Select(url => factory.ForUrl(url))
+                        .ToHashSet();
 
-                // Lock object in all replicas
-                Task[] tasks = partitionConnections.Select(
-                    con => con.Lock(arguments.PartitionName, arguments.ObjectId))
-                    .ToArray();
+                if (partitionConnections.Count > 0) {
+                    // Lock object in all replicas
+                    Task[] tasks = partitionConnections.Select(
+                        con => con.Lock(arguments.PartitionName, arguments.ObjectId))
+                        .ToArray();
 
+                    try {
+                        Task.WaitAll(tasks);
+                    } 
+                    catch (AggregateException ex) {
+                        foreach (var innerEx in ex.InnerExceptions) {
+                            if (innerEx is ReplicaFailureException replicaFailureException) {
+                                partitionsDB.RemoveUrl(replicaFailureException.Url);
+                                // Try to write the value in the remaining replicas
+                                partitionConnections = partitionConnections.Where(
+                                    con => con.Url != replicaFailureException.Url)
+                                    .ToHashSet();
+                            }
+                            else {
+                                throw innerEx;
+                            }
+                        }
+                    }
+                }
+                
                 store.Lock(
                     arguments.PartitionName,
                     arguments.ObjectId);
 
-                Task.WaitAll(tasks);
+                if (partitionConnections.Count > 0) {
+                    // Write object in all replicas
+                    Task[] tasks = partitionConnections.Select(
+                        con => con.Write(
+                            arguments.PartitionName,
+                            arguments.ObjectId,
+                            arguments.ObjectValue))
+                        .ToArray();
 
-                // Write object in all replicas
-                tasks = partitionConnections.Select(
-                    con => con.Write(
-                        arguments.PartitionName,
-                        arguments.ObjectId,
-                        arguments.ObjectValue))
-                    .ToArray();
-
-                Task.WaitAll(tasks);
+                    try { 
+                        Task.WaitAll(tasks);
+                    }
+                    catch (AggregateException ex) {
+                        foreach (var innerEx in ex.InnerExceptions) {
+                            if (innerEx is ReplicaFailureException replicaFailureException) {
+                                partitionsDB.RemoveUrl(replicaFailureException.Url);
+                            }
+                            throw innerEx;
+                        }
+                    }
+                }
 
                 // Write value
                 store.AddOrUpdate(
