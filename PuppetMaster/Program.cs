@@ -32,7 +32,9 @@ namespace PuppetMaster {
                 command.Accept(controller);
             }
 
-            Console.WriteLine("[{0}] Instructions Completed. Press any key to exit...");
+            Console.WriteLine(
+                "[{0}] Instructions Completed. Press any key to exit...",
+                DateTime.Now.ToString("HH:mm:ss"));
             Console.ReadKey();
         }
 

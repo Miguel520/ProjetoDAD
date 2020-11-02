@@ -38,7 +38,9 @@ namespace KVStoreServer.Grpc {
         }
 
         public override Task<CrashResponse> Crash(CrashRequest request, ServerCallContext context) {
-            return base.Crash(request, context);
+            dispatcher.Crash();
+            // Will never execute since crash terminates the program execution
+            return Task.FromResult(new CrashResponse { });
         }
 
         public override Task<FreezeResponse> Freeze(FreezeRequest request, ServerCallContext context) {

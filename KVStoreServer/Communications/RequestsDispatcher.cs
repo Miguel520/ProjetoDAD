@@ -111,6 +111,11 @@ namespace KVStoreServer.Communications {
             replicationService.Lock(args);
         }
 
+        public void Crash() {
+            Console.WriteLine("[{0}] Server Crashed", DateTime.Now.ToString("HH:mm:ss"));
+            Environment.Exit(0);
+        }
+
         public async Task WriteObject(WriteObjectArguments args) {
             WaitFreeze();
             await WaitDelay();
