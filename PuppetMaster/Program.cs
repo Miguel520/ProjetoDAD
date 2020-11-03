@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Threading;
 using PuppetMaster.Commands;
 using PuppetMaster.Configuration;
 using PuppetMaster.NameService;

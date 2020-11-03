@@ -1,5 +1,6 @@
 using Common.Utils;
 using System;
+using System.IO;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -25,11 +26,71 @@ namespace KVStoreServer.Replication {
         private readonly ConcurrentDictionary<string, string> partitionMasters =
             new ConcurrentDictionary<string, string>();
 
-        private string selfId;
+        private readonly string selfId;
 
         public PartitionsDB(string selfId, string selfUrl) {
             urls.TryAdd(selfId, selfUrl);
             this.selfId = selfId;
+        }
+
+        public bool ConfigurePartitions(string filename) {
+
+            TextReader file = GetFileStreamConfig(filename);
+            string line = file.ReadLine();
+
+            string[] parts = line.Split(" ");
+
+            if ( parts.Length != 2
+                || !int.TryParse(parts[0], out int nServers)
+                || !int.TryParse(parts[1], out int nPartitions)) {
+                return false;
+            }
+         
+            for (int i = 0; i < nServers; i++) {
+                line = file.ReadLine();
+                parts = line.Split(",");
+
+                if (parts.Length != 2) return false;
+                urls.TryAdd(parts[0], parts[1]);
+                
+            }
+
+            for (int i = 0; i < nPartitions; i++) {
+                line = file.ReadLine();
+                parts = line.Split(",");
+
+                if (parts.Length < 2) return false;
+                string partitionId = parts[0];
+                string masterId = parts[1];
+
+                partitionMasters.TryAdd(partitionId, masterId);
+
+                HashSet<string> partition = new HashSet<string>();
+                for (int j = 1; j < parts.Length; j++) {
+                    if (!urls.TryGetValue(parts[j], out string _)) {
+                        Console.WriteLine("Server id {0} does not exist.", parts[j]);
+                        return false;
+                    }
+                    partition.Add(parts[j]);
+                }
+                partitions.TryAdd(partitionId, partition);
+            }
+
+            if (file.ReadLine() != null) 
+                Console.WriteLine(
+                    "Bad File: only read {0} lines, {1} servers and {2} partitions.",
+                    nServers + nPartitions + 1,
+                    nServers,
+                    nPartitions);
+
+            //To verify the partitions and servers
+            foreach ((string partitionId, HashSet<string> servers) in partitions) {
+                Console.WriteLine("Partition: {0}", partitionId);
+                foreach (string s in servers) {
+                    Console.WriteLine("server id: {0}", s);
+                }
+            }
+            return true;
         }
 
         /*
@@ -174,6 +235,23 @@ namespace KVStoreServer.Replication {
                 if (partitionName != null) {
                     partitionMasters.TryRemove(partitionName, out _);
                 }
+            }
+        }
+
+        private static TextReader GetFileStreamConfig(string filename) {
+            Console.WriteLine(
+                "[{0}] Reading Configuration from {1}",
+                DateTime.Now.ToString("HH:mm:ss"),
+                filename);
+
+            string rootDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string configDirectory = rootDirectory + "..\\..\\..\\ConfigFiles\\";
+            try {
+                return new StreamReader(configDirectory + filename);
+            } catch (FileNotFoundException) {
+                Console.Error.WriteLine("{0}: File not found", configDirectory + filename);
+                Environment.Exit(1);
+                return null;
             }
         }
     }
