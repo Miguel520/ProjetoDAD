@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using Common.Utils;
+using System.Linq;
 
 namespace Client.Commands
 {
@@ -58,14 +59,26 @@ namespace Client.Commands
             return true;
         }
 
+        /*
+         * Parse the write command
+         * Object values must be one word or be inside ""
+         */
         private static bool TryParseWriteCommand(string[] arguments, out ICommand command) {
             command = null;
 
-            if (arguments.Length != 3) return false;
+            // At least 3 arguments are required
+            if (arguments.Length < 3) return false;
 
             string partitionId = arguments[0];
             string objectId = arguments[1];
-            string value = arguments[2];
+
+            string[] valueTokens = Arrays.Slice(arguments, 2, arguments.Length); 
+            string value = string.Join(' ', valueTokens);
+
+            // Remove leading and trailing " if necessary
+            if (value.StartsWith('"') && value.EndsWith('"')) {
+                value = value[1..^1];
+            }
 
             command = new WriteCommand {
                 PartitionId = partitionId,
