@@ -1,0 +1,7 @@
+﻿write p1 1 no_quotes
+read p1 1 12
+write p1 2 "with_quotes_single_word"
+read p1 2 12
+write p1 3 "with quotes multiple words"
+read p1 3 12
+listServer 12

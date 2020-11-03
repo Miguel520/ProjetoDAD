@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "KVStoreServer": {
+      "commandName": "Project",
+      "commandLineArgs": "server1 localhost 14561 0 0 Config3Servers.txt"
+    }
+  }
+}
