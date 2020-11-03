@@ -21,12 +21,19 @@ namespace KVStoreServer {
                "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport",
                true);
 
-            ServerConfiguration serverConfig = ParseArgs(args);
+            ServerConfiguration serverConfig = ParseArgs(args, out bool file);
 
             // Add self id so that server knows itself
             PartitionsDB partitionsDB = new PartitionsDB(
                 serverConfig.ServerId,
                 HttpURLs.FromHostAndPort(serverConfig.Host, serverConfig.Port));
+
+            if (file) {
+                if (!partitionsDB.ConfigurePartitions(serverConfig.Filename)) {
+                    Console.Error.WriteLine("Couldn't configure server from file.");
+                    DisplayFileSyntax();
+                }
+            }
 
             ReplicationService replicationService = new ReplicationService(
                 partitionsDB,
@@ -64,8 +71,10 @@ namespace KVStoreServer {
             server.ShutdownAsync().Wait();
         }
 
-        private static ServerConfiguration ParseArgs(string[] args) {
-            if (args.Length != 5
+        private static ServerConfiguration ParseArgs(string[] args, out bool file) {
+            file = false;
+            string filename = null;
+            if ((args.Length != 5 && args.Length != 6)
                 || !int.TryParse(args[2], out int port)
                 || !int.TryParse(args[3], out int minDelay)
                 || !int.TryParse(args[4], out int maxDelay)) {
@@ -75,12 +84,20 @@ namespace KVStoreServer {
             }
             string serverId = args[0];
             string host = args[1];
+
+            if (args.Length == 6) { 
+                filename = args[5];
+                file = true;
+            }
+
             return new ServerConfiguration(
                 serverId,
                 host,
                 port,
                 minDelay,
-                maxDelay);
+                maxDelay,
+                filename
+                );
         }
 
         private static void OnInvalidNumberOfArguments() {
@@ -90,6 +107,17 @@ namespace KVStoreServer {
 
         private static void DisplayUsage() {
             Console.WriteLine("Usage: Server server_id host port min_delay max_delay");
+        }
+
+        private static void DisplayFileSyntax() {
+            Console.WriteLine("File must be in KVStoreServer/ConfigFiles. Example:");
+            Console.WriteLine("Nservers Mpartitions");
+            Console.WriteLine("Server_id_1, server_url_1");
+            Console.WriteLine("...");
+            Console.WriteLine("Server_id_n,server_url_n");
+            Console.WriteLine("Partition_id_1,server_master,server_id,server_id,...");
+            Console.WriteLine("...");
+            Console.WriteLine("Partition_id_m,server_master,server_id,server_id,...");
         }
     }
 }

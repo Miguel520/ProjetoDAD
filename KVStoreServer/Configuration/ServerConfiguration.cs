@@ -7,13 +7,15 @@ namespace KVStoreServer.Configuration {
             string host,
             int port,
             int minDelay,
-            int maxDelay) {
+            int maxDelay, 
+            string filename) {
 
             ServerId = serverId;
             Host = host;
             Port = port;
             MinDelay = minDelay;
             MaxDelay = maxDelay;
+            Filename = filename;
         }
 
         public string ServerId { get; }
@@ -21,6 +23,7 @@ namespace KVStoreServer.Configuration {
         public int Port { get; }
         public int MinDelay { get; }
         public int MaxDelay { get; }
+        public string Filename { get; }
 
         public string Url {
             get {
