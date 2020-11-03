@@ -35,7 +35,7 @@
     }
 
     public class WaitCommand : ICommand {
-        public int Time { get; set; }
+        public string Time { get; set; }
 
         public void Accept(ICommandHandler handler) {
             handler.OnWaitCommand(this);

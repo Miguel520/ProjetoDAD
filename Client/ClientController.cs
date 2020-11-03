@@ -12,9 +12,11 @@ namespace Client {
     public class ClientController : ICommandHandler {
 
         // Loop variables
+        private static string LOOPSTRING = "$i";
         private bool insideLoop;
         private readonly List<ICommand> loopCommands = new List<ICommand>();
         private int numReps = 0;
+        private int currentRep = -1;
         private readonly NamingService namingService;
         private string attachedServer;
         private KVStoreConnection attachedConnection;
@@ -32,10 +34,12 @@ namespace Client {
 
         public void OnEndRepeatCommand(EndRepeatCommand command) {
             insideLoop = false;
-            numReps = 0;
             for (int i = 0; i < numReps; i++) {
+                currentRep = (i+1);
                 loopCommands.ForEach(command => command.Accept(this));
             }
+            numReps = 0;
+            currentRep = -1;
         }
 
         public void OnListGlobalCommand(ListGlobalCommand command) {
@@ -88,19 +92,21 @@ namespace Client {
                 return;
             }
 
-            if (!namingService.Lookup(command.ServerId, out string url)) {
-                Console.WriteLine("Error: server id {0} cannot be found", command.ServerId);
+            string serverId = command.ServerId.Replace(LOOPSTRING, currentRep.ToString());
+
+            if (!namingService.Lookup(serverId, out string url)) {
+                Console.WriteLine("Error: server id {0} cannot be found", serverId);
                 return;
             }
 
             KVStoreConnection connection = new KVStoreConnection(url);
 
             bool success = connection.ListServer(
-                command.ServerId,
+                serverId,
                 out ImmutableList<StoredObject> storedObjects);
 
             if (!success) {
-                Console.WriteLine("Error listing server id {0} ", command.ServerId);
+                Console.WriteLine("Error listing server id {0} ", serverId);
                 return;
             }
 
@@ -108,7 +114,7 @@ namespace Client {
                 Console.WriteLine($"Object id: {obj.ObjectId}" +
                     $" {(obj.IsLocked ? "is Locked" : $" has the value {obj.Value}")} " +
                     $" from partition  {obj.PartitionId}" +
-                    $" and server {command.ServerId}" +
+                    $" and server {serverId}" +
                     $" {(obj.IsMaster ? "is" : "is not")} the master of this partition.");
             }
         }
@@ -119,26 +125,30 @@ namespace Client {
                 return;
             }
 
+            string partitionId = command.PartitionId.Replace(LOOPSTRING, currentRep.ToString());
+            string objectId = command.ObjectId.Replace(LOOPSTRING, currentRep.ToString());
+            string serverId = command.ServerId.Replace(LOOPSTRING, currentRep.ToString());
+
             bool attached = false;
 
             if (attachedConnection == null) {
                 //create connection
-                AttachServer(command.ServerId);
+                AttachServer(serverId);
                 attached = true;
             } 
            
             bool success = attachedConnection.Read(
-                    command.PartitionId,
-                    command.ObjectId,
+                    partitionId,
+                    objectId,
                     out string value);
 
             if (!success) {
-                if (!attached && command.ServerId != "-1") {
-                    AttachServer(command.ServerId);
+                if (!attached && serverId != "-1") {
+                    AttachServer(serverId);
 
                     success = attachedConnection.Read(
-                        command.PartitionId,
-                        command.ObjectId,
+                        partitionId,
+                        objectId,
                         out value);
                 }
             }
@@ -151,7 +161,7 @@ namespace Client {
 
             Console.WriteLine( 
                     "Received value to object {0} is {1}",
-                    command.ObjectId,
+                    objectId,
                     value);
         }
 
@@ -167,38 +177,50 @@ namespace Client {
                 loopCommands.Add(command);
                 return;
             }
-            Thread.Sleep(command.Time);
+
+            string time = command.Time.Replace(LOOPSTRING, currentRep.ToString());
+
+            try {
+                Console.WriteLine("Waiting {0}", time);
+                Thread.Sleep(Int32.Parse(time));
+            } catch {
+                Console.WriteLine("Error parsing wait command.");
+            }
         }
 
         public void OnWriteCommand(WriteCommand command) {
             if (insideLoop) {
                 loopCommands.Add(command);
                 return;
-            } 
-            
+            }
+
+            string partitionId = command.PartitionId.Replace(LOOPSTRING, currentRep.ToString());
+            string objectId = command.ObjectId.Replace(LOOPSTRING, currentRep.ToString());
+            string value = command.Value.Replace(LOOPSTRING, currentRep.ToString());
+
             if (namingService.LookupMaster(
-                command.PartitionId,
+                partitionId,
                 out string url)) {
 
                 KVStoreConnection connection =
                     new KVStoreConnection(url);
 
                 bool success = connection.Write(
-                    command.PartitionId,
-                    command.ObjectId,
-                    command.Value);
+                    partitionId,
+                    objectId,
+                    value);
 
                 if (success) {
                     Console.WriteLine(
                         "[{0}] Write object <{1},{2}> with value {3} successfull",
                         DateTime.Now.ToString("HH:mm:ss"),
-                        command.PartitionId,
-                        command.ObjectId,
-                        command.Value);
+                        partitionId,
+                        objectId,
+                        value);
                 } else {
                     Console.WriteLine(
                         "Write object {0} was not sucessful",
-                        command.ObjectId);
+                        objectId);
                 }
             } else {
                 Console.WriteLine("Error on writing command: " +

@@ -1,0 +1,7 @@
+﻿wait 1000
+begin-repeat 3
+wait $i000
+listServer server$i
+write part$i obj$i $i
+read part$i obj$i server$i
+end-repeat
