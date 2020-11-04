@@ -65,12 +65,17 @@ namespace PuppetMaster.KVStoreServer {
 
         /*
          * Async method to crash server
-         * Does noy return since the server will not respond
          */
-        public async void CrashAsync() {
+        public async Task CrashAsync() {
             CrashRequest request = new CrashRequest { };
-
-            client.CrashAsync(request);
+            try {
+                await client.CrashAsync(
+                    request,
+                    deadline: DateTime.UtcNow.AddSeconds(10));
+            }
+            catch (RpcException) {
+                // Do nothing expected to fail
+            }
         }
 
         public async Task<bool> FreezeAsync() {

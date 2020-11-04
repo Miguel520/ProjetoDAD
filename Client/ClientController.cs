@@ -13,7 +13,7 @@ namespace Client {
     public class ClientController : ICommandHandler {
 
         // Loop variables
-        private static string LOOPSTRING = "$i";
+        private static readonly string LOOPSTRING = "$i";
         private bool insideLoop;
         private readonly List<ICommand> loopCommands = new List<ICommand>();
         private int numReps = 0;

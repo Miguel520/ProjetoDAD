@@ -9,5 +9,5 @@ Partition 2 P3 3 1
 Wait 5000
 Status
 Client Cli1 http://localhost:45678 ListGlobalMultPartitionsCrashTest.txt
-Wait 15000
+Wait 10000
 Crash 1

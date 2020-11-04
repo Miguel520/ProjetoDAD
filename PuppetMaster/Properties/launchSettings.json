@@ -2,7 +2,7 @@
   "profiles": {
     "PuppetMaster": {
       "commandName": "Project",
-      "commandLineArgs": "localhost FreezeReplicaForeverTest.txt"
+      "commandLineArgs": "localhost NameServerCrashTest.txt"
     }
   }
 }
