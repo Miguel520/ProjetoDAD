@@ -1,0 +1,4 @@
+﻿write p1 1 valor-1
+write p2 2 valor-2
+read p2 2 14
+read p1 1 13

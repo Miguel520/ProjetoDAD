@@ -1,0 +1,10 @@
+﻿ReplicationFactor 2
+Server 12 http://localhost:13456 0 0
+Server 13 http://localhost:13457 0 0
+Server 14 http://localhost:23456 0 0
+Wait 1000
+Partition 2 p1 12 13
+Partition 2 p2 12 14
+Wait 1000
+Client cli http://localhost:12346 Read2ndTryTest.txt
+Wait 60000

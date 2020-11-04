@@ -2,7 +2,7 @@
   "profiles": {
     "PuppetMaster": {
       "commandName": "Project",
-      "commandLineArgs": "localhost NameServerCrashTest.txt"
+      "commandLineArgs": "localhost Read2ndTryTest.txt"
     }
   }
 }
