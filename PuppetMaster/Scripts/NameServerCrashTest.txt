@@ -1,0 +1,14 @@
+﻿ReplicationFactor 1
+Server 1 http://localhost:12345 0 0
+Server 2 http://localhost:23456 0 0
+Server 3 http://localhost:34567 0 0
+Wait 1000
+Partition 1 P1 3
+Partition 1 P2 2
+Wait 5000
+Crash 1
+Wait 500
+Client Cli1 http://localhost:45678 NameServerCrashTest.txt
+Wait 7000
+Crash 2
+Crash 3

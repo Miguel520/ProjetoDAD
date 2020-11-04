@@ -1,0 +1,5 @@
+﻿begin-repeat 5
+read P2 1 2
+wait 1000
+end-repeat
+read P1 1 3

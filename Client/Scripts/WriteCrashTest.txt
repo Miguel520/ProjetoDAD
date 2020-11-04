@@ -1,0 +1,3 @@
+﻿begin-repeat 5
+write P1 1 value
+end-repeat

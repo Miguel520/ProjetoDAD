@@ -1,6 +1,7 @@
 ﻿using Client.Commands;
 using Client.KVStoreServer;
 using Client.Naming;
+using Common.Exceptions;
 using Common.Protos.KeyValueStore;
 using System;
 using System.Collections.Generic;
@@ -18,7 +19,9 @@ namespace Client {
         private int numReps = 0;
         private int currentRep = -1;
         private readonly NamingService namingService;
-        private string attachedServer;
+        
+        private string attachedServerId;
+        private string attachedServerUrl;
         private KVStoreConnection attachedConnection;
 
         public ClientController(NamingService namingService) {
@@ -53,6 +56,13 @@ namespace Client {
                 "[{0}] List Global System Ids",
                 DateTime.Now.ToString("HH:mm:ss"));
 
+            if (namingService.Partitions == null) {
+                Console.WriteLine(
+                    "[{0}] No partitions found", 
+                    DateTime.Now.ToString("HH:mm:ss"));
+                return;
+            }
+
             foreach ((string partitionId, ImmutableHashSet<string> serversIds) in
                 namingService.Partitions.OrderBy(pair => pair.Key)) {
 
@@ -66,25 +76,34 @@ namespace Client {
 
                     KVStoreConnection connection = new KVStoreConnection(url);
 
-                    if (connection.ListIds(out ImmutableList<Identifier> identifiers, partitionId)) {
-                        foreach (Identifier identifier in
-                            identifiers.OrderBy(objectId => objectId.ObjectId)) {
+                    try {
+                        if (connection.ListIds(out ImmutableList<Identifier> identifiers, partitionId)) {
+                            foreach (Identifier identifier in
+                                identifiers.OrderBy(objectId => objectId.ObjectId)) {
 
-                            Console.WriteLine(
-                                "[{0}]   <{1},{2}>",
-                                DateTime.Now.ToString("HH:mm:ss"),
-                                identifier.PartitionId,
-                                identifier.ObjectId);
+                                Console.WriteLine(
+                                    "[{0}]   <{1},{2}>",
+                                    DateTime.Now.ToString("HH:mm:ss"),
+                                    identifier.PartitionId,
+                                    identifier.ObjectId);
 
+                            }
+                            partitionPrinted = true;
+                            break;
                         }
-                        partitionPrinted = true;
-                        break;
+                    }
+                    catch (ReplicaFailureException) {
+                        Console.WriteLine(
+                            "[{0}] Replica {1} unavailable",
+                            DateTime.Now.ToString("HH:mm:ss"),
+                            serverId);
+                        namingService.AddCrashed(url);
                     }
                 }
 
                 if (!partitionPrinted) {
                     Console.WriteLine(
-                        "[{0}] Unable to print partition {1}: Servers are not responding",
+                        "[{0}] Unable to print partition {1}: Servers unavailable",
                         DateTime.Now.ToString("HH:mm:ss"),
                         partitionId);
                 }
@@ -96,31 +115,52 @@ namespace Client {
                 loopCommands.Add(command);
                 return;
             }
-
             string serverId = command.ServerId.Replace(LOOPSTRING, currentRep.ToString());
 
             if (!namingService.Lookup(serverId, out string url)) {
-                Console.WriteLine("Error: server id {0} cannot be found", serverId);
+                Console.WriteLine(
+                    "[{0}] List server failed: Replica {1} unavailable",
+                    DateTime.Now.ToString("HH:mm:ss"),
+                    serverId);
                 return;
             }
 
             KVStoreConnection connection = new KVStoreConnection(url);
 
-            bool success = connection.ListServer(
-                serverId,
-                out ImmutableList<StoredObject> storedObjects);
+            try {
+                bool success = connection.ListServer(
+                    out ImmutableList<StoredObject> storedObjects);
 
-            if (!success) {
-                Console.WriteLine("Error listing server id {0} ", serverId);
-                return;
+                if (!success) {
+                    Console.WriteLine(
+                        "[{0}] List server failed",
+                        DateTime.Now.ToString("HH:mm:ss"));
+                    return;
+                }
+
+                if (storedObjects.Count != 0) {
+                    foreach(StoredObject obj in storedObjects) {
+                        Console.WriteLine($"[{DateTime.Now.ToString("HH:mm:ss")}]" +
+                            $" Object id: {obj.ObjectId}" +
+                            $" {(obj.IsLocked ? "is Locked" : $" has the value {obj.Value}")} " +
+                            $" from partition  {obj.PartitionId}" +
+                            $" and server {serverId}" +
+                            $" {(obj.IsMaster ? "is" : "is not")} the master of this partition.");
+                    }
+                }
+                else {
+                    Console.WriteLine(
+                        "[{0}] Server {1} empty",
+                        DateTime.Now.ToString("HH:mm:ss"),
+                        serverId);
+                }
             }
-
-            foreach(StoredObject obj in storedObjects) {
-                Console.WriteLine($"Object id: {obj.ObjectId}" +
-                    $" {(obj.IsLocked ? "is Locked" : $" has the value {obj.Value}")} " +
-                    $" from partition  {obj.PartitionId}" +
-                    $" and server {serverId}" +
-                    $" {(obj.IsMaster ? "is" : "is not")} the master of this partition.");
+            catch (ReplicaFailureException) {
+                Console.WriteLine(
+                    "[{0}] List server failed: Replica {1} unavailable",
+                    DateTime.Now.ToString("HH:mm:ss"),
+                    serverId);
+                namingService.AddCrashed(url);
             }
         }
 
@@ -134,48 +174,86 @@ namespace Client {
             string objectId = command.ObjectId.Replace(LOOPSTRING, currentRep.ToString());
             string serverId = command.ServerId.Replace(LOOPSTRING, currentRep.ToString());
 
-            bool attached = false;
+            bool attached = (attachedConnection != null);
 
-            if (attachedConnection == null) {
+            // If not previously attached create attachement if possible
+            if (!attached && serverId != "-1") {
                 //create connection
-                AttachServer(serverId);
-                attached = true;
-            } 
-           
-            bool success = attachedConnection.Read(
-                    partitionId,
-                    objectId,
-                    out string value);
+                attached = AttachServer(serverId);
+            }
 
-            if (!success) {
-                if (!attached && serverId != "-1") {
-                    AttachServer(serverId);
+            bool success = false;
+            string value = null;
 
+            // May not be attached if no previous connection and -1 was passed
+            // or if attached to server id failed
+            if (attached) {
+                try {
                     success = attachedConnection.Read(
                         partitionId,
                         objectId,
                         out value);
                 }
+                catch (ReplicaFailureException) {
+                    OnReplicaFailureConnection();
+                }
+                // Retry if unsuccess
+                // Can only retry if target replica is not previous connection (-1)
+                // and is not already in use (attachedServerId)
+                if (!success && 
+                    serverId != attachedServerId &&
+                    serverId != "-1") {
+
+                    try {
+                        if(AttachServer(serverId)) {
+                            success = attachedConnection.Read(
+                                partitionId,
+                                objectId,
+                                out value);
+                        }
+                    }
+                    catch (ReplicaFailureException) {
+                        OnReplicaFailureConnection();
+                    }
+                }
             }
+            
 
-            //try again
-            if (!success) {
-                Console.WriteLine("N/A");
-                return;
-            }   
-
-            Console.WriteLine( 
-                    "Received value to object {0} is {1}",
+            if (success) {
+                Console.WriteLine(
+                    "[{0}] Object <{1},{2}> has value '{3}'",
+                    DateTime.Now.ToString("HH:mm:ss"),
+                    partitionId,
                     objectId,
                     value);
+            }
+            else {
+                Console.WriteLine(
+                    "[{0}] N/A",
+                    DateTime.Now.ToString("HH:mm:ss"));
+                return;
+            }
         }
 
-        public void AttachServer(string serverId) {
-            attachedServer = serverId;
-            namingService.Lookup(attachedServer, out string url);
-            attachedConnection = new KVStoreConnection(url);
+        public bool AttachServer(string serverId) {
+            attachedServerId = serverId;
+            if (namingService.Lookup(attachedServerId, out string url)) {
+                attachedServerUrl = url;
+                attachedConnection = new KVStoreConnection(url);
+                return true;
+            }
+            return false;
         }
 
+        private void OnReplicaFailureConnection() {
+            Console.WriteLine(
+                "[{0}] Replica {1} unavailable",
+                DateTime.Now.ToString("HH:mm:ss"),
+                attachedServerId);
+            namingService.AddCrashed(attachedServerUrl);
+            // Reset connection
+            attachedConnection = null;
+        }
 
         public void OnWaitCommand(WaitCommand command) {
             if (insideLoop) {
@@ -216,29 +294,43 @@ namespace Client {
 
                 KVStoreConnection connection =
                     new KVStoreConnection(url);
-
-                bool success = connection.Write(
-                    partitionId,
-                    objectId,
-                    value);
-
-                if (success) {
-                    Console.WriteLine(
-                        "[{0}] Write object <{1},{2}> with value {3} successfull",
-                        DateTime.Now.ToString("HH:mm:ss"),
+                
+                try {
+                    bool success = connection.Write(
                         partitionId,
                         objectId,
                         value);
-                } else {
+
+                    if (success) {
+                        Console.WriteLine(
+                            "[{0}] Write object <{1},{2}> with value {3} successfull",
+                            DateTime.Now.ToString("HH:mm:ss"),
+                            partitionId,
+                            objectId,
+                            value);
+                    } else {
+                        Console.WriteLine(
+                            "[{0}] Write object <{1},{2}> failed",
+                            DateTime.Now.ToString("HH:mm:ss"),
+                            partitionId,
+                            objectId);
+                    }
+                }
+                catch (ReplicaFailureException) {
                     Console.WriteLine(
-                        "Write object {0} was not sucessful",
+                        "[{0}] Write object <{1},{2}> failed: Partition master unavailable",
+                        DateTime.Now.ToString("HH:mm:ss"),
+                        partitionId,
                         objectId);
+                    namingService.AddCrashed(url);
                 }
             } else {
-                Console.WriteLine("Error on writing command: " +
-                    "Master doesn't exist.");
+                Console.WriteLine(
+                    "[{0}] Write object <{1},{2}> failed: Partition master unavailable",
+                    DateTime.Now.ToString("HH:mm:ss"),
+                    partitionId,
+                    objectId);
             }
-            Thread.Sleep(10000);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Common.Protos.NamingService;
+﻿using Common.Exceptions;
+using Common.Protos.NamingService;
 using Grpc.Core;
 using Grpc.Net.Client;
 using System;
@@ -29,10 +30,17 @@ namespace Client.Naming {
             LookupRequest request =
                 NamingServiceMessageFactory.BuildLookupRequest(serverId);
             try {
-                LookupResponse response = client.Lookup(request);
+                LookupResponse response = client.Lookup(
+                    request, 
+                    deadline: DateTime.UtcNow.AddSeconds(30));
                 serverUrl = response.ServerUrl;
                 return true;
-            } catch (RpcException e) {
+            }
+            catch (RpcException e) when (e.StatusCode == StatusCode.DeadlineExceeded ||
+                                         e.StatusCode == StatusCode.Internal) {
+                throw new ReplicaFailureException(target);
+            }
+            catch (RpcException e) {
                 Console.WriteLine(
                     "[{0}] Error {1} at lookup for server id {2}",
                     DateTime.Now.ToString("HH:mm:ss"),
@@ -47,9 +55,15 @@ namespace Client.Naming {
             LookupMasterRequest request =
                 NamingServiceMessageFactory.BuildLookupMasterRequest(partitionId);
             try {
-                LookupMasterResponse response = client.LookupMaster(request);
+                LookupMasterResponse response = client.LookupMaster(
+                    request,
+                    deadline: DateTime.UtcNow.AddSeconds(30));
                 masterUrl = response.MasterUrl;
                 return true;
+            }
+            catch (RpcException e) when (e.StatusCode == StatusCode.DeadlineExceeded ||
+                                         e.StatusCode == StatusCode.Internal) {
+                throw new ReplicaFailureException(target);
             }
             catch (RpcException e) {
                 Console.WriteLine(
@@ -65,10 +79,10 @@ namespace Client.Naming {
             out ImmutableDictionary<string, ImmutableHashSet<string>> partitions) {
             
             partitions = null;
-
             try {
                 ListPartitionsResponse response = client.ListPartitions(
-                    new ListPartitionsRequest { });
+                    new ListPartitionsRequest { },
+                    deadline: DateTime.UtcNow.AddSeconds(30));
 
                 ImmutableDictionary<string, ImmutableHashSet<string>>.Builder builder =
                     ImmutableDictionary.CreateBuilder<string, ImmutableHashSet<string>>();
@@ -87,6 +101,10 @@ namespace Client.Naming {
                 }
                 partitions = builder.ToImmutable();
                 return true;
+            }
+            catch (RpcException e) when (e.StatusCode == StatusCode.DeadlineExceeded ||
+                                         e.StatusCode == StatusCode.Internal) {
+                throw new ReplicaFailureException(target);
             }
             catch (RpcException e) {
                 Console.WriteLine(
