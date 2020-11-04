@@ -17,11 +17,9 @@ namespace Client.KVStoreServer {
             target = url;
             channel = GrpcChannel.ForAddress(target);
             client = new KeyValueStoreServiceClient(channel);
-            Console.WriteLine("Established connection to {0}", target);
         }
 
         ~KVStoreConnection() {
-            Console.WriteLine("Shutting down connection to {0}", target);
             channel.ShutdownAsync().Wait();
         }
 
@@ -34,12 +32,12 @@ namespace Client.KVStoreServer {
                     value);
             try {
                 client.Write(request);
-                Console.WriteLine("Write request sent to {0}", target);
                 return true;
             }
             catch (RpcException e) {
                 Console.WriteLine(
-                    "Error: {0} when sending write request to KVStore Server {1}",
+                    "[{0}] Error {1} on write to server {2}",
+                    DateTime.Now.ToString("HH:mm:ss"),
                     e.StatusCode,
                     target);
                 return false;
@@ -55,13 +53,13 @@ namespace Client.KVStoreServer {
                     objectId);
             try {
                 ReadResponse response = client.Read(request);
-                Console.WriteLine("Read request sent to {0}", target);
                 value = response.ObjectValue;
                 return true;
             } 
             catch (RpcException e) {
                 Console.WriteLine(
-                    "Error: {0} when sending read request to KVStore Server {1}",
+                    "[{0}] Error {1} on read from server {2}",
+                    DateTime.Now.ToString("HH:mm:ss"),
                     e.StatusCode,
                     target);
                 return false;
@@ -75,13 +73,13 @@ namespace Client.KVStoreServer {
 
             try {
                 ListResponse response = client.List(request);
-                Console.WriteLine("Listing server with id {0}", serverId);
                 storedObjects = response.Objects.ToImmutableList();
                 return true;
             } 
             catch (RpcException e) {
                 Console.WriteLine(
-                    "Error: {0} when sending list request to KVStore Server {1}",
+                    "[{0}] Error {1} on list server {2}",
+                    DateTime.Now.ToString("HH:mm:ss"),
                     e.StatusCode,
                     target);
                 return false;
@@ -100,7 +98,8 @@ namespace Client.KVStoreServer {
             }
             catch (RpcException e) {
                 Console.WriteLine(
-                    "Error: {0} when sending list ids request to KVStore Server {1}",
+                    "[{0}] Error {1} on list ids from server {2}",
+                    DateTime.Now.ToString("HH:mm:ss"),
                     e.StatusCode,
                     target);
                 return false;

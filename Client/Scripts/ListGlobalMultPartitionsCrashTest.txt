@@ -1,0 +1,6 @@
+﻿begin-repeat 3
+write P$i id-$i value-$i
+end-repeat
+listGlobal
+wait 10000
+listGlobal

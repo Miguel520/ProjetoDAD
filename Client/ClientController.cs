@@ -49,6 +49,10 @@ namespace Client {
             }
 
             // Sort partitions by id for better display
+            Console.WriteLine(
+                "[{0}] List Global System Ids",
+                DateTime.Now.ToString("HH:mm:ss"));
+
             foreach ((string partitionId, ImmutableHashSet<string> serversIds) in
                 namingService.Partitions.OrderBy(pair => pair.Key)) {
 
@@ -67,7 +71,8 @@ namespace Client {
                             identifiers.OrderBy(objectId => objectId.ObjectId)) {
 
                             Console.WriteLine(
-                                "{0}:{1}",
+                                "[{0}]   <{1},{2}>",
+                                DateTime.Now.ToString("HH:mm:ss"),
                                 identifier.PartitionId,
                                 identifier.ObjectId);
 
@@ -180,12 +185,19 @@ namespace Client {
 
             string time = command.Time.Replace(LOOPSTRING, currentRep.ToString());
 
-            try {
-                Console.WriteLine("Waiting {0}", time);
-                Thread.Sleep(Int32.Parse(time));
-            } catch {
-                Console.WriteLine("Error parsing wait command.");
+            if (int.TryParse(time, out int sleepTime)) {
+                Console.WriteLine(
+                    "[{0}] Waiting {1}",
+                    DateTime.Now.ToString("HH:mm:ss"),
+                    time);
+                Thread.Sleep(sleepTime);
             }
+            else {
+                Console.WriteLine(
+                    "[{0}] Error parsing time",
+                    DateTime.Now.ToString("HH:mm:ss"));
+            }
+            
         }
 
         public void OnWriteCommand(WriteCommand command) {

@@ -248,6 +248,10 @@ namespace PuppetMaster {
         }
 
         public void OnWaitCommand(WaitCommand command) {
+            Console.WriteLine(
+                "[{0}] Waiting {1} ms",
+                DateTime.Now.ToString("HH:mm:ss"),
+                command.SleepTime);
             Thread.Sleep(command.SleepTime);
         }
     }
