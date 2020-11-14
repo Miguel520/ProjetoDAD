@@ -6,7 +6,6 @@ using Common.Protos.KeyValueStore;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading;
 
 namespace Client {
@@ -56,56 +55,30 @@ namespace Client {
                 "[{0}] List Global System Ids",
                 DateTime.Now.ToString("HH:mm:ss"));
 
-            if (namingService.Partitions == null) {
-                Console.WriteLine(
-                    "[{0}] No partitions found", 
-                    DateTime.Now.ToString("HH:mm:ss"));
-                return;
-            }
-
-            foreach ((string partitionId, ImmutableHashSet<string> serversIds) in
-                namingService.Partitions.OrderBy(pair => pair.Key)) {
-
-                bool partitionPrinted = false;
-                Random rng = new Random();
-                // Randomly iterate set values to distribute load ammong servers
-                foreach (string serverId in serversIds.OrderBy(id => rng.Next())) {
-                    if (!namingService.Lookup(serverId, out string url)) {
-                        continue;
-                    }
-
-                    KVStoreConnection connection = new KVStoreConnection(url);
-
-                    try {
-                        if (connection.ListIds(out ImmutableList<Identifier> identifiers, partitionId)) {
-                            foreach (Identifier identifier in
-                                identifiers.OrderBy(objectId => objectId.ObjectId)) {
-
-                                Console.WriteLine(
-                                    "[{0}]   <{1},{2}>",
-                                    DateTime.Now.ToString("HH:mm:ss"),
-                                    identifier.PartitionId,
-                                    identifier.ObjectId);
-
-                            }
-                            partitionPrinted = true;
-                            break;
+            foreach (string serverId in namingService.ServersIds.Sort()) {
+                if (!namingService.Lookup(serverId, out string serverUrl)) {
+                    continue;
+                }
+                KVStoreConnection connection = new KVStoreConnection(serverUrl);
+                try {
+                    if (connection.ListServer(out ImmutableList<StoredObject> storedObjects)) {
+                        foreach(StoredObject storedObject in storedObjects) {
+                            Console.WriteLine(
+                                "[{0}] Server: {1}, object: <{2},{3}> = '{4}'",
+                                DateTime.Now.ToString("HH:mm:ss"),
+                                serverId,
+                                storedObject.PartitionId,
+                                storedObject.ObjectId,
+                                storedObject.Value);
                         }
                     }
-                    catch (ReplicaFailureException) {
-                        Console.WriteLine(
-                            "[{0}] Replica {1} unavailable",
-                            DateTime.Now.ToString("HH:mm:ss"),
-                            serverId);
-                        namingService.AddCrashed(url);
-                    }
                 }
-
-                if (!partitionPrinted) {
+                catch (ReplicaFailureException) {
                     Console.WriteLine(
-                        "[{0}] Unable to print partition {1}: Servers unavailable",
+                        "[{0}] Replica {1} unavailable",
                         DateTime.Now.ToString("HH:mm:ss"),
-                        partitionId);
+                        serverId);
+                    namingService.AddCrashed(serverUrl);
                 }
             }
         }

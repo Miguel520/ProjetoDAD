@@ -1,21 +1,41 @@
-﻿using Grpc.Net.Client;
+﻿using Grpc.Core;
+using Grpc.Net.Client;
+using System;
 
 namespace Common.Grpc {
 
     /*
      * Shared rpc channel
      * Users must never shutdown the channel
-     * When last user drops the reference the channel is shutdown
+     * New users should add a new ref to say they are using the channel
+     * When they are done with the channel they must drop their ref
      */
-    class SharedChannel {
-        public SharedChannel(GrpcChannel channel) {
-            Channel = channel;
+    public sealed class SharedChannel : ChannelBase {
+
+        private readonly GrpcChannel channel;
+        private int refs = 1;
+        internal SharedChannel(GrpcChannel channel) : base(channel.Target) {
+            this.channel = channel;
         }
 
-        ~SharedChannel() {
-            Channel.ShutdownAsync().Wait();
+        internal void AddRef() {
+            lock(this) {
+                refs++;
+            }
         }
 
-        public GrpcChannel Channel { get; }
+        internal void DropRef() {
+            lock(this) {
+                refs--;
+                if (refs == 0) {
+                    Console.WriteLine("Clear channel to {0}", channel.Target);
+                    channel.ShutdownAsync().Wait();
+                }
+            }
+        }
+
+        public override CallInvoker CreateCallInvoker() {
+            return channel.CreateCallInvoker();
+        }
     }
 }
