@@ -1,15 +1,17 @@
-using System;
+using Common.Grpc;
 using Grpc.Core;
-using Client.Configuration;
-using ProtoClientConfiguration = Common.Protos.ClientConfiguration.ClientConfigurationService;
-using Client.Communications;
-using Client.Grpc;
-using static Client.Commands.CommandParser;
-
-using Client.Naming;
+using System;
 using System.Collections.Immutable;
+
+using Client.Communications;
+using Client.Configuration;
+using Client.Grpc;
+using Client.Naming;
 using Client.Commands;
-using System.Threading;
+
+using ProtoClientConfiguration = Common.Protos.ClientConfiguration.ClientConfigurationService;
+
+using static Client.Commands.CommandParser;
 
 namespace Client {
     class Program {
@@ -19,8 +21,10 @@ namespace Client {
                 "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport",
                 true);
 
-            ClientConfiguration clientConfig = ParseArgs(args);
+            ChannelPool.SetMaxOpenChannels(3);
 
+            ClientConfiguration clientConfig = ParseArgs(args);
+            
             Console.WriteLine(
                 "[{0}] Client {1} executing script {2} at {3}",
                 DateTime.Now.ToString("HH:mm:ss"),

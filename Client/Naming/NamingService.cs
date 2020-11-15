@@ -1,7 +1,8 @@
-﻿using System.Collections.Immutable;
-using System.Collections.Generic;
-using Common.Exceptions;
+﻿using Common.Exceptions;
 using System;
+using System.Collections.Immutable;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Client.Naming {
     public class NamingService {
@@ -12,10 +13,10 @@ namespace Client.Naming {
         private readonly ImmutableDictionary<string, ImmutableHashSet<string>> partitions;
         private readonly HashSet<string> crashedUrls;
 
-        public ImmutableDictionary<string, ImmutableHashSet<string>> Partitions { 
+        public ImmutableList<string> ServersIds {
             get {
-                return partitions;
-            } 
+                return partitions.SelectMany(partition => partition.Value).Distinct().ToImmutableList();
+            }
         }
 
         public NamingService(ImmutableList<string> receivedNameServersUrls) {

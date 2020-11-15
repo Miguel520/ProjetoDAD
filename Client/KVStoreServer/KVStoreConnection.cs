@@ -1,7 +1,7 @@
 ﻿using Common.Exceptions;
+using Common.Grpc;
 using Common.Protos.KeyValueStore;
 using Grpc.Core;
-using Grpc.Net.Client;
 using System;
 using System.Collections.Immutable;
 
@@ -11,17 +11,17 @@ namespace Client.KVStoreServer {
     class KVStoreConnection {
 
         private readonly string target;
-        private readonly GrpcChannel channel;
+        private readonly ChannelBase channel;
         private readonly KeyValueStoreServiceClient client;
 
         public KVStoreConnection(string url) {
             target = url;
-            channel = GrpcChannel.ForAddress(target);
+            channel = ChannelPool.Instance.ForUrl(url);
             client = new KeyValueStoreServiceClient(channel);
         }
 
         ~KVStoreConnection() {
-            channel.ShutdownAsync().Wait();
+            ChannelPool.Instance.ClearChannel(channel);
         }
 
         public bool Write(string partitionId, string objectId, string value) {
