@@ -1,6 +1,6 @@
 ﻿using Common.Protos.KeyValueStore;
 
-namespace Client.KVStoreServer {
+namespace Client.Grpc {
     class KVStoreMessageFactory {
 
         public KVStoreMessageFactory() {
