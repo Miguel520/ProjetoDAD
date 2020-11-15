@@ -3,6 +3,7 @@ using System;
 using System.Collections.Immutable;
 using System.Collections.Generic;
 using System.Linq;
+using Client.Grpc;
 
 namespace Client.Naming {
     public class NamingService {
@@ -13,35 +14,25 @@ namespace Client.Naming {
         private readonly ImmutableDictionary<string, ImmutableHashSet<string>> partitions;
         private readonly HashSet<string> crashedUrls;
 
-        public ImmutableList<string> ServersIds {
-            get {
-                return partitions.SelectMany(partition => partition.Value).Distinct().ToImmutableList();
-            }
-        }
-
         public NamingService(ImmutableList<string> receivedNameServersUrls) {
+            GrpcMessageLayer.ReplicaFailureEvent += AddCrashed;
+            
             nameServersUrls = new HashSet<string>(receivedNameServersUrls);
             knownServers = new Dictionary<string, string>();
             knownMasters = new Dictionary<string, string>();
             crashedUrls = new HashSet<string>();
             partitions = ImmutableDictionary.Create<string, ImmutableHashSet<string>>();
+            
             foreach (string nameServerUrl in receivedNameServersUrls) {
-                NamingServiceConnection connection =
-                    new NamingServiceConnection(nameServerUrl);
+                if (GrpcMessageLayer.Instance.ListPartitions(nameServerUrl, out partitions)) {
+                    break;
+                }
+            }
+        }
 
-                try {
-                    if (connection.ListPartitions(out partitions)) {
-                        break;
-                    }
-                }
-                catch (ReplicaFailureException) {
-                    // If already unavailable then remove
-                    Console.WriteLine(
-                        "[{0}] Replica {1} unavailable",
-                        DateTime.Now.ToString("HH:mm:ss"),
-                        nameServerUrl);
-                    nameServersUrls.Remove(nameServerUrl);
-                }
+        public ImmutableList<string> ServersIds {
+            get {
+                return partitions.SelectMany(partition => partition.Value).Distinct().ToImmutableList();
             }
         }
 
@@ -58,30 +49,18 @@ namespace Client.Naming {
                 return true;
             }
 
-            List<string> crashedServers = new List<string>();
-
-            foreach (string nameServerUrl in nameServersUrls) {
+            // Copy nameServersUrls to other list so that if some server
+            // is unavailable, we can receive the failure event concurrently
+            // without modifying nameServersUrls
+            foreach (string nameServerUrl in nameServersUrls.ToList()) {
                 NamingServiceConnection connection =
                     new NamingServiceConnection(nameServerUrl);
 
-                try {
-                    if (connection.Lookup(serverId, out serverUrl)) {
-                        knownServers.Add(serverId, serverUrl);
-                        break;
-                    }
-                }
-                catch (ReplicaFailureException) {
-                    // If nameServer unavailable then add for removal
-                    // Cant instantly remove because alters nameServersUrls
-                    Console.WriteLine(
-                        "[{0}] Replica {1} unavailable",
-                        DateTime.Now.ToString("HH:mm:ss"),
-                        nameServerUrl);
-                    crashedServers.Add(nameServerUrl);
+                if (GrpcMessageLayer.Instance.Lookup(nameServerUrl, serverId, out serverUrl)) {
+                    knownServers.Add(serverId, serverUrl);
+                    break;
                 }
             }
-
-            crashedServers.ForEach(AddCrashed);
 
             return (serverUrl != null);
         }
@@ -96,37 +75,19 @@ namespace Client.Naming {
                 return true;
             }
 
-            List<string> crashedServers = new List<string>();
-
-            foreach (string nameServerUrl in nameServersUrls) {
-                NamingServiceConnection connection =
-                    new NamingServiceConnection(nameServerUrl);
-
-                try {
-                    if (connection.LookupMaster(partitionId, out masterUrl)) {
-                        knownMasters.Add(partitionId, masterUrl);
-                        break;
-                    }
-                }
-                catch (ReplicaFailureException) {
-                    // If nameServer unavailable then add for removal
-                    // Cant instantly remove because alters nameServersUrls
-                    Console.WriteLine(
-                        "[{0}] Replica {1} unavailable",
-                        DateTime.Now.ToString("HH:mm:ss"),
-                        nameServerUrl);
-                    crashedServers.Add(nameServerUrl);
+            foreach (string nameServerUrl in nameServersUrls.ToList()) {
+                if (GrpcMessageLayer.Instance.LookupMaster(nameServerUrl, partitionId, out masterUrl)) {
+                    knownMasters.Add(partitionId, masterUrl);
+                    break;
                 }
             }
-
-            crashedServers.ForEach(AddCrashed);
 
             return (masterUrl != null);
         }
 
-        public void AddCrashed(string serverUrl) {
-            nameServersUrls.Remove(serverUrl);
-            crashedUrls.Add(serverUrl);
+        private void AddCrashed(object sender, ReplicaFailureEventArgs args) {
+            nameServersUrls.Remove(args.Url);
+            crashedUrls.Add(args.Url);
         }
     }
 }

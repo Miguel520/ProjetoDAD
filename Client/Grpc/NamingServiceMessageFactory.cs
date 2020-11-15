@@ -1,6 +1,6 @@
 ﻿using Common.Protos.NamingService;
 
-namespace Client.Naming {
+namespace Client.Grpc {
     /*
      * Factory class to build messages related to PuppetMaster communication
      */

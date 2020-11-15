@@ -1,12 +1,12 @@
-﻿using Client.Commands;
-using Client.KVStoreServer;
-using Client.Naming;
-using Common.Exceptions;
-using Common.Protos.KeyValueStore;
+﻿using Common.Protos.KeyValueStore;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
+
+using Client.Commands;
+using Client.Grpc;
+using Client.Naming;
 
 namespace Client {
     public class ClientController : ICommandHandler {
@@ -21,11 +21,14 @@ namespace Client {
         
         private string attachedServerId;
         private string attachedServerUrl;
-        private KVStoreConnection attachedConnection;
+        private object attachedServerLock = new object();
 
         public ClientController(NamingService namingService) {
+
+            GrpcMessageLayer.ReplicaFailureEvent += OnReplicaFailureEvent;
+
             this.namingService = namingService;
-            attachedConnection = null;
+            attachedServerUrl = null;
         }
 
         public void OnBeginRepeatCommand(BeginRepeatCommand command) {
@@ -59,26 +62,16 @@ namespace Client {
                 if (!namingService.Lookup(serverId, out string serverUrl)) {
                     continue;
                 }
-                KVStoreConnection connection = new KVStoreConnection(serverUrl);
-                try {
-                    if (connection.ListServer(out ImmutableList<StoredObject> storedObjects)) {
-                        foreach(StoredObject storedObject in storedObjects) {
-                            Console.WriteLine(
-                                "[{0}] Server: {1}, object: <{2},{3}> = '{4}'",
-                                DateTime.Now.ToString("HH:mm:ss"),
-                                serverId,
-                                storedObject.PartitionId,
-                                storedObject.ObjectId,
-                                storedObject.Value);
-                        }
+                if (GrpcMessageLayer.Instance.ListServer(serverUrl, out ImmutableList<StoredObject> storedObjects)) {
+                    foreach(StoredObject storedObject in storedObjects) {
+                        Console.WriteLine(
+                            "[{0}] Server: {1}, object: <{2},{3}> = '{4}'",
+                            DateTime.Now.ToString("HH:mm:ss"),
+                            serverId,
+                            storedObject.PartitionId,
+                            storedObject.ObjectId,
+                            storedObject.Value);
                     }
-                }
-                catch (ReplicaFailureException) {
-                    Console.WriteLine(
-                        "[{0}] Replica {1} unavailable",
-                        DateTime.Now.ToString("HH:mm:ss"),
-                        serverId);
-                    namingService.AddCrashed(serverUrl);
                 }
             }
         }
@@ -98,42 +91,32 @@ namespace Client {
                 return;
             }
 
-            KVStoreConnection connection = new KVStoreConnection(url);
+            bool success = GrpcMessageLayer.Instance.ListServer(
+                url,
+                out ImmutableList<StoredObject> storedObjects);
 
-            try {
-                bool success = connection.ListServer(
-                    out ImmutableList<StoredObject> storedObjects);
+            if (!success) {
+                Console.WriteLine(
+                    "[{0}] List server failed",
+                    DateTime.Now.ToString("HH:mm:ss"));
+                return;
+            }
 
-                if (!success) {
-                    Console.WriteLine(
-                        "[{0}] List server failed",
-                        DateTime.Now.ToString("HH:mm:ss"));
-                    return;
-                }
-
-                if (storedObjects.Count != 0) {
-                    foreach(StoredObject obj in storedObjects) {
-                        Console.WriteLine($"[{DateTime.Now.ToString("HH:mm:ss")}]" +
-                            $" Object id: {obj.ObjectId}" +
-                            $" {(obj.IsLocked ? "is Locked" : $" has the value {obj.Value}")} " +
-                            $" from partition  {obj.PartitionId}" +
-                            $" and server {serverId}" +
-                            $" {(obj.IsMaster ? "is" : "is not")} the master of this partition.");
-                    }
-                }
-                else {
-                    Console.WriteLine(
-                        "[{0}] Server {1} empty",
-                        DateTime.Now.ToString("HH:mm:ss"),
-                        serverId);
+            if (storedObjects.Count != 0) {
+                foreach(StoredObject obj in storedObjects) {
+                    Console.WriteLine($"[{DateTime.Now.ToString("HH:mm:ss")}]" +
+                        $" Object id: {obj.ObjectId}" +
+                        $" {(obj.IsLocked ? "is Locked" : $" has the value {obj.Value}")} " +
+                        $" from partition  {obj.PartitionId}" +
+                        $" and server {serverId}" +
+                        $" {(obj.IsMaster ? "is" : "is not")} the master of this partition.");
                 }
             }
-            catch (ReplicaFailureException) {
+            else {
                 Console.WriteLine(
-                    "[{0}] List server failed: Replica {1} unavailable",
+                    "[{0}] Server {1} empty",
                     DateTime.Now.ToString("HH:mm:ss"),
                     serverId);
-                namingService.AddCrashed(url);
             }
         }
 
@@ -147,7 +130,9 @@ namespace Client {
             string objectId = command.ObjectId.Replace(LOOPSTRING, currentRep.ToString());
             string serverId = command.ServerId.Replace(LOOPSTRING, currentRep.ToString());
 
-            bool attached = (attachedConnection != null);
+            Monitor.Enter(attachedServerLock);
+            
+            bool attached = (attachedServerUrl != null);
 
             // If not previously attached create attachement if possible
             if (!attached && serverId != "-1") {
@@ -157,19 +142,16 @@ namespace Client {
 
             bool success = false;
             string value = null;
-
             // May not be attached if no previous connection and -1 was passed
             // or if attached to server id failed
             if (attached) {
-                try {
-                    success = attachedConnection.Read(
-                        partitionId,
-                        objectId,
-                        out value);
-                }
-                catch (ReplicaFailureException) {
-                    OnReplicaFailureConnection();
-                }
+                success = GrpcMessageLayer.Instance.Read(
+                    attachedServerUrl,
+                    partitionId,
+                    objectId,
+                    out value);
+                Monitor.Exit(attachedServerLock);
+
                 // Retry if unsuccess
                 // Can only retry if target replica is not previous connection (-1)
                 // and is not already in use (attachedServerId)
@@ -177,18 +159,19 @@ namespace Client {
                     serverId != attachedServerId &&
                     serverId != "-1") {
 
-                    try {
-                        if(AttachServer(serverId)) {
-                            success = attachedConnection.Read(
+                    lock(attachedServerLock) {
+                        if (AttachServer(serverId)) {
+                            success = GrpcMessageLayer.Instance.Read(
+                                attachedServerUrl,
                                 partitionId,
                                 objectId,
                                 out value);
                         }
                     }
-                    catch (ReplicaFailureException) {
-                        OnReplicaFailureConnection();
-                    }
                 }
+            }
+            else {
+                Monitor.Exit(attachedServerLock);
             }
             
 
@@ -212,20 +195,9 @@ namespace Client {
             attachedServerId = serverId;
             if (namingService.Lookup(attachedServerId, out string url)) {
                 attachedServerUrl = url;
-                attachedConnection = new KVStoreConnection(url);
                 return true;
             }
             return false;
-        }
-
-        private void OnReplicaFailureConnection() {
-            Console.WriteLine(
-                "[{0}] Replica {1} unavailable",
-                DateTime.Now.ToString("HH:mm:ss"),
-                attachedServerId);
-            namingService.AddCrashed(attachedServerUrl);
-            // Reset connection
-            attachedConnection = null;
         }
 
         public void OnWaitCommand(WaitCommand command) {
@@ -264,38 +236,26 @@ namespace Client {
             if (namingService.LookupMaster(
                 partitionId,
                 out string url)) {
-
-                KVStoreConnection connection =
-                    new KVStoreConnection(url);
                 
-                try {
-                    bool success = connection.Write(
+                bool success = GrpcMessageLayer.Instance.Write(
+                    url,
+                    partitionId,
+                    objectId,
+                    value);
+
+                if (success) {
+                    Console.WriteLine(
+                        "[{0}] Write object <{1},{2}> with value {3} successfull",
+                        DateTime.Now.ToString("HH:mm:ss"),
                         partitionId,
                         objectId,
                         value);
-
-                    if (success) {
-                        Console.WriteLine(
-                            "[{0}] Write object <{1},{2}> with value {3} successfull",
-                            DateTime.Now.ToString("HH:mm:ss"),
-                            partitionId,
-                            objectId,
-                            value);
-                    } else {
-                        Console.WriteLine(
-                            "[{0}] Write object <{1},{2}> failed",
-                            DateTime.Now.ToString("HH:mm:ss"),
-                            partitionId,
-                            objectId);
-                    }
-                }
-                catch (ReplicaFailureException) {
+                } else {
                     Console.WriteLine(
-                        "[{0}] Write object <{1},{2}> failed: Partition master unavailable",
+                        "[{0}] Write object <{1},{2}> failed",
                         DateTime.Now.ToString("HH:mm:ss"),
                         partitionId,
                         objectId);
-                    namingService.AddCrashed(url);
                 }
             } else {
                 Console.WriteLine(
@@ -303,6 +263,14 @@ namespace Client {
                     DateTime.Now.ToString("HH:mm:ss"),
                     partitionId,
                     objectId);
+            }
+        }
+
+        private void OnReplicaFailureEvent(object sender, ReplicaFailureEventArgs args) {
+            lock(attachedServerLock) {
+                if (args.Url == attachedServerUrl) {
+                    attachedServerUrl = null;
+                }
             }
         }
     }
