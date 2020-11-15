@@ -54,29 +54,5 @@ namespace Client.Grpc {
                 deadline: DateTime.UtcNow.AddSeconds(60));
             storedObjects = response.Objects.ToImmutableList();
         }
-
-        public bool ListIds(out ImmutableList<Identifier> ids, string partitionId) {
-            ids = null;
-
-            ListIdsRequest request = new ListIdsRequest { PartitionId = partitionId };
-
-            try {
-                ListIdsResponse response = client.ListIds(request);
-                ids = response.Ids.ToImmutableList();
-                return true;
-            }
-            catch (RpcException e) when (e.StatusCode == StatusCode.DeadlineExceeded ||
-                                         e.StatusCode == StatusCode.Internal) {
-                throw new ReplicaFailureException(target);
-            }
-            catch (RpcException e) {
-                Console.WriteLine(
-                    "[{0}] Error {1} on list ids from server {2}",
-                    DateTime.Now.ToString("HH:mm:ss"),
-                    e.StatusCode,
-                    target);
-                return false;
-            }
-        }
     }
 }

@@ -1,4 +1,6 @@
-﻿using Grpc.Core;
+﻿using Common.Grpc;
+using Common.Utils;
+using Grpc.Core;
 using System;
 
 using KVStoreServer.Communications;
@@ -11,8 +13,6 @@ using ProtoKeyValueStore = Common.Protos.KeyValueStore.KeyValueStoreService;
 using NamingServiceProto = Common.Protos.NamingService.NamingService;
 using ReplicationServiceProto = Common.Protos.Replication.ReplicationService;
 
-using Common.Utils;
-
 namespace KVStoreServer {
     class Program {
         static void Main(string[] args) {
@@ -20,6 +20,8 @@ namespace KVStoreServer {
             AppContext.SetSwitch(
                "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport",
                true);
+
+            ChannelPool.SetMaxOpenChannels(10);
 
             ServerConfiguration serverConfig = ParseArgs(args, out bool file);
 
@@ -37,7 +39,6 @@ namespace KVStoreServer {
 
             ReplicationService replicationService = new ReplicationService(
                 partitionsDB,
-                new ReplicationConnectionFactory(),
                 serverConfig);
 
             RequestsDispatcher dispatcher = new RequestsDispatcher(

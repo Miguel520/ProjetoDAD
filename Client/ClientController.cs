@@ -55,7 +55,7 @@ namespace Client {
 
             // Sort partitions by id for better display
             Console.WriteLine(
-                "[{0}] List Global System Ids",
+                "[{0}] List Global System",
                 DateTime.Now.ToString("HH:mm:ss"));
 
             foreach (string serverId in namingService.ServersIds.Sort()) {

@@ -41,13 +41,6 @@ namespace KVStoreServer.Grpc {
                 };
         }
 
-        public override async Task<ListIdsResponse> ListIds(ListIdsRequest request, ServerCallContext context) {
-            IEnumerable<StoredValueDto> list = await dispatcher.ListGlobal(ParseListIdsrequest(request));
-            return new ListIdsResponse {
-                Ids = { BuildIdentifierObjects(list) }
-            };
-        }
-
         private static IEnumerable<StoredObject> BuildStoredObjects(
            IEnumerable<StoredValueDto> storedObjects) {
 
@@ -58,15 +51,6 @@ namespace KVStoreServer.Grpc {
                     Value =  obj.Value,
                     IsMaster = obj.IsMaster,
                     IsLocked = obj.IsLocked
-                };
-            });
-        }
-
-        private static IEnumerable<Identifier> BuildIdentifierObjects(IEnumerable<StoredValueDto> storedObjects) {
-            return storedObjects.Select(obj => {
-                return new Identifier {
-                    PartitionId = obj.PartitionId,
-                    ObjectId = obj.ObjectId
                 };
             });
         }
@@ -83,12 +67,6 @@ namespace KVStoreServer.Grpc {
                 PartitionId = request.PartitionId,
                 ObjectId = request.ObjectId,
                 ObjectValue = request.ObjectValue
-            };
-        }
-
-        private ListIdsArguments ParseListIdsrequest(ListIdsRequest request) {
-            return new ListIdsArguments {
-                PartitionId = request.PartitionId
             };
         }
     }

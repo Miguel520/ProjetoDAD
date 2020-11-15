@@ -6,7 +6,6 @@ service KeyValueStoreService {
     rpc Read(ReadRequest) returns (ReadResponse);
     rpc Write(WriteRequest) returns (WriteResponse);
     rpc List(ListRequest) returns (ListResponse);
-    rpc ListIds(ListIdsRequest) returns (ListIdsResponse);
 }
 
 message ReadRequest {
@@ -40,17 +39,4 @@ message StoredObject {
     string value = 3;
     bool is_master = 4;
     bool is_Locked = 5;
-}
-
-message ListIdsRequest {
-    string partition_id = 1;
-}
-
-message ListIdsResponse {
-    repeated Identifier ids = 1;
-}
-
-message Identifier {
-    string partition_id = 1;
-    string object_id = 2;
 }
