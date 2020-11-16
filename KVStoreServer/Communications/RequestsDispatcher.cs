@@ -53,13 +53,6 @@ namespace KVStoreServer.Communications {
             WaitFreeze();
             await WaitDelay();
             replicationService.TryGetAllObjects(out List<StoredValueDto> objects);
-            return objects.ToImmutableList(); ;
-        }
-
-        public async Task<ImmutableList<StoredValueDto>> ListGlobal(ListIdsArguments args) {
-            WaitFreeze();
-            await WaitDelay();
-            replicationService.TryGetAllObjectsThisPartition(out List<StoredValueDto> objects, args);
             return objects.ToImmutableList();
         }
 

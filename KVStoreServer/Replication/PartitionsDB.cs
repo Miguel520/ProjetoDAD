@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using KVStoreServer.Grpc;
 
 namespace KVStoreServer.Replication {
 
@@ -29,6 +30,7 @@ namespace KVStoreServer.Replication {
         private readonly string selfId;
 
         public PartitionsDB(string selfId, string selfUrl) {
+            GrpcMessageLayer.ReplicaFailureEvent += OnReplicaFailure;
             urls.TryAdd(selfId, selfUrl);
             this.selfId = selfId;
         }
@@ -219,7 +221,8 @@ namespace KVStoreServer.Replication {
         /*
          * Removes server with given url from every partition, or correspondence
          */
-        public void RemoveUrl(string serverUrl) {
+        public void OnReplicaFailure(object sender, ReplicaFailureEventArgs args) {
+            string serverUrl = args.Url;
             string serverId = urls.First(pair => pair.Value.Equals(serverUrl)).Key;
             string partitionName = partitionMasters.FirstOrDefault(pair => pair.Value == serverId).Key;
 
