@@ -2,7 +2,7 @@
   "profiles": {
     "PuppetMaster": {
       "commandName": "Project",
-      "commandLineArgs": "localhost WriteMultipleClientsTest.txt"
+      "commandLineArgs": "localhost AutoDetectCrashTest.txt"
     }
   }
 }

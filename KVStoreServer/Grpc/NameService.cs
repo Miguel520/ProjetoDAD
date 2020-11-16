@@ -19,7 +19,7 @@ namespace KVStoreServer.Grpc {
 
         public override Task<LookupResponse> Lookup(LookupRequest request, ServerCallContext context) {
             string serverId = request.ServerId;
-            if (dB.TryGetUrl(serverId, out string serverUrl)) {
+            if (FailureDetectionLayer.Instance.TryGetServer(serverId, out string serverUrl)) {
                 return Task.FromResult(new LookupResponse { ServerUrl = serverUrl });
             }
             throw new RpcException(new Status(StatusCode.NotFound, "No Such Id"));
@@ -31,7 +31,7 @@ namespace KVStoreServer.Grpc {
             
             string partitionName = request.PartitionId;
             if (dB.TryGetMaster(partitionName, out string masterId)
-                && dB.TryGetUrl(masterId, out string masterUrl)) {
+                && FailureDetectionLayer.Instance.TryGetServer(masterId, out string masterUrl)) {
 
                 return Task.FromResult(new LookupMasterResponse { MasterUrl = masterUrl });
             }

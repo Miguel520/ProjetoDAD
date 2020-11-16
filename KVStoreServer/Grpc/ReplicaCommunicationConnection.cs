@@ -1,23 +1,23 @@
 ﻿using Common.Grpc;
-using Common.Protos.Replication;
+using Common.Protos.ReplicaCommunication;
 using Grpc.Core;
 using System;
 using System.Threading.Tasks;
 
-using static Common.Protos.Replication.ReplicationService;
+using static Common.Protos.ReplicaCommunication.ReplicaCommunicationService;
 
 namespace KVStoreServer.Grpc {
-    public class ReplicationConnection {
+    public class ReplicaCommunicationConnection {
 
         private readonly ChannelBase channel;
-        private readonly ReplicationServiceClient client;
+        private readonly ReplicaCommunicationServiceClient client;
 
-        public ReplicationConnection(string url) {
+        public ReplicaCommunicationConnection(string url) {
             channel = ChannelPool.Instance.ForUrl(url);
-            client = new ReplicationServiceClient(channel);
+            client = new ReplicaCommunicationServiceClient(channel);
         }
 
-        ~ReplicationConnection() {
+        ~ReplicaCommunicationConnection() {
             ChannelPool.Instance.ClearChannel(channel);
         }
 
@@ -37,6 +37,12 @@ namespace KVStoreServer.Grpc {
                     ObjectId = objectId,
                     ObjectValue = objectValue
                 },
+                deadline: DateTime.UtcNow.AddSeconds(30));
+        }
+
+        public async Task Ping() {
+            await client.PingAsync(
+                new PingRequest { },
                 deadline: DateTime.UtcNow.AddSeconds(30));
         }
     }

@@ -5,7 +5,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using KVStoreServer.Grpc;
+using KVStoreServer.Naming;
+using KVStoreServer.Events;
 
 namespace KVStoreServer.Replication {
 
@@ -19,10 +20,6 @@ namespace KVStoreServer.Replication {
         private readonly ConcurrentDictionary<string, HashSet<string>> partitions =
             new ConcurrentDictionary<string, HashSet<string>>();
 
-        // Mappings for server ids and urls
-        private readonly ConcurrentDictionary<string, string> urls =
-            new ConcurrentDictionary<string, string>();
-
         // Mappings for partitions ids and master servers
         private readonly ConcurrentDictionary<string, string> partitionMasters =
             new ConcurrentDictionary<string, string>();
@@ -30,8 +27,8 @@ namespace KVStoreServer.Replication {
         private readonly string selfId;
 
         public PartitionsDB(string selfId, string selfUrl) {
-            GrpcMessageLayer.ReplicaFailureEvent += OnReplicaFailure;
-            urls.TryAdd(selfId, selfUrl);
+            NamingServiceLayer.ReplicaFailureEvent += OnReplicaFailure;
+            FailureDetectionLayer.Instance.RegisterServer(selfId, selfUrl);
             this.selfId = selfId;
         }
 
@@ -53,7 +50,7 @@ namespace KVStoreServer.Replication {
                 parts = line.Split(",");
 
                 if (parts.Length != 2) return false;
-                urls.TryAdd(parts[0], parts[1]);
+                FailureDetectionLayer.Instance.RegisterServer(parts[0], parts[1]);
                 
             }
 
@@ -69,7 +66,7 @@ namespace KVStoreServer.Replication {
 
                 HashSet<string> partition = new HashSet<string>();
                 for (int j = 1; j < parts.Length; j++) {
-                    if (!urls.TryGetValue(parts[j], out string _)) {
+                    if (!FailureDetectionLayer.Instance.TryGetServer(parts[j], out string _)) {
                         Console.WriteLine("Server id {0} does not exist.", parts[j]);
                         return false;
                     }
@@ -115,7 +112,7 @@ namespace KVStoreServer.Replication {
                 Conditions.AssertArgument(partition.Contains(masterId));
 
                 foreach ((string serverId, string serverUrl) in members) {
-                    bool alreadyExists = urls.TryGetValue(
+                    bool alreadyExists = FailureDetectionLayer.Instance.TryGetServer(
                         serverId,
                         out string currentUrl);
                     
@@ -130,11 +127,8 @@ namespace KVStoreServer.Replication {
 
                 // Insert servers correspondence
                 foreach ((string serverId, string serverUrl) in members) {
-                    string addValue = urls.GetOrAdd(serverId, serverUrl);
-                    // If first time adding then addValue is serverUrl and they are equal
-                    // If not first time then addValue is the value before adding
-                    // and it must be equal to serverUrl
-                    Conditions.AssertState(addValue.Equals(serverUrl));
+                    Conditions.AssertState(
+                        FailureDetectionLayer.Instance.RegisterServer(serverId, serverUrl));
                 }
             }
         }
@@ -153,14 +147,6 @@ namespace KVStoreServer.Replication {
                 partition = null;
                 return false;
             }
-        }
-
-        /*
-         * Returns true if a server with the given id exists and url is set to the server url,
-         * otherwise returns false and url is set to null
-         */
-        public bool TryGetUrl(string serverId, out string url) {
-            return urls.TryGetValue(serverId, out url);
         }
 
         /*
@@ -221,9 +207,8 @@ namespace KVStoreServer.Replication {
         /*
          * Removes server with given url from every partition, or correspondence
          */
-        public void OnReplicaFailure(object sender, ReplicaFailureEventArgs args) {
-            string serverUrl = args.Url;
-            string serverId = urls.First(pair => pair.Value.Equals(serverUrl)).Key;
+        public void OnReplicaFailure(object sender, IdFailureEventArgs args) {
+            string serverId = args.Id;
             string partitionName = partitionMasters.FirstOrDefault(pair => pair.Value == serverId).Key;
 
             // Remove from partitions
@@ -232,8 +217,6 @@ namespace KVStoreServer.Replication {
                     partition.Remove(serverId);
                 }
 
-                // Remove from correspondences
-                urls.TryRemove(serverId, out _);
                 // Remove from masters
                 if (partitionName != null) {
                     partitionMasters.TryRemove(partitionName, out _);

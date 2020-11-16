@@ -1,3 +1,0 @@
-﻿Server 1 http://localhost:12345 0 0
-Wait 1000
-Crash 1
