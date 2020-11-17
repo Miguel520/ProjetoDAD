@@ -21,29 +21,34 @@ namespace KVStoreServer.Grpc {
             ChannelPool.Instance.ClearChannel(channel);
         }
 
-        public async Task Lock(string partitionId, string objectId) {
+        public async Task Lock(string partitionId, string objectId, long timeout) {
             await client.LockAsync(
                 new LockRequest {
                     PartitionId = partitionId,
                     ObjectId = objectId
                 },
-                deadline: DateTime.UtcNow.AddSeconds(30));
+                deadline: DateTime.UtcNow.AddMilliseconds(timeout));
         }
 
-        public async Task Write(string partitionId, string objectId, string objectValue) {
+        public async Task Write(
+            string partitionId, 
+            string objectId, 
+            string objectValue,
+            long timeout) {
+
             await client.WriteAsync(
                 new WriteRequest {
                     PartitionId = partitionId,
                     ObjectId = objectId,
                     ObjectValue = objectValue
                 },
-                deadline: DateTime.UtcNow.AddSeconds(30));
+                deadline: DateTime.UtcNow.AddMilliseconds(timeout));
         }
 
-        public async Task Ping() {
+        public async Task Ping(long timeout) {
             await client.PingAsync(
                 new PingRequest { },
-                deadline: DateTime.UtcNow.AddSeconds(30));
+                deadline: DateTime.UtcNow.AddMilliseconds(timeout));
         }
     }
 }

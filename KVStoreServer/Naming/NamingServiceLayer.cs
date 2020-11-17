@@ -45,13 +45,15 @@ namespace KVStoreServer.Naming {
         public async Task Lock(
             string serverId,
             string partitionId,
-            string objectId) {
+            string objectId,
+            long timeout) {
 
             if (urls.TryGetValue(serverId, out string serverUrl)) {
                 await GrpcMessageLayer.Instance.Lock(
                     serverUrl,
                     partitionId,
-                    objectId);
+                    objectId,
+                    timeout);
             }
         }
 
@@ -59,22 +61,25 @@ namespace KVStoreServer.Naming {
             string serverId,
             string partitionId,
             string objectId,
-            string objectValue) {
+            string objectValue,
+            long timeout) {
 
             if (urls.TryGetValue(serverId, out string serverUrl)) {
                 await GrpcMessageLayer.Instance.Write(
                     serverUrl,
                     partitionId,
                     objectId,
-                    objectValue);
+                    objectValue,
+                    timeout);
             }
         }
 
         public async Task Ping(
-            string serverId) {
+            string serverId,
+            long timeout) {
 
             if (urls.TryGetValue(serverId, out string serverUrl)) {
-                await GrpcMessageLayer.Instance.Ping(serverUrl);
+                await GrpcMessageLayer.Instance.Ping(serverUrl, timeout);
             }
         }
 

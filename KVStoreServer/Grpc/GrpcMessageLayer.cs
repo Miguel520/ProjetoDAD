@@ -14,11 +14,12 @@ namespace KVStoreServer.Grpc {
         public async Task Lock(
             string serverUrl, 
             string partitionId, 
-            string objectId) {
+            string objectId,
+            long timeout) {
 
             try {
                 ReplicaCommunicationConnection connection = new ReplicaCommunicationConnection(serverUrl);
-                await connection.Lock(partitionId, objectId);
+                await connection.Lock(partitionId, objectId, timeout);
             }
             catch (RpcException exception) {
                 HandleRpcException(serverUrl, exception);
@@ -29,11 +30,12 @@ namespace KVStoreServer.Grpc {
             string serverUrl,
             string partitionId,
             string objectId,
-            string objectValue) {
+            string objectValue,
+            long timeout) {
 
             try {
                 ReplicaCommunicationConnection connection = new ReplicaCommunicationConnection(serverUrl);
-                await connection.Write(partitionId, objectId, objectValue);
+                await connection.Write(partitionId, objectId, objectValue, timeout);
             }
             catch (RpcException exception) {
                 HandleRpcException(serverUrl, exception);
@@ -41,11 +43,12 @@ namespace KVStoreServer.Grpc {
         }
 
         public async Task Ping(
-            string serverUrl) {
+            string serverUrl,
+            long timeout) {
 
             try {
                 ReplicaCommunicationConnection connection = new ReplicaCommunicationConnection(serverUrl);
-                await connection.Ping();
+                await connection.Ping(timeout);
             }
             catch (RpcException exception) {
                 HandleRpcException(serverUrl, exception);

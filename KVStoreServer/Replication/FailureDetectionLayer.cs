@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,9 +15,9 @@ namespace KVStoreServer.Replication {
     public class FailureDetectionLayer {
 
         private static readonly int PING_DELAY = 10000;
-        private static readonly int INITIAL_TIMEOUT = 60000;
+        private static readonly int INITIAL_RTT = 30000;
 
-        private ConcurrentDictionary<string, long> currentTimeouts =
+        private ConcurrentDictionary<string, long> estimatedRTT =
             new ConcurrentDictionary<string, long>();
 
         private string selfId;
@@ -37,7 +38,7 @@ namespace KVStoreServer.Replication {
             string serverUrl) {
             
             if (NamingServiceLayer.Instance.RegisterServer(serverId, serverUrl)) {
-                currentTimeouts.TryAdd(serverId, INITIAL_TIMEOUT);
+                estimatedRTT.TryAdd(serverId, INITIAL_RTT);
                 return true;
             }
             return false;
@@ -55,7 +56,9 @@ namespace KVStoreServer.Replication {
             string partitionId,
             string objectId) {
 
-            await NamingServiceLayer.Instance.Lock(serverId, partitionId, objectId);
+            if (estimatedRTT.TryGetValue(serverId, out long rtt)) {
+                await NamingServiceLayer.Instance.Lock(serverId, partitionId, objectId, 2 * rtt);
+            }
         }
 
         public async Task Write(
@@ -64,30 +67,44 @@ namespace KVStoreServer.Replication {
             string objectId,
             string objectValue) {
 
-            await NamingServiceLayer.Instance.Write(serverId, partitionId, objectId, objectValue);
+            if (estimatedRTT.TryGetValue(serverId, out long rtt)) {
+                await NamingServiceLayer.Instance.Write(
+                    serverId, 
+                    partitionId, 
+                    objectId, 
+                    objectValue,
+                    2 * rtt);
+            }
         }
 
         private async void PingAliveServers() {
             while(true) {
                 //Ping all servers
-                Task[] tasks = currentTimeouts.Keys.Where(id => selfId != id).Select(PingSingleServer).ToArray();
+                Task[] tasks = estimatedRTT.Keys.Where(id => selfId != id).Select(PingSingleServer).ToArray();
                 Task.WaitAll(tasks);
                 await Task.Delay(PING_DELAY);
             }
         }
 
         private async Task PingSingleServer(string serverId) {
-            Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
-            await NamingServiceLayer.Instance.Ping(serverId);
-            stopWatch.Stop();
-            long timeEllapsed = stopWatch.ElapsedMilliseconds;
-            // TODO: Update value with walking average
+            if (estimatedRTT.TryGetValue(serverId, out long rtt)) {
+                Stopwatch stopWatch = new Stopwatch();
+                stopWatch.Start();
+                await NamingServiceLayer.Instance.Ping(serverId, 2 * rtt);
+                stopWatch.Stop();
+                long timeEllapsed = stopWatch.ElapsedMilliseconds;
+                lock(estimatedRTT) {
+                    if (estimatedRTT.ContainsKey(serverId)) {
+                        // newTimout = sampledTimout * 0.8 + oldTimout * 0.2
+                        estimatedRTT[serverId] = (8 * timeEllapsed) / 10 + (2 * rtt) / 10;
+                    }
+                }
+            }
         }
 
         public void OnReplicaFailure(object sender, IdFailureEventArgs args) {
             string serverId = args.Id;
-            currentTimeouts.TryRemove(serverId, out _);
+            estimatedRTT.TryRemove(serverId, out _);
         }
     }
 }
