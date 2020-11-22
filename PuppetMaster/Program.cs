@@ -18,6 +18,12 @@ namespace PuppetMaster {
                 true);
 
             PMConfiguration config = ParseArgs(args);
+            
+            Console.WriteLine(
+                "[{0}] Puppet Master started with version {1}",
+                DateTime.Now.ToString("HH:mm:ss"),
+                config.Version);
+            
             NameServiceDB nameServiceDB = new NameServiceDB();
             PMController controller = new PMController(config, nameServiceDB);
 
@@ -39,24 +45,25 @@ namespace PuppetMaster {
         }
 
         private static PMConfiguration ParseArgs(string[] args) {
-            if (args.Length < 1) {
+            if (args.Length < 2
+                || !int.TryParse(args[1], out int version)) {
                 OnInvalidNumberOfArguments();
                 Environment.Exit(1);
                 return null;
             }
-            
             PMConfiguration config = new PMConfiguration {
                 Host = args[0],
-                Port = PORT
+                Port = PORT,
+                Version = version
             };
             switch (args.Length) {
                 // Read commands from Standard Input
-                case 1:
+                case 2:
                     config.InputSource = GetStdinStreamInput();
                     return config;
                 // Read commands from Configuration File
-                case 2:
-                    config.InputSource = GetFileStreamInput(args[1]);
+                case 3:
+                    config.InputSource = GetFileStreamInput(args[2]);
                     return config;
                 default:
                     OnInvalidNumberOfArguments();
@@ -94,7 +101,7 @@ namespace PuppetMaster {
         }
 
         private static void DisplayUsage() {
-            Console.WriteLine("Usage: PuppetMaster name_server_host name_server_port [fileName]");
+            Console.WriteLine("Usage: PuppetMaster host version [fileName]");
         }
     }
 }

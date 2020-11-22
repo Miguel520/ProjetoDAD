@@ -25,7 +25,8 @@ namespace PCS.Grpc {
                 Host = request.Host,
                 Port = request.Port,
                 MinDelay = request.MinDelay,
-                MaxDelay = request.MaxDelay
+                MaxDelay = request.MaxDelay,
+                Version = request.Version
             };
         }
 
@@ -43,7 +44,8 @@ namespace PCS.Grpc {
                 Host = request.Host,
                 Port = request.Port,
                 Script = request.Script,
-                NameServersUrls = request.NamingServersUrls.ToList()
+                NameServersUrls = request.NamingServersUrls.ToList(),
+                Version = request.Version
             };
         }
     }

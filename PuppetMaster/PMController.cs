@@ -66,7 +66,8 @@ namespace PuppetMaster {
                 serverId,
                 command.Port,
                 command.MinDelay,
-                command.MaxDelay)
+                command.MaxDelay,
+                config.Version)
             .ContinueWith(antecedent => {
                 if (antecedent.Result) {
                     Console.WriteLine(
@@ -150,7 +151,8 @@ namespace PuppetMaster {
                 username,
                 command.Port,
                 command.ScriptFile,
-                nameServiceDB.ListServers())
+                nameServiceDB.ListServers(),
+                config.Version)
             .ContinueWith(antecedent => {
                 if (antecedent.Result) {
                     Console.WriteLine(

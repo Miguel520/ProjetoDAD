@@ -26,11 +26,12 @@ namespace Client {
             ClientConfiguration clientConfig = ParseArgs(args);
             
             Console.WriteLine(
-                "[{0}] Client {1} executing script {2} at {3}",
+                "[{0}] Client {1} executing script {2} at {3} with version {4}",
                 DateTime.Now.ToString("HH:mm:ss"),
                 clientConfig.Username,
                 clientConfig.Script,
-                clientConfig.Url);
+                clientConfig.Url,
+                clientConfig.Version);
 
             NamingService namingService = new NamingService(clientConfig.NamingServersUrls);
             ClientController controller = new ClientController(namingService);
@@ -73,8 +74,9 @@ namespace Client {
         }
 
         private static ClientConfiguration ParseArgs(string[] args) {
-            if (args.Length < 5 
-                || !int.TryParse(args[2], out int port)) {
+            if (args.Length < 6 
+                || !int.TryParse(args[2], out int port)
+                || !int.TryParse(args[4], out int version)) {
                 OnInvalidArguments();
                 Environment.Exit(1);
                 return null;
@@ -87,7 +89,7 @@ namespace Client {
             // All the arguments after script are name servers the client can use
             ImmutableList<string>.Builder builder = ImmutableList.CreateBuilder<string>();
 
-            for (int i = 4; i < args.Length; i++) {
+            for (int i = 5; i < args.Length; i++) {
                 builder.Add(args[i]);
             }
 
@@ -96,7 +98,8 @@ namespace Client {
                 host,
                 port,
                 script,
-                builder.ToImmutable());
+                builder.ToImmutable(),
+                version);
         }
 
         private static void OnInvalidArguments() {
@@ -105,7 +108,7 @@ namespace Client {
         }
 
         private static void DisplayUsage() {
-            Console.WriteLine("Usage: Client username host port script_file_name server_host_name server_port_name");
+            Console.WriteLine("Usage: Client username host port script version name_server_1_url [name_server_2_url...]");
         }
     }
 }

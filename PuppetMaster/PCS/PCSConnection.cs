@@ -39,9 +39,17 @@ namespace PuppetMaster.PCS {
             string serverId, 
             int port, 
             int minDelay, 
-            int maxDelay) {
+            int maxDelay,
+            int version) {
+
             CreateServerRequest request =
-                PCSMessageFactory.BuildCreateServerRequest(serverId, host, port, minDelay, maxDelay);
+                PCSMessageFactory.BuildCreateServerRequest(
+                    serverId, 
+                    host,
+                    port, 
+                    minDelay, 
+                    maxDelay, 
+                    version);
 
             try {
                 await client.CreateServerAsync(request);
@@ -64,7 +72,8 @@ namespace PuppetMaster.PCS {
             string username, 
             int port, 
             string scriptFile, 
-            IEnumerable<string> nameServersUrls) {
+            IEnumerable<string> nameServersUrls,
+            int version) {
 
             CreateClientRequest request =
                 PCSMessageFactory.BuildCreateClientRequest(
@@ -72,7 +81,8 @@ namespace PuppetMaster.PCS {
                     host, 
                     port, 
                     scriptFile, 
-                    nameServersUrls);
+                    nameServersUrls,
+                    version);
             try {
                 await client.CreateClientAsync(request);
                 return true;

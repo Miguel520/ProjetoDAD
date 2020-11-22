@@ -1,5 +1,4 @@
-﻿using Common.Utils;
-using System.IO;
+﻿using System.IO;
 
 namespace PuppetMaster.Configuration {
     public class PMConfiguration {
@@ -7,7 +6,7 @@ namespace PuppetMaster.Configuration {
         public string Host { get; set; }
         public int Port { get; set; }
 
-        public string Url { get { return HttpURLs.FromHostAndPort(Host, Port); } }
+        public int Version { get; set; }
 
         public TextReader InputSource { get; set; }
     }

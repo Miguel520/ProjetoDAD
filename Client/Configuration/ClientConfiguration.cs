@@ -8,13 +8,15 @@ namespace Client.Configuration {
             string host,
             int port,
             string script,
-            ImmutableList<string> namingServersUrls) {
+            ImmutableList<string> namingServersUrls,
+            int version) {
 
             Username = username;
             Host = host;
             Port = port;
             Script = script;
             NamingServersUrls = namingServersUrls;
+            Version = version;
         }
 
         public string Username { get; }
@@ -22,6 +24,7 @@ namespace Client.Configuration {
         public int Port { get; }
         public string Script { get; }
         public ImmutableList<string> NamingServersUrls { get; }
+        public int Version { get; }
 
         public string Url {
             get {

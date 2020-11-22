@@ -15,14 +15,16 @@ namespace PuppetMaster.PCS {
             string host,
             int port,
             int minDelay,
-            int maxDelay) {
+            int maxDelay,
+            int version) {
 
             return new CreateServerRequest {
                 ServerId = serverId,
                 Host = host,
                 Port = port,
                 MinDelay = minDelay,
-                MaxDelay = maxDelay
+                MaxDelay = maxDelay,
+                Version = version
             };
         }
 
@@ -31,14 +33,16 @@ namespace PuppetMaster.PCS {
             string host,
             int port,
             string scriptFile,
-            IEnumerable<string> namingServersUrls) {
+            IEnumerable<string> namingServersUrls,
+            int version) {
 
             return new CreateClientRequest {
                 Username = username,
                 Host = host,
                 Port = port,
                 Script = scriptFile,
-                NamingServersUrls = { namingServersUrls }
+                NamingServersUrls = { namingServersUrls },
+                Version = version
             };
         }
     }
