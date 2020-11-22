@@ -66,8 +66,11 @@ namespace KVStoreServer {
             };
             server.Start();
             Console.WriteLine(
-                $"Server with id {serverConfig.ServerId} " +
-                $"started at {serverConfig.Url}");
+                "[{0}] Server {1} running at {2} with version {3}",
+                DateTime.Now.ToString("HH:mm:ss"),
+                serverConfig.ServerId,
+                serverConfig.Url,
+                serverConfig.Version);
             Console.WriteLine("Press any key to stop the server...");
             Console.ReadKey();
 
@@ -77,10 +80,11 @@ namespace KVStoreServer {
         private static ServerConfiguration ParseArgs(string[] args, out bool file) {
             file = false;
             string filename = null;
-            if ((args.Length != 5 && args.Length != 6)
+            if ((args.Length != 6 && args.Length != 7)
                 || !int.TryParse(args[2], out int port)
                 || !int.TryParse(args[3], out int minDelay)
-                || !int.TryParse(args[4], out int maxDelay)) {
+                || !int.TryParse(args[4], out int maxDelay)
+                || !int.TryParse(args[5], out int version)) {
                 OnInvalidNumberOfArguments();
                 Environment.Exit(1);
                 return null;
@@ -88,8 +92,8 @@ namespace KVStoreServer {
             string serverId = args[0];
             string host = args[1];
 
-            if (args.Length == 6) { 
-                filename = args[5];
+            if (args.Length == 7) { 
+                filename = args[6];
                 file = true;
             }
 
@@ -99,8 +103,8 @@ namespace KVStoreServer {
                 port,
                 minDelay,
                 maxDelay,
-                filename
-                );
+                filename,
+                version);
         }
 
         private static void OnInvalidNumberOfArguments() {
@@ -109,7 +113,7 @@ namespace KVStoreServer {
         }
 
         private static void DisplayUsage() {
-            Console.WriteLine("Usage: Server server_id host port min_delay max_delay");
+            Console.WriteLine("Usage: Server server_id host port min_delay max_delay version [config_file]");
         }
 
         private static void DisplayFileSyntax() {

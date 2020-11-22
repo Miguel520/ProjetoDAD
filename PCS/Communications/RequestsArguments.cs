@@ -9,15 +9,18 @@ namespace PCS.Communications {
         public int Port { get; set; }
         public int MinDelay { get; set; }
         public int MaxDelay { get; set; }
+        public int Version { get; set; }
 
-        //arguments: server_id host port min_delay max_delay
+        //arguments: server_id host port min_delay max_delay version
         public string CollapseArguments() {
             string[] args = { 
                 ServerId,
                 Host,
                 Port.ToString(),
                 MinDelay.ToString(),
-                MaxDelay.ToString()};
+                MaxDelay.ToString(),
+                Version.ToString()    
+            };
 
             return string.Join(" ", args);
         }
@@ -31,13 +34,17 @@ namespace PCS.Communications {
 
         public List<string> NameServersUrls { get; set; }
 
-        //arguments: username host port script_path server_host_name server_host_port
+        public int Version { get; set; }
+
+        //arguments: username host port script version (name_server_url)+
         public string CollapseArguments() {
-            string[] args = { 
+            string[] args = {
                 Username,
                 Host,
                 Port.ToString(),
-                Script };
+                Script,
+                Version.ToString()
+            };
 
             return string.Join(" ", args.Concat(NameServersUrls));
         }
