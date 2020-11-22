@@ -11,7 +11,7 @@ using KVStoreServer.Replication;
 using ProtoServerConfiguration = Common.Protos.ServerConfiguration.ServerConfigurationService;
 using ProtoKeyValueStore = Common.Protos.KeyValueStore.KeyValueStoreService;
 using NamingServiceProto = Common.Protos.NamingService.NamingService;
-using ReplicationServiceProto = Common.Protos.Replication.ReplicationService;
+using ReplicationServiceProto = Common.Protos.ReplicaCommunication.ReplicaCommunicationService;
 
 namespace KVStoreServer {
     class Program {
@@ -24,6 +24,8 @@ namespace KVStoreServer {
             ChannelPool.SetMaxOpenChannels(10);
 
             ServerConfiguration serverConfig = ParseArgs(args, out bool file);
+
+            FailureDetectionLayer.Instance.RegisterSelfId(serverConfig.ServerId);
 
             // Add self id so that server knows itself
             PartitionsDB partitionsDB = new PartitionsDB(
@@ -52,7 +54,7 @@ namespace KVStoreServer {
                         new ConfigurationService(dispatcher)),
                     ProtoKeyValueStore.BindService(new StorageService(dispatcher)),
                     NamingServiceProto.BindService(new NamingService(partitionsDB)),
-                    ReplicationServiceProto.BindService(new PartitionReplicationService(dispatcher))
+                    ReplicationServiceProto.BindService(new ReplicaCommunicationServiceImpl(dispatcher))
                     
                 },
                 Ports = {

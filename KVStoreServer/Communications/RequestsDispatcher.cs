@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
-using Common.Protos.KeyValueStore;
 using KVStoreServer.Configuration;
 using KVStoreServer.Replication;
 using KVStoreServer.Storage;
@@ -113,6 +112,11 @@ namespace KVStoreServer.Communications {
             WaitFreeze();
             await WaitDelay();
             replicationService.WriteObject(args);
+        }
+
+        public async Task Ping() {
+            WaitFreeze();
+            await WaitDelay();
         }
 
         private void WaitFreeze() {

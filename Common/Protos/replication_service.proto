@@ -1,10 +1,11 @@
 ﻿syntax = "proto3";
 
-option csharp_namespace = "Common.Protos.Replication";
+option csharp_namespace = "Common.Protos.ReplicaCommunication";
 
-service ReplicationService {
+service ReplicaCommunicationService {
 	rpc Lock(LockRequest) returns (LockResponse);
 	rpc Write(WriteRequest) returns (WriteResponse);
+	rpc Ping(PingRequest) returns (PingResponse);
 }
 
 message LockRequest {
@@ -21,3 +22,7 @@ message WriteRequest {
 }
 
 message WriteResponse {}
+
+message PingRequest {}
+
+message PingResponse {}

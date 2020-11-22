@@ -1,14 +1,12 @@
 ﻿using Grpc.Core;
+using KVStoreServer.Events;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace KVStoreServer.Grpc {
     public class GrpcMessageLayer {
 
-        public static event EventHandler<ReplicaFailureEventArgs> ReplicaFailureEvent;
-
-        private readonly HashSet<string> crashedServers = new HashSet<string>();
+        public static event EventHandler<UrlFailureEventArgs> ReplicaFailureEvent;
 
         private GrpcMessageLayer() { }
         public static GrpcMessageLayer Instance { get; } = new GrpcMessageLayer();
@@ -16,17 +14,12 @@ namespace KVStoreServer.Grpc {
         public async Task Lock(
             string serverUrl, 
             string partitionId, 
-            string objectId) {
-
-            lock(crashedServers) {
-                if (crashedServers.Contains(serverUrl)) {
-                    return;
-                }
-            }
+            string objectId,
+            long timeout) {
 
             try {
-                ReplicationConnection connection = new ReplicationConnection(serverUrl);
-                await connection.Lock(partitionId, objectId);
+                ReplicaCommunicationConnection connection = new ReplicaCommunicationConnection(serverUrl);
+                await connection.Lock(partitionId, objectId, timeout);
             }
             catch (RpcException exception) {
                 HandleRpcException(serverUrl, exception);
@@ -37,17 +30,25 @@ namespace KVStoreServer.Grpc {
             string serverUrl,
             string partitionId,
             string objectId,
-            string objectValue) {
-
-            lock (crashedServers) {
-                if (crashedServers.Contains(serverUrl)) {
-                    return;
-                }
-            }
+            string objectValue,
+            long timeout) {
 
             try {
-                ReplicationConnection connection = new ReplicationConnection(serverUrl);
-                await connection.Write(partitionId, objectId, objectValue);
+                ReplicaCommunicationConnection connection = new ReplicaCommunicationConnection(serverUrl);
+                await connection.Write(partitionId, objectId, objectValue, timeout);
+            }
+            catch (RpcException exception) {
+                HandleRpcException(serverUrl, exception);
+            }
+        }
+
+        public async Task Ping(
+            string serverUrl,
+            long timeout) {
+
+            try {
+                ReplicaCommunicationConnection connection = new ReplicaCommunicationConnection(serverUrl);
+                await connection.Ping(timeout);
             }
             catch (RpcException exception) {
                 HandleRpcException(serverUrl, exception);
@@ -74,12 +75,9 @@ namespace KVStoreServer.Grpc {
         }
 
         private void BroadcastReplicaFailure(string serverUrl) {
-            lock (crashedServers) {
-                crashedServers.Add(serverUrl);
-            }
             ReplicaFailureEvent?.Invoke(
                 this,
-                new ReplicaFailureEventArgs { Url = serverUrl });
+                new UrlFailureEventArgs { Url = serverUrl });
         }
     }
 }

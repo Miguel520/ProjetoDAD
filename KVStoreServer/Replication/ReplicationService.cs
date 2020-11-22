@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Common.Exceptions;
 using KVStoreServer.Communications;
 using KVStoreServer.Configuration;
 using KVStoreServer.Grpc;
+using KVStoreServer.Naming;
 using KVStoreServer.Storage;
 
 namespace KVStoreServer.Replication {
@@ -44,19 +44,13 @@ namespace KVStoreServer.Replication {
                 // Get partition replicas urls
                 partitionsDB.TryGetPartition(arguments.PartitionId, out ImmutableHashSet<string> partitionIds);
 
-                HashSet<string> partitionUrls =
-                    partitionIds.Where(id => id != config.ServerId)
-                        .Select(serverId => {
-                            partitionsDB.TryGetUrl(serverId, out string url);
-                            return url;
-                        })
-                        .ToHashSet();
+                List<string> otherReplicasIds = partitionIds.Where(id => id != config.ServerId).ToList();
 
-                if (partitionUrls.Count > 0) {
+                if (otherReplicasIds.Count > 0) {
                     // Lock object in all replicas
-                    Task[] tasks = partitionUrls.Select(
-                        url => GrpcMessageLayer.Instance.Lock(
-                            url, 
+                    Task[] tasks = otherReplicasIds.Select(
+                        id => FailureDetectionLayer.Instance.Lock(
+                            id, 
                             arguments.PartitionId, 
                             arguments.ObjectId))
                         .ToArray();
@@ -68,11 +62,11 @@ namespace KVStoreServer.Replication {
                     arguments.PartitionId,
                     arguments.ObjectId);
 
-                if (partitionUrls.Count > 0) {
+                if (otherReplicasIds.Count > 0) {
                     // Write object in all replicas
-                    Task[] tasks = partitionUrls.Select(
-                        url => GrpcMessageLayer.Instance.Write(
-                            url,
+                    Task[] tasks = otherReplicasIds.Select(
+                        id => FailureDetectionLayer.Instance.Write(
+                            id,
                             arguments.PartitionId,
                             arguments.ObjectId,
                             arguments.ObjectValue))
