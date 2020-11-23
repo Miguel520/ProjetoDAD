@@ -12,6 +12,7 @@ using Client.Commands;
 using ProtoClientConfiguration = Common.Protos.ClientConfiguration.ClientConfigurationService;
 
 using static Client.Commands.CommandParser;
+using Client.KVS;
 
 namespace Client {
     class Program {
@@ -34,6 +35,9 @@ namespace Client {
                 clientConfig.Version);
 
             NamingService namingService = new NamingService(clientConfig.NamingServersUrls);
+
+            KVSMessageLayer.SetContext(namingService);
+
             ClientController controller = new ClientController(namingService);
 
             RequestsDispatcher dispatcher = new RequestsDispatcher(clientConfig);
