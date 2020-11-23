@@ -121,12 +121,13 @@ namespace Client {
 
             string partitionId = command.PartitionId.Replace(LOOPSTRING, currentRep.ToString());
             string objectId = command.ObjectId.Replace(LOOPSTRING, currentRep.ToString());
-            string serverId = command.ServerId.Replace(LOOPSTRING, currentRep.ToString());
+            // Check if server id is null
+            string serverId = command.ServerId?.Replace(LOOPSTRING, currentRep.ToString());
 
             bool success;
             string value;
             // No fallback server
-            if (serverId == "-1") {
+            if (serverId == null || serverId == "-1") {
                 success = KVSMessageLayer.Instance.Read(
                     partitionId,
                     objectId,

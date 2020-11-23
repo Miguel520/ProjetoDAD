@@ -44,11 +44,11 @@ namespace Client.Commands
         private static bool TryParseReadCommand(string[] arguments, out ICommand command) {
             command = null;
 
-            if (arguments.Length != 3) return false;
+            if (arguments.Length != 2 && arguments.Length != 3) return false;
 
             string partitionId = arguments[0];
             string objectId = arguments[1];
-            string serverId = arguments[2];
+            string serverId = (arguments.Length == 3 ? arguments[2] : null);
 
             command = new ReadCommand {
                 PartitionId = partitionId,
