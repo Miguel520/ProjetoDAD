@@ -28,7 +28,6 @@ namespace Common.Grpc {
             lock(this) {
                 refs--;
                 if (refs == 0) {
-                    Console.WriteLine("Clear channel to {0}", channel.Target);
                     channel.ShutdownAsync().Wait();
                 }
             }
