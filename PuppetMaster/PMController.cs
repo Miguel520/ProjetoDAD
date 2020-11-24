@@ -25,6 +25,9 @@ namespace PuppetMaster {
         private readonly PMConfiguration config;
         private readonly NameServiceDB nameServiceDB;
 
+        private bool partitionsCreated = false;
+        private Dictionary<string, string[]> partitions = new Dictionary<string, string[]>();
+
         public PMController(PMConfiguration config, NameServiceDB nameServiceDB) {
             this.config = config;
             this.nameServiceDB = nameServiceDB;
@@ -104,39 +107,24 @@ namespace PuppetMaster {
                 return;
             }
 
-            // Lookup servers urls
-            IEnumerable<Tuple<string, string>> servers = serverIds.Select(id => {
-                nameServiceDB.TryLookupServer(id, out string url);
-                return new Tuple<string, string>(id, url);
-            });
-
-            // Check if all servers already existed
-            if (!servers.All(server => server.Item2 != null)) {
-                Console.WriteLine("Unknown server ids");
-                return;
-            }
-
-            List<Task> joinPartitionTasks = new List<Task>();
-
-            // Send to all servers, even those not in the partition
-            // so that everyone knowns the state of the system
-            foreach (string url in nameServiceDB.ListServers()) {
-                ServerConfigurationConnection connection =
-                    new ServerConfigurationConnection(url);
-
-                joinPartitionTasks.Add(
-                    connection.JoinPartitionAsync(partitionId, servers, serverIds[0]));
-            }
-
-            Task.WhenAll(joinPartitionTasks.ToArray()).ContinueWith((antecedent) => {
+            // Store partition for later creation
+            if (partitions.TryAdd(partitionId, serverIds)) {
                 Console.WriteLine(
-                    "[{0}] Partition '{1}' created",
+                    "[{0}] Partition '{1}' submitted",
                     DateTime.Now.ToString("HH:mm:ss"),
                     partitionId);
-            });
+            }
+            else {
+                Console.WriteLine(
+                    "[{0}] Partition '{1}' already exists",
+                    DateTime.Now.ToString("HH:mm:ss"),
+                    partitionId);
+            }
         }
 
         public void OnCreateClientCommand(CreateClientCommand command) {
+            CreatePartitionsIfRequired();
+
             string username = command.Username;
             string url = HttpURLs.FromHostAndPort(command.Host, command.Port);
 
@@ -170,6 +158,7 @@ namespace PuppetMaster {
         }
 
         public void OnStatusCommand(StatusCommand command) {
+            CreatePartitionsIfRequired();
 
             ImmutableList<string> serverUrls = nameServiceDB.ListServers();
             ImmutableList<string> clientUrls = nameServiceDB.ListClients();
@@ -196,6 +185,8 @@ namespace PuppetMaster {
         }
 
         public void OnCrashServerCommand(CrashServerCommand command) {
+            CreatePartitionsIfRequired();
+
             // Check if server exists
             if (!nameServiceDB.TryLookupServer(command.ServerId, out string url)) {
                 Console.Error.WriteLine("Server with id {0} doesn't exist", command.ServerId);
@@ -213,6 +204,8 @@ namespace PuppetMaster {
         }
 
         public void OnFreezeServerCommand(FreezeServerCommand command) {
+            CreatePartitionsIfRequired();
+
             // Check if server exists
             if (!nameServiceDB.TryLookupServer(command.ServerId, out string url)) {
                 Console.Error.WriteLine("Server with id {0} doesn't exist", command.ServerId);
@@ -232,6 +225,8 @@ namespace PuppetMaster {
         }
 
         public void OnUnfreezeServerCommand(UnfreezeServerCommand command) {
+            CreatePartitionsIfRequired();
+
             // Check if server exists
             if (!nameServiceDB.TryLookupServer(command.ServerId, out string url)) {
                 Console.Error.WriteLine("Server with id {0} doesn't exist", command.ServerId);
@@ -256,6 +251,45 @@ namespace PuppetMaster {
                 DateTime.Now.ToString("HH:mm:ss"),
                 command.SleepTime);
             Thread.Sleep(command.SleepTime);
+        }
+
+        private void CreatePartitionsIfRequired() {
+            if (partitionsCreated) return;
+
+            List<Task> joinPartitionTasks = new List<Task>();
+
+            foreach ((string partitionId, string[] serverIds) in partitions) {
+                // Lookup servers urls
+                IEnumerable<Tuple<string, string>> servers = serverIds.Select(id => {
+                    nameServiceDB.TryLookupServer(id, out string url);
+                    return new Tuple<string, string>(id, url);
+                });
+
+                // Check if all servers already existed
+                if (!servers.All(server => server.Item2 != null)) {
+                    Console.WriteLine("Unknown server ids");
+                    return;
+                }
+
+                // Send to all servers, even those not in the partition
+                // so that everyone knowns the state of the system
+                foreach (string url in nameServiceDB.ListServers()) {
+                    ServerConfigurationConnection connection =
+                        new ServerConfigurationConnection(url);
+
+                    joinPartitionTasks.Add(
+                        connection.JoinPartitionAsync(partitionId, servers, serverIds[0]));
+                }
+
+            }
+
+            Task.WaitAll(joinPartitionTasks.ToArray());
+
+            Console.WriteLine(
+                "[{0}] Partitions created",
+                DateTime.Now.ToString("HH:mm:ss"));
+
+            partitionsCreated = true;
         }
     }
 }

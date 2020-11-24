@@ -2,7 +2,7 @@
   "profiles": {
     "PuppetMaster": {
       "commandName": "Project",
-      "commandLineArgs": "localhost 2 WriteMultipleClientsTest.txt"
+      "commandLineArgs": "localhost 2 pm_script1"
     }
   }
 }
