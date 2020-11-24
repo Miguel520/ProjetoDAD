@@ -1,5 +1,6 @@
 ﻿read p1 1 13
 wait 1000
+read p1 1
 begin-repeat 5
 read p1 1 -1
 wait 1000
