@@ -36,6 +36,15 @@ namespace Client.Naming {
             }
         }
 
+        public bool IsInPartition(string partitionId, string serverId) {
+            return partitions.TryGetValue(partitionId, out ImmutableHashSet<string> serverIds)
+                && serverIds.Contains(serverId);
+        }
+
+        public bool ListPartition(string partitionId, out ImmutableHashSet<string> serverIds) {
+            return partitions.TryGetValue(partitionId, out serverIds);
+        }
+
         /*
          * Lookup for the url of the server with the given id
          */

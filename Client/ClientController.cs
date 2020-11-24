@@ -7,6 +7,7 @@ using System.Threading;
 using Client.Commands;
 using Client.Grpc;
 using Client.Naming;
+using Client.KVS;
 
 namespace Client {
     public class ClientController : ICommandHandler {
@@ -18,17 +19,9 @@ namespace Client {
         private int numReps = 0;
         private int currentRep = -1;
         private readonly NamingService namingService;
-        
-        private string attachedServerId;
-        private string attachedServerUrl;
-        private object attachedServerLock = new object();
 
         public ClientController(NamingService namingService) {
-
-            GrpcMessageLayer.ReplicaFailureEvent += OnReplicaFailureEvent;
-
             this.namingService = namingService;
-            attachedServerUrl = null;
         }
 
         public void OnBeginRepeatCommand(BeginRepeatCommand command) {
@@ -128,52 +121,25 @@ namespace Client {
 
             string partitionId = command.PartitionId.Replace(LOOPSTRING, currentRep.ToString());
             string objectId = command.ObjectId.Replace(LOOPSTRING, currentRep.ToString());
-            string serverId = command.ServerId.Replace(LOOPSTRING, currentRep.ToString());
+            // Check if server id is null
+            string serverId = command.ServerId?.Replace(LOOPSTRING, currentRep.ToString());
 
-            Monitor.Enter(attachedServerLock);
-            
-            bool attached = (attachedServerUrl != null);
-
-            // If not previously attached create attachement if possible
-            if (!attached && serverId != "-1") {
-                //create connection
-                attached = AttachServer(serverId);
-            }
-
-            bool success = false;
-            string value = null;
-            // May not be attached if no previous connection and -1 was passed
-            // or if attached to server id failed
-            if (attached) {
-                success = GrpcMessageLayer.Instance.Read(
-                    attachedServerUrl,
+            bool success;
+            string value;
+            // No fallback server
+            if (serverId == null || serverId == "-1") {
+                success = KVSMessageLayer.Instance.Read(
                     partitionId,
                     objectId,
                     out value);
-                Monitor.Exit(attachedServerLock);
-
-                // Retry if unsuccess
-                // Can only retry if target replica is not previous connection (-1)
-                // and is not already in use (attachedServerId)
-                if (!success && 
-                    serverId != attachedServerId &&
-                    serverId != "-1") {
-
-                    lock(attachedServerLock) {
-                        if (AttachServer(serverId)) {
-                            success = GrpcMessageLayer.Instance.Read(
-                                attachedServerUrl,
-                                partitionId,
-                                objectId,
-                                out value);
-                        }
-                    }
-                }
             }
             else {
-                Monitor.Exit(attachedServerLock);
+                success = KVSMessageLayer.Instance.ReadFallback(
+                    partitionId,
+                    objectId,
+                    serverId,
+                    out value);
             }
-            
 
             if (success) {
                 Console.WriteLine(
@@ -189,15 +155,6 @@ namespace Client {
                     DateTime.Now.ToString("HH:mm:ss"));
                 return;
             }
-        }
-
-        public bool AttachServer(string serverId) {
-            attachedServerId = serverId;
-            if (namingService.Lookup(attachedServerId, out string url)) {
-                attachedServerUrl = url;
-                return true;
-            }
-            return false;
         }
 
         public void OnWaitCommand(WaitCommand command) {
@@ -233,44 +190,20 @@ namespace Client {
             string objectId = command.ObjectId.Replace(LOOPSTRING, currentRep.ToString());
             string value = command.Value.Replace(LOOPSTRING, currentRep.ToString());
 
-            if (namingService.LookupMaster(
-                partitionId,
-                out string url)) {
-                
-                bool success = GrpcMessageLayer.Instance.Write(
-                    url,
+            if (KVSMessageLayer.Instance.Write(partitionId, objectId, value)) {
+                Console.WriteLine(
+                    "[{0}] Write object <{1},{2}> with value {3} successfull",
+                    DateTime.Now.ToString("HH:mm:ss"),
                     partitionId,
                     objectId,
                     value);
-
-                if (success) {
-                    Console.WriteLine(
-                        "[{0}] Write object <{1},{2}> with value {3} successfull",
-                        DateTime.Now.ToString("HH:mm:ss"),
-                        partitionId,
-                        objectId,
-                        value);
-                } else {
-                    Console.WriteLine(
-                        "[{0}] Write object <{1},{2}> failed",
-                        DateTime.Now.ToString("HH:mm:ss"),
-                        partitionId,
-                        objectId);
-                }
-            } else {
+            }
+            else {
                 Console.WriteLine(
-                    "[{0}] Write object <{1},{2}> failed: Partition master unavailable",
+                    "[{0}] Write object <{1},{2}> failed",
                     DateTime.Now.ToString("HH:mm:ss"),
                     partitionId,
                     objectId);
-            }
-        }
-
-        private void OnReplicaFailureEvent(object sender, ReplicaFailureEventArgs args) {
-            lock(attachedServerLock) {
-                if (args.Url == attachedServerUrl) {
-                    attachedServerUrl = null;
-                }
             }
         }
     }
