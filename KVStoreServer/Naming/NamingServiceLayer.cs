@@ -6,6 +6,12 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace KVStoreServer.Naming {
+
+    /*
+     * Layer for translation between ids and urls
+     * Should not store any other logic
+     * Only retransmits replica failure event with id and not url
+     */
     class NamingServiceLayer {
 
         public static event EventHandler<IdFailureEventArgs> ReplicaFailureEvent;
@@ -87,7 +93,6 @@ namespace KVStoreServer.Naming {
             lock (urls) {
                 string serverUrl = args.Url;
                 string serverId = urls.First(pair => pair.Value.Equals(serverUrl)).Key;
-                urls.TryRemove(serverId, out _);
                 ReplicaFailureEvent?.Invoke(
                     this,
                     new IdFailureEventArgs { Id = serverId });
