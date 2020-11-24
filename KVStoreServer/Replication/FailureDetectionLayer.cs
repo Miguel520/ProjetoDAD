@@ -15,7 +15,9 @@ namespace KVStoreServer.Replication {
     public class FailureDetectionLayer {
 
         private static readonly int PING_DELAY = 10000;
-        private static readonly int INITIAL_RTT = 30000;
+        private static readonly int INITIAL_RTT = 15000;
+        // Dont let timeout be to low
+        private static readonly int MIN_TIMOUT = 5000;
 
         private ConcurrentDictionary<string, long> estimatedRTT =
             new ConcurrentDictionary<string, long>();
@@ -57,7 +59,11 @@ namespace KVStoreServer.Replication {
             string objectId) {
 
             if (estimatedRTT.TryGetValue(serverId, out long rtt)) {
-                await NamingServiceLayer.Instance.Lock(serverId, partitionId, objectId, 2 * rtt);
+                await NamingServiceLayer.Instance.Lock(
+                    serverId, 
+                    partitionId, 
+                    objectId, 
+                    2 * rtt + MIN_TIMOUT);
             }
         }
 
@@ -73,7 +79,7 @@ namespace KVStoreServer.Replication {
                     partitionId, 
                     objectId, 
                     objectValue,
-                    2 * rtt);
+                    2 * rtt + MIN_TIMOUT);
             }
         }
 
@@ -90,12 +96,12 @@ namespace KVStoreServer.Replication {
             if (estimatedRTT.TryGetValue(serverId, out long rtt)) {
                 Stopwatch stopWatch = new Stopwatch();
                 stopWatch.Start();
-                await NamingServiceLayer.Instance.Ping(serverId, 2 * rtt);
+                await NamingServiceLayer.Instance.Ping(serverId, 2 * rtt + MIN_TIMOUT);
                 stopWatch.Stop();
                 long timeEllapsed = stopWatch.ElapsedMilliseconds;
                 lock(estimatedRTT) {
                     if (estimatedRTT.ContainsKey(serverId)) {
-                        // newTimout = sampledTimout * 0.8 + oldTimout * 0.2
+                        // newRTT = sampledRTT * 0.8 + oldRTT * 0.2
                         estimatedRTT[serverId] = (8 * timeEllapsed) / 10 + (2 * rtt) / 10;
                     }
                 }

@@ -27,7 +27,6 @@ namespace KVStoreServer.Replication {
         private readonly string selfId;
 
         public PartitionsDB(string selfId, string selfUrl) {
-            NamingServiceLayer.ReplicaFailureEvent += OnReplicaFailure;
             FailureDetectionLayer.Instance.RegisterServer(selfId, selfUrl);
             this.selfId = selfId;
         }
@@ -202,26 +201,6 @@ namespace KVStoreServer.Replication {
             isMaster = serverId == selfId;
 
             return true;
-        }
-
-        /*
-         * Removes server with given url from every partition, or correspondence
-         */
-        public void OnReplicaFailure(object sender, IdFailureEventArgs args) {
-            string serverId = args.Id;
-            string partitionName = partitionMasters.FirstOrDefault(pair => pair.Value == serverId).Key;
-
-            // Remove from partitions
-            lock (this) {
-                foreach (HashSet<string> partition in partitions.Values) {
-                    partition.Remove(serverId);
-                }
-
-                // Remove from masters
-                if (partitionName != null) {
-                    partitionMasters.TryRemove(partitionName, out _);
-                }
-            }
         }
 
         private static TextReader GetFileStreamConfig(string filename) {
