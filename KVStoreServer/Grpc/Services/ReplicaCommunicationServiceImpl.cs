@@ -2,30 +2,28 @@
 using Grpc.Core;
 using System.Threading.Tasks;
 
-using KVStoreServer.Communications;
-
 using static Common.Protos.ReplicaCommunication.ReplicaCommunicationService;
 
 namespace KVStoreServer.Grpc {
     class ReplicaCommunicationServiceImpl : ReplicaCommunicationServiceBase {
 
-        private readonly RequestsDispatcher dispatcher;
-        public ReplicaCommunicationServiceImpl(RequestsDispatcher dispatcher) {
+        private readonly SimpleIncomingDispatcher dispatcher;
+        public ReplicaCommunicationServiceImpl(SimpleIncomingDispatcher dispatcher) {
             this.dispatcher = dispatcher;
         }
 
         public override async Task<LockResponse> Lock(LockRequest request, ServerCallContext context) {
-            await dispatcher.Lock(ParseLockRequest(request));
+            await dispatcher.OnLock(ParseLockRequest(request));
             return new LockResponse { };
         }
 
         public override async Task<WriteResponse> Write(WriteRequest request, ServerCallContext context) {
-            await dispatcher.WriteObject(ParseWriteRequest(request));
+            await dispatcher.OnWriteObject(ParseWriteRequest(request));
             return new WriteResponse { };
         }
 
         public override async Task<PingResponse> Ping(PingRequest request, ServerCallContext context) {
-            await dispatcher.Ping();
+            await dispatcher.OnPing();
             return new PingResponse { };
         }
 

@@ -1,56 +1,84 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using KVStoreServer.Events;
+using KVStoreServer.Grpc;
 using KVStoreServer.Naming;
 
 namespace KVStoreServer.Replication {
 
     /*
-     * Layer responsible for the fast detection of server crashes
-     * Also responsible for setting timeouts for the requests
+     * Layer responsible for the detection of server crashes
      */
     public class FailureDetectionLayer {
 
-        private static readonly int PING_DELAY = 10000;
-        private static readonly int INITIAL_RTT = 15000;
-        // Dont let timeout be to low
-        private static readonly int MIN_TIMOUT = 5000;
-
-        private ConcurrentDictionary<string, long> estimatedRTT =
-            new ConcurrentDictionary<string, long>();
-
-        private string selfId;
+        private readonly ConcurrentBag<string> crashedUrls = new ConcurrentBag<string>();
 
         private FailureDetectionLayer() {
-            NamingServiceLayer.ReplicaFailureEvent += OnReplicaFailure;
-            Task.Run(() => PingAliveServers());
+            SimpleNamingServiceLayer.Instance.BindFailureHandler(OnReplicaFailure);
         }
 
         public static FailureDetectionLayer Instance { get; } = new FailureDetectionLayer();
 
-        public void RegisterSelfId(string serverId) {
-            selfId = serverId;
-        }
-
         public bool RegisterServer(
             string serverId,
             string serverUrl) {
-            
-            if (NamingServiceLayer.Instance.RegisterServer(serverId, serverUrl)) {
-                estimatedRTT.TryAdd(serverId, INITIAL_RTT);
-                return true;
-            }
-            return false;
+
+            return SimpleNamingServiceLayer.Instance.RegisterServer(serverId, serverUrl);
         }
 
         public bool TryGetServer(
             string serverId,
             out string serverUrl) {
 
-            return NamingServiceLayer.Instance.TryGetServer(serverId, out serverUrl);
+            return SimpleNamingServiceLayer.Instance.TryGetServer(serverId, out serverUrl);
+        }
+
+        // Bind handlers for incoming messages
+
+        public void BindReadHandler(ReadHandler handler) {
+            SimpleNamingServiceLayer.Instance.BindReadHandler(handler);
+        }
+
+        public void BindWriteHandler(WriteHandler handler) {
+            SimpleNamingServiceLayer.Instance.BindWriteHandler(handler);
+        }
+
+        public void BindListServerHandler(ListServerHandler handler) {
+            SimpleNamingServiceLayer.Instance.BindListServerHandler(handler);
+        }
+
+        public void BindLockHandler(LockHandler handler) {
+            SimpleNamingServiceLayer.Instance.BindLockHandler(handler);
+        }
+
+        public void BindWriteObjectHandler(WriteObjectHandler handler) {
+            SimpleNamingServiceLayer.Instance.BindWriteObjectHandler(handler);
+        }
+
+        public void BindLookupMasterHandler(LookupMasterHandler handler) {
+            SimpleNamingServiceLayer.Instance.BindLookupMasterHandler(handler);
+        }
+
+        public void BindListPartitionsHandler(ListPartitionsHandler handler) {
+            SimpleNamingServiceLayer.Instance.BindListPartitionsHandler(handler);
+        }
+
+        public void BindJoinPartitionHandler(JoinPartitionHandler handler) {
+            SimpleNamingServiceLayer.Instance.BindJoinPartitionHandler(handler);
+        }
+
+        public void BindStatusHandler(StatusHandler handler) {
+            SimpleNamingServiceLayer.Instance.BindStatusHandler(handler);
+        }
+
+        public void Start() {
+            SimpleNamingServiceLayer.Instance.Start();
+        }
+
+        public void Shutdown() {
+            SimpleNamingServiceLayer.Instance.Shutdown();
         }
 
         public async Task Lock(
@@ -58,12 +86,11 @@ namespace KVStoreServer.Replication {
             string partitionId,
             string objectId) {
 
-            if (estimatedRTT.TryGetValue(serverId, out long rtt)) {
-                await NamingServiceLayer.Instance.Lock(
+            if (!crashedUrls.Contains(serverId)) {
+                await SimpleNamingServiceLayer.Instance.Lock(
                     serverId, 
                     partitionId, 
-                    objectId, 
-                    2 * rtt + MIN_TIMOUT);
+                    objectId);
             }
         }
 
@@ -73,44 +100,21 @@ namespace KVStoreServer.Replication {
             string objectId,
             string objectValue) {
 
-            if (estimatedRTT.TryGetValue(serverId, out long rtt)) {
-                await NamingServiceLayer.Instance.Write(
+            if (!crashedUrls.Contains(serverId)) {
+                await SimpleNamingServiceLayer.Instance.Write(
                     serverId, 
                     partitionId, 
                     objectId, 
-                    objectValue,
-                    2 * rtt + MIN_TIMOUT);
+                    objectValue);
             }
         }
 
-        private async void PingAliveServers() {
-            while(true) {
-                //Ping all servers
-                Task[] tasks = estimatedRTT.Keys.Where(id => selfId != id).Select(PingSingleServer).ToArray();
-                Task.WaitAll(tasks);
-                await Task.Delay(PING_DELAY);
-            }
-        }
-
-        private async Task PingSingleServer(string serverId) {
-            if (estimatedRTT.TryGetValue(serverId, out long rtt)) {
-                Stopwatch stopWatch = new Stopwatch();
-                stopWatch.Start();
-                await NamingServiceLayer.Instance.Ping(serverId, 2 * rtt + MIN_TIMOUT);
-                stopWatch.Stop();
-                long timeEllapsed = stopWatch.ElapsedMilliseconds;
-                lock(estimatedRTT) {
-                    if (estimatedRTT.ContainsKey(serverId)) {
-                        // newRTT = sampledRTT * 0.8 + oldRTT * 0.2
-                        estimatedRTT[serverId] = (8 * timeEllapsed) / 10 + (2 * rtt) / 10;
-                    }
+        public void OnReplicaFailure(string serverId) {
+            lock(crashedUrls) {
+                if (!crashedUrls.Contains(serverId)) {
+                    crashedUrls.Add(serverId);
                 }
             }
-        }
-
-        public void OnReplicaFailure(object sender, IdFailureEventArgs args) {
-            string serverId = args.Id;
-            estimatedRTT.TryRemove(serverId, out _);
         }
     }
 }

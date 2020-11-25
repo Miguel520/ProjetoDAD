@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Collections.Generic;
 using System.Linq;
 using Client.Grpc;
+using System.Threading;
 
 namespace Client.Naming {
     public class NamingService {

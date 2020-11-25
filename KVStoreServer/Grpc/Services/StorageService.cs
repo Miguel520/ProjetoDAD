@@ -5,19 +5,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using KVStoreServer.Communications;
 using KVStoreServer.Storage;
 
 namespace KVStoreServer.Grpc {
     public class StorageService : KeyValueStoreService.KeyValueStoreServiceBase {
 
-        private readonly RequestsDispatcher dispatcher;
-        public StorageService(RequestsDispatcher dispatcher) {
+        private readonly SimpleIncomingDispatcher dispatcher;
+        public StorageService(SimpleIncomingDispatcher dispatcher) {
             this.dispatcher = dispatcher;
         }
 
         public override async Task<ReadResponse> Read(ReadRequest request, ServerCallContext context) {
-            string value = await dispatcher.Read(ParseReadRequest(request));
+            string value = await dispatcher.OnRead(ParseReadRequest(request));
             if (value == null) throw new RpcException(new Status(StatusCode.NotFound, "No such object"));
             return new ReadResponse { 
                 ObjectValue = value
@@ -26,7 +25,7 @@ namespace KVStoreServer.Grpc {
 
         public override async Task<WriteResponse> Write(WriteRequest request, ServerCallContext context) {
             try {
-                await dispatcher.Write(ParseWriteRequest(request));
+                await dispatcher.OnWrite(ParseWriteRequest(request));
             }
             catch (ReplicaFailureException) {
                 throw new RpcException(new Status(StatusCode.Unavailable, "Failed to connect to replica"));
@@ -35,7 +34,7 @@ namespace KVStoreServer.Grpc {
         }
 
         public override async Task<ListResponse> List(ListRequest request, ServerCallContext context) {
-            IEnumerable<StoredValueDto> list = await dispatcher.List();
+            IEnumerable<StoredValueDto> list = await dispatcher.OnListServer();
             return new ListResponse {
                 Objects = { BuildStoredObjects(list) }
                 };

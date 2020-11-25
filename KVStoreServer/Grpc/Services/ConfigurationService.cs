@@ -4,16 +4,14 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-using KVStoreServer.Communications;
-
 using Server = Common.Protos.ServerConfiguration.Server;
 
 namespace KVStoreServer.Grpc {
     public class ConfigurationService : ServerConfigurationService.ServerConfigurationServiceBase {
 
-        private readonly RequestsDispatcher dispatcher;
+        private readonly BaseIncomingDispatcher dispatcher;
 
-        public ConfigurationService(RequestsDispatcher dispatcher) {
+        public ConfigurationService(BaseIncomingDispatcher dispatcher) {
             this.dispatcher = dispatcher;
         }
 
@@ -21,7 +19,7 @@ namespace KVStoreServer.Grpc {
             JoinPartitionRequest request,
             ServerCallContext context) {
     
-            await dispatcher.JoinPartition(ParseJoinPartition(request));
+            await dispatcher.OnJoinPartition(ParseJoinPartition(request));
 
             Console.WriteLine(
                 "[{0}] Received Partition {1}",
@@ -35,24 +33,24 @@ namespace KVStoreServer.Grpc {
             StatusRequest request,
             ServerCallContext context) {
 
-            dispatcher.Status();
+            dispatcher.OnStatus();
 
             return Task.FromResult(new StatusResponse());
         }
 
         public override Task<CrashResponse> Crash(CrashRequest request, ServerCallContext context) {
-            dispatcher.Crash();
+            dispatcher.OnCrash();
             // Will never execute since crash terminates the program execution
             return Task.FromResult(new CrashResponse { });
         }
 
         public override Task<FreezeResponse> Freeze(FreezeRequest request, ServerCallContext context) {
-            dispatcher.Freeze();
+            dispatcher.OnFreeze();
             return Task.FromResult(new FreezeResponse { });
         }
 
         public override Task<UnfreezeResponse> Unfreeze(UnfreezeRequest request, ServerCallContext context) {
-            dispatcher.Unfreeze();
+            dispatcher.OnUnfreeze();
             return Task.FromResult(new UnfreezeResponse { });
         }
 

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace KVStoreServer.Communications {
+namespace KVStoreServer.Grpc {
 
     public class ReadArguments {
         public string PartitionId { get; set; }

@@ -6,6 +6,8 @@ service ReplicaCommunicationService {
 	rpc Lock(LockRequest) returns (LockResponse);
 	rpc Write(WriteRequest) returns (WriteResponse);
 	rpc Ping(PingRequest) returns (PingResponse);
+	rpc BroadcastWrite(BroadcastWriteRequest) returns (BroadcastWriteResponse);
+	rpc BroadcastFailure(BroadcastFailureRequest) returns (BroadcastFailureResponse);
 }
 
 message LockRequest {
@@ -26,3 +28,35 @@ message WriteResponse {}
 message PingRequest {}
 
 message PingResponse {}
+
+message BroadcastWriteRequest {
+	MessageId message_id = 1;
+	string key = 2;
+	TimestampedValue timestamped_value = 3;
+	VectorClock replicaTimestamp = 4;
+}
+
+message BroadcastWriteResponse {}
+
+message MessageId {
+	string server_id = 1;
+	int32 server_counter = 2;
+}
+
+message TimestampedValue {
+	string object_value = 1;
+	VectorClock timestamp = 2;
+	string last_write_server_id = 3;
+}
+
+message VectorClock {
+	repeated string server_ids = 1;
+	repeated int32 server_clocks = 2;
+}
+
+message BroadcastFailureRequest {
+	MessageId message_id = 1;
+	string server_id = 2;
+}
+
+message BroadcastFailureResponse {}

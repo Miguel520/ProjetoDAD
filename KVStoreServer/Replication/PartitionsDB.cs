@@ -4,9 +4,8 @@ using System.IO;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using KVStoreServer.Naming;
-using KVStoreServer.Events;
+using KVStoreServer.Grpc;
+using System.Threading;
 
 namespace KVStoreServer.Replication {
 
@@ -99,10 +98,11 @@ namespace KVStoreServer.Replication {
          * Throws InvalidOperationException if the state of the object is incorrect
          *                                  (should never happen)
          */
-        public void AddPartition(
-            string partitionId,
-            IEnumerable<Tuple<string, string>> members,
-            string masterId) {
+        public void JoinPartition(JoinPartitionArguments arguments) {
+
+            string partitionId = arguments.PartitionId;
+            IEnumerable<Tuple<string, string>> members = arguments.Members;
+            string masterId = arguments.MasterId;
 
             HashSet<string> partition = BuildPartition(members);
             lock(this) {
@@ -152,7 +152,7 @@ namespace KVStoreServer.Replication {
          * Returns true if a partition with the given name exists and masterId is set to the value,
          * otherwise returns false and masterId is set to 0
          */
-        public bool TryGetMaster(string partitionId, out string masterId) {
+        public bool TryGetMasterUrl(string partitionId, out string masterId) {
             return partitionMasters.TryGetValue(partitionId, out masterId);
         }
 

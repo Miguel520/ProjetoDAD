@@ -11,39 +11,38 @@ using static Common.Protos.NamingService.NamingService;
 namespace KVStoreServer.Grpc {
     class NamingService : NamingServiceBase {
 
-        private readonly PartitionsDB dB;
+        private readonly BaseIncomingDispatcher dispatcher;
 
-        public NamingService(PartitionsDB dB) {
-            this.dB = dB;
+        public NamingService(BaseIncomingDispatcher dispatcher) {
+            this.dispatcher = dispatcher;
         }
 
-        public override Task<LookupResponse> Lookup(LookupRequest request, ServerCallContext context) {
+        public override async Task<LookupResponse> Lookup(LookupRequest request, ServerCallContext context) {
             string serverId = request.ServerId;
-            if (FailureDetectionLayer.Instance.TryGetServer(serverId, out string serverUrl)) {
-                return Task.FromResult(new LookupResponse { ServerUrl = serverUrl });
+            string serverUrl = await dispatcher.OnLookup(serverId);
+            if (serverUrl != null) {
+                return new LookupResponse { ServerUrl = serverUrl };
             }
             throw new RpcException(new Status(StatusCode.NotFound, "No Such Id"));
         }
 
-        public override Task<LookupMasterResponse> LookupMaster
+        public override async Task<LookupMasterResponse> LookupMaster
             (LookupMasterRequest request, 
             ServerCallContext context) {
             
             string partitionName = request.PartitionId;
-            if (dB.TryGetMaster(partitionName, out string masterId)
-                && FailureDetectionLayer.Instance.TryGetServer(masterId, out string masterUrl)) {
-
-                return Task.FromResult(new LookupMasterResponse { MasterUrl = masterUrl });
+            string masterUrl = await dispatcher.OnLookupMaster(partitionName);
+            if (masterUrl != null) {
+                return new LookupMasterResponse { MasterUrl = masterUrl };
             }
             throw new RpcException(new Status(StatusCode.NotFound, "No Such Partition"));
         }
 
-        public override Task<ListPartitionsResponse> ListPartitions(ListPartitionsRequest request, ServerCallContext context) {
-            IEnumerable<PartitionServersDto> listPartitions = dB.ListPartitionsWithServerIds();
-            return Task.FromResult(new ListPartitionsResponse
-            {
+        public override async Task<ListPartitionsResponse> ListPartitions(ListPartitionsRequest request, ServerCallContext context) {
+            IEnumerable<PartitionServersDto> listPartitions = await dispatcher.OnListPartitions();
+            return new ListPartitionsResponse {
                 Partitions = { BuildPartition(listPartitions) }
-            });
+            };
         }
 
         private static IEnumerable<Partition> BuildPartition(IEnumerable<PartitionServersDto> listPartitions) {

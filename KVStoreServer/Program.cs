@@ -1,17 +1,11 @@
 ﻿using Common.Grpc;
 using Common.Utils;
-using Grpc.Core;
 using System;
 
-using KVStoreServer.Communications;
 using KVStoreServer.Configuration;
-using KVStoreServer.Grpc;
 using KVStoreServer.Replication;
-
-using ProtoServerConfiguration = Common.Protos.ServerConfiguration.ServerConfigurationService;
-using ProtoKeyValueStore = Common.Protos.KeyValueStore.KeyValueStoreService;
-using NamingServiceProto = Common.Protos.NamingService.NamingService;
-using ReplicationServiceProto = Common.Protos.ReplicaCommunication.ReplicaCommunicationService;
+using System.Threading;
+using KVStoreServer.Grpc;
 
 namespace KVStoreServer {
     class Program {
@@ -25,7 +19,7 @@ namespace KVStoreServer {
 
             ServerConfiguration serverConfig = ParseArgs(args, out bool file);
 
-            FailureDetectionLayer.Instance.RegisterSelfId(serverConfig.ServerId);
+            SimpleGrpcMessageLayer.SetContext(serverConfig);
 
             // Add self id so that server knows itself
             PartitionsDB partitionsDB = new PartitionsDB(
@@ -39,32 +33,12 @@ namespace KVStoreServer {
                 }
             }
 
-            ReplicationService replicationService = new ReplicationService(
-                partitionsDB,
-                serverConfig);
+            ReplicationService service = new ReplicationService(partitionsDB, serverConfig);
+            // Bind handlers for messages
+            service.Bind();
 
-            RequestsDispatcher dispatcher = new RequestsDispatcher(
-                serverConfig,
-                replicationService,
-                partitionsDB);
-
-            Server server = new Server {
-                Services = {
-                    ProtoServerConfiguration.BindService(
-                        new ConfigurationService(dispatcher)),
-                    ProtoKeyValueStore.BindService(new StorageService(dispatcher)),
-                    NamingServiceProto.BindService(new NamingService(partitionsDB)),
-                    ReplicationServiceProto.BindService(new ReplicaCommunicationServiceImpl(dispatcher))
-                    
-                },
-                Ports = {
-                    new ServerPort(
-                        serverConfig.Host,
-                        serverConfig.Port,
-                        ServerCredentials.Insecure)
-                }
-            };
-            server.Start();
+            FailureDetectionLayer.Instance.Start();
+            
             Console.WriteLine(
                 "[{0}] Server {1} running at {2} with version {3}",
                 DateTime.Now.ToString("HH:mm:ss"),
@@ -74,7 +48,7 @@ namespace KVStoreServer {
             Console.WriteLine("Press any key to stop the server...");
             Console.ReadKey();
 
-            server.ShutdownAsync().Wait();
+            FailureDetectionLayer.Instance.Shutdown();
         }
 
         private static ServerConfiguration ParseArgs(string[] args, out bool file) {
