@@ -1,7 +1,7 @@
 ﻿using Grpc.Core;
 using System;
 
-namespace KVStoreServer.Grpc {
+namespace KVStoreServer.Grpc.Base {
     public class BaseOutgoingDispatcher {
 
         private UrlFailureHandler failureHandler = null;

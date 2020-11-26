@@ -5,7 +5,7 @@ using System;
 using KVStoreServer.Configuration;
 using KVStoreServer.Replication;
 using System.Threading;
-using KVStoreServer.Grpc;
+using KVStoreServer.Grpc.Simple;
 
 namespace KVStoreServer {
     class Program {

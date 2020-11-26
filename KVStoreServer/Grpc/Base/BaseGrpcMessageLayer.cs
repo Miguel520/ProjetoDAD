@@ -1,7 +1,13 @@
-﻿using KVStoreServer.Replication;
+﻿using Grpc.Core;
 using System.Collections.Generic;
 
-namespace KVStoreServer.Grpc {
+using KVStoreServer.Configuration;
+using KVStoreServer.Replication;
+
+using ProtoServerConfiguration = Common.Protos.ServerConfiguration.ServerConfigurationService;
+using NamingServiceProto = Common.Protos.NamingService.NamingService;
+
+namespace KVStoreServer.Grpc.Base {
 
     // Define delegates for method handlers
 
@@ -15,7 +21,39 @@ namespace KVStoreServer.Grpc {
     public delegate void UrlFailureHandler(string crashedUrl);
     public abstract class BaseGrpcMessageLayer {
 
-        public BaseGrpcMessageLayer() {}
+        private readonly ServerConfiguration serverConfig;
+
+        private Server server;
+
+        public BaseGrpcMessageLayer(ServerConfiguration serverConfig) {
+            this.serverConfig = serverConfig;
+        }
+
+        // Get Base Services
+
+        public void Start() {
+            server = new Server {
+                Services = {
+                    ProtoServerConfiguration.BindService(
+                        new ConfigurationService(GetIncomingDispatcher())),
+                    NamingServiceProto.BindService(
+                        new NamingService(GetIncomingDispatcher()))
+                },
+                Ports = {
+                    new ServerPort(
+                        serverConfig.Host,
+                        serverConfig.Port,
+                        ServerCredentials.Insecure)
+                }
+            };
+            foreach (ServerServiceDefinition definition in GetServicesDefinitions())
+                server.Services.Add(definition);
+            server.Start();
+        }
+
+        public void Shutdown() {
+            server.ShutdownAsync().Wait();
+        }
 
         // Bind handlers for incoming messages
 
@@ -43,24 +81,12 @@ namespace KVStoreServer.Grpc {
             GetOutgoingDispatcher().BindFailureHandler(handler);
         }
 
-        //public async Task BroadcastWrite(
-        //    string serverUrl,
-        //    MessageId messageId,
-        //    string key,
-        //    ImmutableTimestampedValue value,
-        //    ImmutableVectorClock replicaTimestamp,
-        //    long timeout) {
-
-        //    try {
-        //        ReplicaCommunicationConnection connection = new ReplicaCommunicationConnection(serverUrl);
-        //        await connection.BroadcastWrite(messageId, key, value, replicaTimestamp, timeout);
-        //    }
-        //    catch (RpcException exception) {
-        //        HandleRpcException(serverUrl, exception);
-        //    }
-        //}
-
         protected abstract BaseIncomingDispatcher GetIncomingDispatcher();
         protected abstract BaseOutgoingDispatcher GetOutgoingDispatcher();
+
+        /*
+         * Get extra service definitions specific for each version
+         */
+        protected abstract IEnumerable<ServerServiceDefinition> GetServicesDefinitions();
     }
 }

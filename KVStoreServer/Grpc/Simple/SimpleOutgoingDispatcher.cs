@@ -1,7 +1,8 @@
 ﻿using Grpc.Core;
+using KVStoreServer.Grpc.Base;
 using System.Threading.Tasks;
 
-namespace KVStoreServer.Grpc {
+namespace KVStoreServer.Grpc.Simple {
     public class SimpleOutgoingDispatcher : BaseOutgoingDispatcher {
 
         public async Task Lock(
@@ -10,7 +11,7 @@ namespace KVStoreServer.Grpc {
             string objectId) {
 
             try {
-                ReplicaCommunicationConnection connection = new ReplicaCommunicationConnection(serverUrl);
+                SimpleReplicaCommunicationConnection connection = new SimpleReplicaCommunicationConnection(serverUrl);
                 await connection.Lock(partitionId, objectId, DEFAULT_TIMEOUT);
             }
             catch (RpcException exception) {
@@ -25,7 +26,7 @@ namespace KVStoreServer.Grpc {
             string objectValue) {
 
             try {
-                ReplicaCommunicationConnection connection = new ReplicaCommunicationConnection(serverUrl);
+                SimpleReplicaCommunicationConnection connection = new SimpleReplicaCommunicationConnection(serverUrl);
                 await connection.Write(partitionId, objectId, objectValue, DEFAULT_TIMEOUT);
             }
             catch (RpcException exception) {

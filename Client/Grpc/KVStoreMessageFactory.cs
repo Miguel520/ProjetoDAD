@@ -1,4 +1,4 @@
-﻿using Common.Protos.KeyValueStore;
+﻿using Common.Protos.SimpleKeyValueStore;
 
 namespace Client.Grpc {
     class KVStoreMessageFactory {

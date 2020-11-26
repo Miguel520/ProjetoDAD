@@ -1,5 +1,5 @@
 ﻿using Common.Exceptions;
-using Common.Protos.KeyValueStore;
+using Common.Protos.SimpleKeyValueStore;
 using Grpc.Core;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 using KVStoreServer.Storage;
 
-namespace KVStoreServer.Grpc {
-    public class StorageService : KeyValueStoreService.KeyValueStoreServiceBase {
+namespace KVStoreServer.Grpc.Simple {
+    public class SimpleStorageService : SimpleKeyValueStoreService.SimpleKeyValueStoreServiceBase {
 
         private readonly SimpleIncomingDispatcher dispatcher;
-        public StorageService(SimpleIncomingDispatcher dispatcher) {
+        public SimpleStorageService(SimpleIncomingDispatcher dispatcher) {
             this.dispatcher = dispatcher;
         }
 

@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using KVStoreServer.Configuration;
-using KVStoreServer.Grpc;
+using KVStoreServer.Grpc.Base;
+using KVStoreServer.Grpc.Simple;
 using KVStoreServer.Storage;
 
 namespace KVStoreServer.Replication {

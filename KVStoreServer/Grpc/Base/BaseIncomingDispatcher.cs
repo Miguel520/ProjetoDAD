@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace KVStoreServer.Grpc {
+namespace KVStoreServer.Grpc.Base {
     public class BaseIncomingDispatcher {
 
         private readonly ServerConfiguration config;

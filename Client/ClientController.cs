@@ -1,4 +1,4 @@
-﻿using Common.Protos.KeyValueStore;
+﻿using Common.Protos.SimpleKeyValueStore;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;

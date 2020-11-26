@@ -1,8 +1,7 @@
-﻿using Common.Protos.KeyValueStore;
+﻿using Common.Protos.SimpleKeyValueStore;
 using Grpc.Core;
 using System;
 using System.Collections.Immutable;
-using System.Threading;
 
 namespace Client.Grpc {
     public class GrpcMessageLayer {

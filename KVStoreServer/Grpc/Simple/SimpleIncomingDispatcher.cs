@@ -1,10 +1,11 @@
 ﻿using Common.Utils;
 using KVStoreServer.Configuration;
+using KVStoreServer.Grpc.Base;
 using KVStoreServer.Storage;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace KVStoreServer.Grpc {
+namespace KVStoreServer.Grpc.Simple {
     public class SimpleIncomingDispatcher : BaseIncomingDispatcher {
 
         private ReadHandler readHandler = null;
