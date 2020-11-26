@@ -2,10 +2,12 @@
 
 option csharp_namespace = "Common.Protos.ReplicaCommunication";
 
-service ReplicaCommunicationService {
+service SimpleReplicaCommunicationService {
 	rpc Lock(LockRequest) returns (LockResponse);
 	rpc Write(WriteRequest) returns (WriteResponse);
-	rpc Ping(PingRequest) returns (PingResponse);
+}
+
+service AdvancedReplicaCommunicationService {
 	rpc BroadcastWrite(BroadcastWriteRequest) returns (BroadcastWriteResponse);
 	rpc BroadcastFailure(BroadcastFailureRequest) returns (BroadcastFailureResponse);
 }
@@ -24,10 +26,6 @@ message WriteRequest {
 }
 
 message WriteResponse {}
-
-message PingRequest {}
-
-message PingResponse {}
 
 message BroadcastWriteRequest {
 	MessageId message_id = 1;

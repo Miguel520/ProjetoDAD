@@ -1,8 +1,8 @@
 ﻿syntax = "proto3";
 
-option csharp_namespace = "Common.Protos.KeyValueStore";
+option csharp_namespace = "Common.Protos.SimpleKeyValueStore";
 
-service KeyValueStoreService {
+service SimpleKeyValueStoreService {
     rpc Read(ReadRequest) returns (ReadResponse);
     rpc Write(WriteRequest) returns (WriteResponse);
     rpc List(ListRequest) returns (ListResponse);

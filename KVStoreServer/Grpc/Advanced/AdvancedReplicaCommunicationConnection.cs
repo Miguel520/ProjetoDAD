@@ -1,58 +1,27 @@
 ﻿using Common.Grpc;
 using Common.Protos.ReplicaCommunication;
 using Grpc.Core;
-using KVStoreServer.KVS;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-using static Common.Protos.ReplicaCommunication.ReplicaCommunicationService;
+using KVStoreServer.KVS;
 
-using Broadcast = KVStoreServer.Broadcast;
+using static Common.Protos.ReplicaCommunication.AdvancedReplicaCommunicationService;
 
-namespace KVStoreServer.Grpc {
-    public class ReplicaCommunicationConnection {
+namespace KVStoreServer.Grpc.Advanced {
+    class AdvancedReplicaCommunicationConnection {
 
         private readonly ChannelBase channel;
-        private readonly ReplicaCommunicationServiceClient client;
+        private readonly AdvancedReplicaCommunicationServiceClient client;
 
-        public ReplicaCommunicationConnection(string url) {
+        public AdvancedReplicaCommunicationConnection(string url) {
             channel = ChannelPool.Instance.ForUrl(url);
-            client = new ReplicaCommunicationServiceClient(channel);
+            client = new AdvancedReplicaCommunicationServiceClient(channel);
         }
 
-        ~ReplicaCommunicationConnection() {
+        ~AdvancedReplicaCommunicationConnection() {
             ChannelPool.Instance.ClearChannel(channel);
-        }
-
-        public async Task Lock(string partitionId, string objectId, long timeout) {
-            await client.LockAsync(
-                new LockRequest {
-                    PartitionId = partitionId,
-                    ObjectId = objectId
-                },
-                deadline: DateTime.UtcNow.AddMilliseconds(timeout));
-        }
-
-        public async Task Write(
-            string partitionId, 
-            string objectId, 
-            string objectValue,
-            long timeout) {
-
-            await client.WriteAsync(
-                new WriteRequest {
-                    PartitionId = partitionId,
-                    ObjectId = objectId,
-                    ObjectValue = objectValue
-                },
-                deadline: DateTime.UtcNow.AddMilliseconds(timeout));
-        }
-
-        public async Task Ping(long timeout) {
-            await client.PingAsync(
-                new PingRequest { },
-                deadline: DateTime.UtcNow.AddMilliseconds(timeout));
         }
 
         public async Task BroadcastWrite(

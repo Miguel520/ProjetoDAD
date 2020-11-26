@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace KVStoreServer.Grpc {
+﻿namespace KVStoreServer.Grpc.Simple {
 
     public class ReadArguments {
         public string PartitionId { get; set; }
@@ -12,12 +9,6 @@ namespace KVStoreServer.Grpc {
         public string PartitionId { get; set; }
         public string ObjectId { get; set; }
         public string ObjectValue { get; set; }
-    }
-
-    public class JoinPartitionArguments {
-        public string PartitionId { get; set; }
-        public IEnumerable<Tuple<string, string>> Members { get; set; }
-        public string MasterId { get; set; }
     }
 
     /* Arguments for internal replication */

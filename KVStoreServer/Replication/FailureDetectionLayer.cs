@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using KVStoreServer.Grpc;
+using KVStoreServer.Grpc.Base;
+using KVStoreServer.Grpc.Simple;
 using KVStoreServer.Naming;
 
 namespace KVStoreServer.Replication {

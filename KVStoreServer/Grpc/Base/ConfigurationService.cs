@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using Server = Common.Protos.ServerConfiguration.Server;
 
-namespace KVStoreServer.Grpc {
+namespace KVStoreServer.Grpc.Base {
     public class ConfigurationService : ServerConfigurationService.ServerConfigurationServiceBase {
 
         private readonly BaseIncomingDispatcher dispatcher;

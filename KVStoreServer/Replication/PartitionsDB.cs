@@ -4,8 +4,7 @@ using System.IO;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using KVStoreServer.Grpc;
-using System.Threading;
+using KVStoreServer.Grpc.Base;
 
 namespace KVStoreServer.Replication {
 

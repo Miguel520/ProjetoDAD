@@ -1,16 +1,15 @@
 ﻿using Common.Utils;
 using Grpc.Core;
 using KVStoreServer.Configuration;
+using KVStoreServer.Grpc.Base;
 using KVStoreServer.Storage;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-using ProtoServerConfiguration = Common.Protos.ServerConfiguration.ServerConfigurationService;
-using ProtoKeyValueStore = Common.Protos.KeyValueStore.KeyValueStoreService;
-using NamingServiceProto = Common.Protos.NamingService.NamingService;
-using ReplicationServiceProto = Common.Protos.ReplicaCommunication.ReplicaCommunicationService;
+using ProtoKeyValueStore = Common.Protos.SimpleKeyValueStore.SimpleKeyValueStoreService;
+using ReplicationServiceProto = Common.Protos.ReplicaCommunication.SimpleReplicaCommunicationService;
 
-namespace KVStoreServer.Grpc {
+namespace KVStoreServer.Grpc.Simple {
 
     public delegate string ReadHandler(ReadArguments arguments);
     public delegate void WriteHandler(WriteArguments arguments);
@@ -23,15 +22,12 @@ namespace KVStoreServer.Grpc {
         private static SimpleGrpcMessageLayer instance = null;
         private static readonly object instanceLock = new object();
 
-        private readonly ServerConfiguration serverConfig;
-
         private readonly SimpleIncomingDispatcher incomingDispatcher;
         private readonly SimpleOutgoingDispatcher outgoingDispatcher;
 
-        private Server server;
+        private SimpleGrpcMessageLayer(ServerConfiguration serverConfig) 
+            : base(serverConfig) {
 
-        private SimpleGrpcMessageLayer(ServerConfiguration serverConfig) : base() {
-            this.serverConfig = serverConfig;
             incomingDispatcher = new SimpleIncomingDispatcher(serverConfig);
             outgoingDispatcher = new SimpleOutgoingDispatcher();
         }
@@ -50,30 +46,6 @@ namespace KVStoreServer.Grpc {
                 Conditions.AssertState(instance == null);
                 instance = new SimpleGrpcMessageLayer(serverConfig);
             }
-        }
-
-        public void Start() {
-            server = new Server {
-                Services = {
-                    ProtoServerConfiguration.BindService(
-                        new ConfigurationService(incomingDispatcher)),
-                    ProtoKeyValueStore.BindService(new StorageService(incomingDispatcher)),
-                    NamingServiceProto.BindService(new NamingService(incomingDispatcher)),
-                    ReplicationServiceProto.BindService(new ReplicaCommunicationServiceImpl(incomingDispatcher))
-
-                },
-                Ports = {
-                    new ServerPort(
-                        serverConfig.Host,
-                        serverConfig.Port,
-                        ServerCredentials.Insecure)
-                }
-            };
-            server.Start();
-        }
-
-        public void Shutdown() {
-            server.ShutdownAsync().Wait();
         }
 
         public void BindReadHandler(ReadHandler handler) {
@@ -119,6 +91,15 @@ namespace KVStoreServer.Grpc {
 
         protected override BaseOutgoingDispatcher GetOutgoingDispatcher() {
             return outgoingDispatcher;
+        }
+
+        protected override IEnumerable<ServerServiceDefinition> GetServicesDefinitions() {
+            return new ServerServiceDefinition[] {
+                ProtoKeyValueStore.BindService(
+                    new SimpleStorageService(incomingDispatcher)),
+                ReplicationServiceProto.BindService(
+                    new SimpleReplicaCommunicationServiceImpl(incomingDispatcher))
+            };
         }
     }
 }

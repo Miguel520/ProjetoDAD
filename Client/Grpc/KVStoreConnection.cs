@@ -1,23 +1,23 @@
 ﻿using Common.Exceptions;
 using Common.Grpc;
-using Common.Protos.KeyValueStore;
+using Common.Protos.SimpleKeyValueStore;
 using Grpc.Core;
 using System;
 using System.Collections.Immutable;
 
-using static Common.Protos.KeyValueStore.KeyValueStoreService;
+using static Common.Protos.SimpleKeyValueStore.SimpleKeyValueStoreService;
 
 namespace Client.Grpc {
     class KVStoreConnection {
 
         private readonly string target;
         private readonly ChannelBase channel;
-        private readonly KeyValueStoreServiceClient client;
+        private readonly SimpleKeyValueStoreServiceClient client;
 
         public KVStoreConnection(string url) {
             target = url;
             channel = ChannelPool.Instance.ForUrl(url);
-            client = new KeyValueStoreServiceClient(channel);
+            client = new SimpleKeyValueStoreServiceClient(channel);
         }
 
         ~KVStoreConnection() {

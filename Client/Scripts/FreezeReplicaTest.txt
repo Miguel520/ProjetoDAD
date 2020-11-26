@@ -1,5 +1,7 @@
 ﻿write P1 1 funcionei
 wait 1000
 read P1 1 2
+listGlobal
 write P1 1 funcionei2
 read P1 1 2
+listGlobal

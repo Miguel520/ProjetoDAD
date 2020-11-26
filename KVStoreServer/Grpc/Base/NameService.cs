@@ -8,7 +8,7 @@ using KVStoreServer.Replication;
 
 using static Common.Protos.NamingService.NamingService;
 
-namespace KVStoreServer.Grpc {
+namespace KVStoreServer.Grpc.Base {
     class NamingService : NamingServiceBase {
 
         private readonly BaseIncomingDispatcher dispatcher;

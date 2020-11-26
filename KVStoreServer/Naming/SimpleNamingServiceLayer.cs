@@ -1,4 +1,5 @@
-﻿using KVStoreServer.Grpc;
+﻿using KVStoreServer.Grpc.Base;
+using KVStoreServer.Grpc.Simple;
 using System.Threading.Tasks;
 
 namespace KVStoreServer.Naming {
