@@ -9,6 +9,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace KVStoreServer.Grpc.Advanced {
+
+    public delegate void BroadcastWriteHandler(BroadcastWriteArguments arguments);
+    public delegate void BroadcastFailureHandler(BroadcastFailureArguments arguments);
     public class AdvancedGrpcMessageLayer : BaseGrpcMessageLayer {
 
         private static AdvancedGrpcMessageLayer instance = null;
@@ -41,8 +44,17 @@ namespace KVStoreServer.Grpc.Advanced {
             }
         }
 
+        public void BindBroadcastWriteHandler(BroadcastWriteHandler handler) {
+            incomingDispatcher.BindBroadcastWriteHandler(handler);
+        }
+
+        public void BindBroadcastFailureHandler(BroadcastFailureHandler handler) {
+            incomingDispatcher.BindBroadcastFailureHandler(handler);
+        }
+
         public async Task BroadcastWrite(
             string serverUrl,
+            string partitionId,
             MessageId messageId,
             string key,
             ImmutableTimestampedValue value,
@@ -50,10 +62,24 @@ namespace KVStoreServer.Grpc.Advanced {
 
             await outgoingDispatcher.BroadcastWrite(
                 serverUrl,
+                partitionId,
                 messageId,
                 key,
                 value,
                 replicaTimestamp);
+        }
+
+        public async Task BroadcastFailure(
+            string serverUrl,
+            string partitionId,
+            MessageId messageId,
+            string failedServerId) {
+
+            await outgoingDispatcher.BroadcastFailure(
+                serverUrl,
+                partitionId,
+                messageId,
+                failedServerId);
         }
 
         protected override BaseIncomingDispatcher GetIncomingDispatcher() => incomingDispatcher;

@@ -28,10 +28,11 @@ message WriteRequest {
 message WriteResponse {}
 
 message BroadcastWriteRequest {
-	MessageId message_id = 1;
-	string key = 2;
-	TimestampedValue timestamped_value = 3;
-	VectorClock replicaTimestamp = 4;
+	string partition_id = 1;
+	MessageId message_id = 2;
+	string key = 3;
+	TimestampedValue timestamped_value = 4;
+	VectorClock replicaTimestamp = 5;
 }
 
 message BroadcastWriteResponse {}
@@ -53,8 +54,9 @@ message VectorClock {
 }
 
 message BroadcastFailureRequest {
-	MessageId message_id = 1;
-	string server_id = 2;
+	string partition_id = 1;
+	MessageId message_id = 2;
+	string failed_server_id = 3;
 }
 
 message BroadcastFailureResponse {}

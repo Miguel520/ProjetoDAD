@@ -98,7 +98,7 @@ namespace KVStoreServer.Grpc.Simple {
                 ProtoKeyValueStore.BindService(
                     new SimpleStorageService(incomingDispatcher)),
                 ReplicationServiceProto.BindService(
-                    new SimpleReplicaCommunicationServiceImpl(incomingDispatcher))
+                    new SimpleReplicaCommunicationService(incomingDispatcher))
             };
         }
     }

@@ -10,6 +10,7 @@ namespace KVStoreServer.Grpc.Advanced {
 
         public async Task BroadcastWrite(
             string serverUrl,
+            string partitionId,
             MessageId messageId,
             string key,
             ImmutableTimestampedValue value,
@@ -17,7 +18,22 @@ namespace KVStoreServer.Grpc.Advanced {
 
             try {
                 AdvancedReplicaCommunicationConnection connection = new AdvancedReplicaCommunicationConnection(serverUrl);
-                await connection.BroadcastWrite(messageId, key, value, replicaTimestamp, DEFAULT_TIMEOUT);
+                await connection.BroadcastWrite(partitionId, messageId, key, value, replicaTimestamp, DEFAULT_TIMEOUT);
+            }
+            catch (RpcException exception) {
+                HandleRpcException(serverUrl, exception);
+            }
+        }
+
+        public async Task BroadcastFailure(
+            string serverUrl,
+            string partitionId,
+            Broadcast.MessageId messageId,
+            string failedServerId) {
+
+            try {
+                AdvancedReplicaCommunicationConnection connection = new AdvancedReplicaCommunicationConnection(serverUrl);
+                await connection.BroadcastFailure(partitionId, messageId, failedServerId, DEFAULT_TIMEOUT);
             }
             catch (RpcException exception) {
                 HandleRpcException(serverUrl, exception);

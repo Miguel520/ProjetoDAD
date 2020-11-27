@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 using static Common.Protos.ReplicaCommunication.SimpleReplicaCommunicationService;
 
 namespace KVStoreServer.Grpc.Simple {
-    class SimpleReplicaCommunicationServiceImpl : SimpleReplicaCommunicationServiceBase {
+    class SimpleReplicaCommunicationService : SimpleReplicaCommunicationServiceBase {
 
         private readonly SimpleIncomingDispatcher dispatcher;
-        public SimpleReplicaCommunicationServiceImpl(SimpleIncomingDispatcher dispatcher) {
+        public SimpleReplicaCommunicationService(SimpleIncomingDispatcher dispatcher) {
             this.dispatcher = dispatcher;
         }
 

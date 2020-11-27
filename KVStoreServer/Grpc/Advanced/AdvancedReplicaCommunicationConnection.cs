@@ -25,6 +25,7 @@ namespace KVStoreServer.Grpc.Advanced {
         }
 
         public async Task BroadcastWrite(
+            string partitionId,
             Broadcast.MessageId messageId,
             string key,
             ImmutableTimestampedValue value,
@@ -33,10 +34,26 @@ namespace KVStoreServer.Grpc.Advanced {
 
             await client.BroadcastWriteAsync(
                 new BroadcastWriteRequest {
+                    PartitionId = partitionId,
                     MessageId = BuildMessageId(messageId),
                     Key = key,
                     TimestampedValue = BuildValue(value),
                     ReplicaTimestamp = BuildClock(replicaTimestamp)
+                },
+                deadline: DateTime.UtcNow.AddMilliseconds(timeout));
+        }
+
+        public async Task BroadcastFailure(
+            string partitionId,
+            Broadcast.MessageId messageId,
+            string failedServerId, 
+            long timeout) {
+
+            await client.BroadcastFailureAsync(
+                new BroadcastFailureRequest {
+                    PartitionId = partitionId,
+                    MessageId = BuildMessageId(messageId),
+                    FailedServerId = failedServerId
                 },
                 deadline: DateTime.UtcNow.AddMilliseconds(timeout));
         }
