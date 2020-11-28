@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 
-namespace KVStoreServer.Storage {
+namespace KVStoreServer.Storage.Simple {
 
     /*
      * Class responsible for the storage of a partioned key value store
@@ -11,7 +9,7 @@ namespace KVStoreServer.Storage {
      */
     public class PartitionedKeyValueStore {
 
-        public readonly ConcurrentDictionary<string, SingleKeyValueStore> stores =
+        private readonly ConcurrentDictionary<string, SingleKeyValueStore> stores =
             new ConcurrentDictionary<string, SingleKeyValueStore>();
 
         public PartitionedKeyValueStore() {
@@ -54,7 +52,7 @@ namespace KVStoreServer.Storage {
             objects = new List<StoredValueDto>();
 
             foreach (KeyValuePair<string, SingleKeyValueStore> stored in stores) {
-                
+
                 stored.Value.TryGetAllObjects(
                     out List<StoredValueDto> allObjectsInPartition);
 

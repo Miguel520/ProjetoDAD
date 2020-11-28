@@ -1,9 +1,9 @@
 ﻿using Common.Utils;
 using KVStoreServer.CausalConsistency;
 
-namespace KVStoreServer.KVS {
+namespace KVStoreServer.Storage.Advanced {
     public class MutableTimestampedValue {
-        
+
         private MutableVectorClock timestamp = MutableVectorClock.Empty();
 
         public MutableTimestampedValue() { }
@@ -20,19 +20,21 @@ namespace KVStoreServer.KVS {
          * Returns the immutable timestamped value to be propagated to
          * all other servers
          */
-        public ImmutableTimestampedValue Update(string newValue, string serverId) {
+        public ImmutableTimestampedValue PrepareMerge(string newValue, string serverId) {
 
             Conditions.AssertArgument(serverId != null);
 
+            MutableTimestampedValue copy = new MutableTimestampedValue();
             lock (this) {
-                Value = newValue;
-                LastWriteServerId = serverId;
-                timestamp.Increment(serverId);
-                return ImmutableTimestampedValue.BuildFrom(
-                    Value,
-                    Timestamp,
-                    LastWriteServerId);
+                copy.Value = newValue;
+                copy.LastWriteServerId = serverId;
+                copy.timestamp = MutableVectorClock.CopyOf(timestamp);
             }
+            copy.timestamp.Increment(serverId);
+            return ImmutableTimestampedValue.BuildFrom(
+                    copy.Value,
+                    copy.Timestamp,
+                    copy.LastWriteServerId);
         }
 
         /*
@@ -48,7 +50,7 @@ namespace KVStoreServer.KVS {
             string otherLastWriteServerId = other.LastWriteServerId;
 
             // Prevent simultaneous updates
-            lock(this) {
+            lock (this) {
                 // If current timestamp happens before new timestamp then
                 // replace value, timestamp and lastWriteServerId
                 if (VectorClock.HappensBefore(timestamp, otherTimestamp)) {
@@ -65,6 +67,15 @@ namespace KVStoreServer.KVS {
                     // Always merge timestamps
                     timestamp.Merge(otherTimestamp);
                 }
+            }
+        }
+
+        public ImmutableTimestampedValue ToImmutable() {
+            lock(this) {
+                return ImmutableTimestampedValue.BuildFrom(
+                    Value,
+                    Timestamp,
+                    LastWriteServerId);
             }
         }
     }

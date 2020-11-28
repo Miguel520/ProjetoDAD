@@ -2,7 +2,7 @@
 using KVStoreServer.Broadcast;
 using KVStoreServer.CausalConsistency;
 using KVStoreServer.Grpc.Base;
-using KVStoreServer.KVS;
+using KVStoreServer.Storage.Advanced;
 using System.Threading.Tasks;
 
 namespace KVStoreServer.Grpc.Advanced {

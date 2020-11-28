@@ -1,7 +1,7 @@
 ﻿using Common.Utils;
 using KVStoreServer.Configuration;
 using KVStoreServer.Grpc.Base;
-using KVStoreServer.Storage;
+using KVStoreServer.Storage.Simple;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

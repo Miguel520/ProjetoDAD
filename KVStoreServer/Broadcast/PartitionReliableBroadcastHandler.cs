@@ -1,7 +1,7 @@
 ﻿using KVStoreServer.CausalConsistency;
 using KVStoreServer.Grpc.Advanced;
-using KVStoreServer.KVS;
 using KVStoreServer.Naming;
+using KVStoreServer.Storage.Advanced;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Threading;

@@ -3,9 +3,9 @@ using Common.Utils;
 using System;
 
 using KVStoreServer.Configuration;
-using KVStoreServer.Replication;
 using System.Threading;
 using KVStoreServer.Grpc.Simple;
+using KVStoreServer.Replication.Simple;
 
 namespace KVStoreServer {
     class Program {

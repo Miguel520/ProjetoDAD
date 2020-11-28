@@ -1,6 +1,6 @@
 ﻿using Common.Protos.ReplicaCommunication;
 using Grpc.Core;
-using KVStoreServer.KVS;
+using KVStoreServer.Storage.Advanced;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using static Common.Protos.ReplicaCommunication.AdvancedReplicaCommunicationService;

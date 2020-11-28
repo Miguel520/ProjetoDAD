@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace KVStoreServer.Storage {
+namespace KVStoreServer.Storage.Simple {
 
     /*
      * Class to store a value in a key value store
@@ -18,7 +18,7 @@ namespace KVStoreServer.Storage {
 
         public string Value {
             set {
-                lock(this) {
+                lock (this) {
                     if (!locked) {
                         throw new InvalidOperationException();
                     }
@@ -42,16 +42,16 @@ namespace KVStoreServer.Storage {
          * Locks an object to prepare a write
          */
         public void Lock() {
-            lock(this) {
+            lock (this) {
                 locked = true;
             }
         }
 
         //just for debug purposes
         public StoredValueDto GetStoredValueDto() {
-            return new StoredValueDto { 
+            return new StoredValueDto {
                 IsLocked = locked,
-                Value = value 
+                Value = value
             };
         }
     }

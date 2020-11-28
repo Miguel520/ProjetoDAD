@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using KVStoreServer.Grpc.Base;
 
-namespace KVStoreServer.Replication {
+namespace KVStoreServer.Replication.Simple {
 
     /*
      * Class to store system partitions as well as server ids and urls
@@ -36,19 +36,19 @@ namespace KVStoreServer.Replication {
 
             string[] parts = line.Split(" ");
 
-            if ( parts.Length != 2
+            if (parts.Length != 2
                 || !int.TryParse(parts[0], out int nServers)
                 || !int.TryParse(parts[1], out int nPartitions)) {
                 return false;
             }
-         
+
             for (int i = 0; i < nServers; i++) {
                 line = file.ReadLine();
                 parts = line.Split(",");
 
                 if (parts.Length != 2) return false;
                 FailureDetectionLayer.Instance.RegisterServer(parts[0], parts[1]);
-                
+
             }
 
             for (int i = 0; i < nPartitions; i++) {
@@ -72,7 +72,7 @@ namespace KVStoreServer.Replication {
                 partitions.TryAdd(partitionId, partition);
             }
 
-            if (file.ReadLine() != null) 
+            if (file.ReadLine() != null)
                 Console.WriteLine(
                     "Bad File: only read {0} lines, {1} servers and {2} partitions.",
                     nServers + nPartitions + 1,
@@ -104,8 +104,8 @@ namespace KVStoreServer.Replication {
             string masterId = arguments.MasterId;
 
             HashSet<string> partition = BuildPartition(members);
-            lock(this) {
-                
+            lock (this) {
+
                 Conditions.AssertArgument(!partitions.ContainsKey(partitionId));
                 Conditions.AssertArgument(partition.Contains(masterId));
 
@@ -113,7 +113,7 @@ namespace KVStoreServer.Replication {
                     bool alreadyExists = FailureDetectionLayer.Instance.TryGetServer(
                         serverId,
                         out string currentUrl);
-                    
+
                     // Url mapping must not exist or be the same as before
                     Conditions.AssertArgument(
                         !alreadyExists || currentUrl.Equals(serverUrl));
@@ -156,8 +156,8 @@ namespace KVStoreServer.Replication {
         }
 
         public ImmutableList<string> ListPartitions() {
-            lock(partitions) {
-                return ImmutableList.ToImmutableList(partitions.Keys);
+            lock (partitions) {
+                return partitions.Keys.ToImmutableList();
             }
         }
 
@@ -176,7 +176,7 @@ namespace KVStoreServer.Replication {
                 }
                 return list.ToImmutableList();
             }
-        }        
+        }
 
         private HashSet<string> BuildPartition(IEnumerable<Tuple<string, string>> members) {
             HashSet<string> partition = new HashSet<string>();
@@ -212,7 +212,8 @@ namespace KVStoreServer.Replication {
             string configDirectory = rootDirectory + "..\\..\\..\\ConfigFiles\\";
             try {
                 return new StreamReader(configDirectory + filename);
-            } catch (FileNotFoundException) {
+            }
+            catch (FileNotFoundException) {
                 Console.Error.WriteLine("{0}: File not found", configDirectory + filename);
                 Environment.Exit(1);
                 return null;
