@@ -15,6 +15,7 @@ using Client.KVS;
 using Client.Grpc.Base;
 using Client.Controller;
 using Client.Grpc.Simple;
+using Client.Grpc.Advanced;
 
 namespace Client {
     class Program {
@@ -27,14 +28,27 @@ namespace Client {
             ChannelPool.SetMaxOpenChannels(3);
 
             ClientConfiguration clientConfig = ParseArgs(args);
+
+            switch (clientConfig.Version) {
+                case 1:
+                    RunSimpleVersion(clientConfig);
+                    break;
+                case 2:
+                    RunAdvancedVersion(clientConfig);
+                    break;
+                default:
+                    throw new InvalidOperationException("Unknown version");
+            }
             
+        }
+
+        private static void RunSimpleVersion(ClientConfiguration clientConfig) {
             Console.WriteLine(
-                "[{0}] Client {1} executing script {2} at {3} with version {4}",
+                "[{0}] Client {1} executing script {2} at {3} with simple version",
                 DateTime.Now.ToString("HH:mm:ss"),
                 clientConfig.Username,
                 clientConfig.Script,
-                clientConfig.Url,
-                clientConfig.Version);
+                clientConfig.Url);
 
             NamingService namingService = new NamingService(
                 clientConfig.NamingServersUrls,
@@ -44,6 +58,29 @@ namespace Client {
 
             SimpleClientController controller = new SimpleClientController(namingService);
 
+            RunMainLoop(controller, clientConfig);
+        }
+
+        private static void RunAdvancedVersion(ClientConfiguration clientConfig) {
+            Console.WriteLine(
+                "[{0}] Client {1} executing script {2} at {3} with advanced version",
+                DateTime.Now.ToString("HH:mm:ss"),
+                clientConfig.Username,
+                clientConfig.Script,
+                clientConfig.Url);
+
+            NamingService namingService = new NamingService(
+                clientConfig.NamingServersUrls,
+                AdvancedGrpcMessageLayer.Instance);
+
+            AdvancedKVSMessageLayer.SetContext(namingService);
+
+            AdvancedClientController controller = new AdvancedClientController(namingService);
+
+            RunMainLoop(controller, clientConfig);
+        }
+
+        private static void RunMainLoop(ICommandHandler controller, ClientConfiguration clientConfig) {
             RequestsDispatcher dispatcher = new RequestsDispatcher(clientConfig);
 
             Server client = new Server {
@@ -68,7 +105,7 @@ namespace Client {
 
             ICommand command;
             foreach (string line in lines) {
-                if(!TryParse(line, out command)) {
+                if (!TryParse(line, out command)) {
                     Console.WriteLine("Invalid Command");
                     continue;
                 }
