@@ -5,12 +5,12 @@ using System.Collections.Immutable;
 using System.Threading;
 
 using Client.Commands;
-using Client.Grpc;
 using Client.Naming;
 using Client.KVS;
+using Client.Grpc.Simple;
 
-namespace Client {
-    public class ClientController : ICommandHandler {
+namespace Client.Controller {
+    public class SimpleClientController : ICommandHandler {
 
         // Loop variables
         private static readonly string LOOPSTRING = "$i";
@@ -20,7 +20,7 @@ namespace Client {
         private int currentRep = -1;
         private readonly NamingService namingService;
 
-        public ClientController(NamingService namingService) {
+        public SimpleClientController(NamingService namingService) {
             this.namingService = namingService;
         }
 
@@ -33,7 +33,7 @@ namespace Client {
         public void OnEndRepeatCommand(EndRepeatCommand command) {
             insideLoop = false;
             for (int i = 0; i < numReps; i++) {
-                currentRep = (i+1);
+                currentRep = i + 1;
                 loopCommands.ForEach(command => command.Accept(this));
             }
             numReps = 0;
@@ -55,8 +55,8 @@ namespace Client {
                 if (!namingService.Lookup(serverId, out string serverUrl)) {
                     continue;
                 }
-                if (GrpcMessageLayer.Instance.ListServer(serverUrl, out ImmutableList<StoredObject> storedObjects)) {
-                    foreach(StoredObject storedObject in storedObjects) {
+                if (SimpleGrpcMessageLayer.Instance.ListServer(serverUrl, out ImmutableList<StoredObject> storedObjects)) {
+                    foreach (StoredObject storedObject in storedObjects) {
                         Console.WriteLine(
                             "[{0}] Server: {1}, object: <{2},{3}> = '{4}'",
                             DateTime.Now.ToString("HH:mm:ss"),
@@ -84,7 +84,7 @@ namespace Client {
                 return;
             }
 
-            bool success = GrpcMessageLayer.Instance.ListServer(
+            bool success = SimpleGrpcMessageLayer.Instance.ListServer(
                 url,
                 out ImmutableList<StoredObject> storedObjects);
 
@@ -96,7 +96,7 @@ namespace Client {
             }
 
             if (storedObjects.Count != 0) {
-                foreach(StoredObject obj in storedObjects) {
+                foreach (StoredObject obj in storedObjects) {
                     Console.WriteLine($"[{DateTime.Now.ToString("HH:mm:ss")}]" +
                         $" Object id: {obj.ObjectId}" +
                         $" {(obj.IsLocked ? "is Locked" : $" has the value {obj.Value}")} " +
@@ -128,13 +128,13 @@ namespace Client {
             string value;
             // No fallback server
             if (serverId == null || serverId == "-1") {
-                success = KVSMessageLayer.Instance.Read(
+                success = SimpleKVSMessageLayer.Instance.Read(
                     partitionId,
                     objectId,
                     out value);
             }
             else {
-                success = KVSMessageLayer.Instance.ReadFallback(
+                success = SimpleKVSMessageLayer.Instance.ReadFallback(
                     partitionId,
                     objectId,
                     serverId,
@@ -177,7 +177,7 @@ namespace Client {
                     "[{0}] Error parsing time",
                     DateTime.Now.ToString("HH:mm:ss"));
             }
-            
+
         }
 
         public void OnWriteCommand(WriteCommand command) {
@@ -190,7 +190,7 @@ namespace Client {
             string objectId = command.ObjectId.Replace(LOOPSTRING, currentRep.ToString());
             string value = command.Value.Replace(LOOPSTRING, currentRep.ToString());
 
-            if (KVSMessageLayer.Instance.Write(partitionId, objectId, value)) {
+            if (SimpleKVSMessageLayer.Instance.Write(partitionId, objectId, value)) {
                 Console.WriteLine(
                     "[{0}] Write object <{1},{2}> with value {3} successfull",
                     DateTime.Now.ToString("HH:mm:ss"),

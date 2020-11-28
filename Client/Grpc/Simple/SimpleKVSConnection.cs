@@ -1,5 +1,4 @@
-﻿using Common.Exceptions;
-using Common.Grpc;
+﻿using Common.Grpc;
 using Common.Protos.SimpleKeyValueStore;
 using Grpc.Core;
 using System;
@@ -7,50 +6,50 @@ using System.Collections.Immutable;
 
 using static Common.Protos.SimpleKeyValueStore.SimpleKeyValueStoreService;
 
-namespace Client.Grpc {
-    class KVStoreConnection {
+namespace Client.Grpc.Simple {
+    class SimpleKVSConnection {
 
         private readonly string target;
         private readonly ChannelBase channel;
         private readonly SimpleKeyValueStoreServiceClient client;
 
-        public KVStoreConnection(string url) {
+        public SimpleKVSConnection(string url) {
             target = url;
             channel = ChannelPool.Instance.ForUrl(url);
             client = new SimpleKeyValueStoreServiceClient(channel);
         }
 
-        ~KVStoreConnection() {
+        ~SimpleKVSConnection() {
             ChannelPool.Instance.ClearChannel(channel);
         }
 
         public void Write(string partitionId, string objectId, string value) {
             WriteRequest request =
-                KVStoreMessageFactory.BuildWriteRequest(
+                SimpleKVSMessageFactory.BuildWriteRequest(
                     partitionId,
                     objectId,
                     value);
             client.Write(
-                request, 
+                request,
                 deadline: DateTime.UtcNow.AddSeconds(60));
         }
 
         public void Read(string partitionId, string objectId, out string value) {
             ReadRequest request =
-                KVStoreMessageFactory.BuildReadRequest(
+                SimpleKVSMessageFactory.BuildReadRequest(
                     partitionId,
                     objectId);
             ReadResponse response = client.Read(
-                request, 
+                request,
                 deadline: DateTime.UtcNow.AddSeconds(60));
             value = response.ObjectValue;
         }
 
         public void ListServer(out ImmutableList<StoredObject> storedObjects) {
-            ListRequest request = KVStoreMessageFactory.BuildListRequest();
+            ListRequest request = SimpleKVSMessageFactory.BuildListRequest();
 
             ListResponse response = client.List(
-                request, 
+                request,
                 deadline: DateTime.UtcNow.AddSeconds(60));
             storedObjects = response.Objects.ToImmutableList();
         }

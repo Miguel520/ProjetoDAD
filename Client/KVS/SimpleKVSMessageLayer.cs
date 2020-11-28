@@ -1,13 +1,12 @@
-﻿using Client.Grpc;
+﻿using Client.Grpc.Simple;
 using Client.Naming;
 using Common.Utils;
-using System;
 using System.Collections.Immutable;
 
 namespace Client.KVS {
-    public class KVSMessageLayer {
+    public class SimpleKVSMessageLayer {
 
-        private static KVSMessageLayer instance = null;
+        private static SimpleKVSMessageLayer instance = null;
         private static readonly object instanceLock = new object();
         
         private readonly NamingService namingService = null;
@@ -15,7 +14,7 @@ namespace Client.KVS {
         // Id of the last attachment
         private string attachedId = null;
 
-        private KVSMessageLayer(NamingService namingService) {
+        private SimpleKVSMessageLayer(NamingService namingService) {
             this.namingService = namingService;
         }
 
@@ -23,11 +22,11 @@ namespace Client.KVS {
             lock(instanceLock) {
                 Conditions.AssertArgument(namingService != null);
                 Conditions.AssertState(instance == null);
-                instance = new KVSMessageLayer(namingService);
+                instance = new SimpleKVSMessageLayer(namingService);
             }
         }
 
-        public static KVSMessageLayer Instance {
+        public static SimpleKVSMessageLayer Instance {
             get {
                 lock(instanceLock) {
                     Conditions.AssertState(instance != null);
@@ -51,7 +50,7 @@ namespace Client.KVS {
             string value) {
 
             return namingService.LookupMaster(partitionId, out string masterUrl)
-                && GrpcMessageLayer.Instance.Write(
+                && SimpleGrpcMessageLayer.Instance.Write(
                     masterUrl,
                     partitionId,
                     objectId,
@@ -137,7 +136,7 @@ namespace Client.KVS {
             string serverUrl,
             out string value) {
 
-            bool success = GrpcMessageLayer.Instance.Read(
+            bool success = SimpleGrpcMessageLayer.Instance.Read(
                         serverUrl,
                         partitionId,
                         objectId,

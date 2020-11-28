@@ -3,7 +3,7 @@ using Client.Communications;
 using Common.Protos.ClientConfiguration;
 using Grpc.Core;
 
-namespace Client.Grpc {
+namespace Client.Grpc.Base {
     class ConfigurationService : ClientConfigurationService.ClientConfigurationServiceBase {
 
         private readonly RequestsDispatcher requestsDispatcher;
