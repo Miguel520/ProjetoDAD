@@ -2,7 +2,7 @@
 using KVStoreServer.CausalConsistency;
 using KVStoreServer.Grpc.Advanced;
 using KVStoreServer.Grpc.Base;
-using KVStoreServer.KVS;
+using KVStoreServer.Storage.Advanced;
 using System.Threading.Tasks;
 
 namespace KVStoreServer.Naming {
@@ -11,6 +11,12 @@ namespace KVStoreServer.Naming {
         private AdvancedNamingServiceLayer() { }
 
         public static AdvancedNamingServiceLayer Instance { get; } = new AdvancedNamingServiceLayer();
+
+        // Bind handlers for incoming messages
+
+        public void BindWriteHandler(WriteHandler handler) {
+            AdvancedGrpcMessageLayer.Instance.BindWriteHandler(handler);
+        }
 
         public void BindBroadcastWriteHandler(BroadcastWriteHandler handler) {
             AdvancedGrpcMessageLayer.Instance.BindBroadcastWriteHandler(handler);

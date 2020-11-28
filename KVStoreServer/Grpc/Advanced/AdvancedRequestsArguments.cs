@@ -1,8 +1,20 @@
 ﻿using KVStoreServer.Broadcast;
 using KVStoreServer.CausalConsistency;
-using KVStoreServer.KVS;
+using KVStoreServer.Storage.Advanced;
 
 namespace KVStoreServer.Grpc.Advanced {
+
+    public class WriteArguments {
+
+        public string PartitionId { get; set; }
+
+        public string ObjectId { get; set; }
+
+        public string ObjectValue { get; set; }
+
+        public ImmutableVectorClock Timestamp { get; set; }
+    }
+
     public class BroadcastWriteArguments {
 
         public string PartitionId { get; set; }

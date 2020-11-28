@@ -4,11 +4,16 @@ using KVStoreServer.Broadcast;
 using KVStoreServer.CausalConsistency;
 using KVStoreServer.Configuration;
 using KVStoreServer.Grpc.Base;
-using KVStoreServer.KVS;
+using KVStoreServer.Storage.Advanced;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using ProtoKeyValueStore = Common.Protos.AdvancedKeyValueStore.AdvancedKeyValueStoreService;
+using ReplicationServiceProto = Common.Protos.ReplicaCommunication.AdvancedReplicaCommunicationService;
+
 namespace KVStoreServer.Grpc.Advanced {
+
+    public delegate ImmutableVectorClock WriteHandler(WriteArguments writeArguments);
 
     public delegate void BroadcastWriteHandler(BroadcastWriteArguments arguments);
     public delegate void BroadcastFailureHandler(BroadcastFailureArguments arguments);
@@ -42,6 +47,10 @@ namespace KVStoreServer.Grpc.Advanced {
                 Conditions.AssertState(instance == null);
                 instance = new AdvancedGrpcMessageLayer(serverConfig);
             }
+        }
+
+        public void BindWriteHandler(WriteHandler handler) {
+            incomingDispatcher.BindWriteHandler(handler);
         }
 
         public void BindBroadcastWriteHandler(BroadcastWriteHandler handler) {
@@ -87,7 +96,12 @@ namespace KVStoreServer.Grpc.Advanced {
         protected override BaseOutgoingDispatcher GetOutgoingDispatcher() => outgoingDispatcher;
 
         protected override IEnumerable<ServerServiceDefinition> GetServicesDefinitions() {
-            return new ServerServiceDefinition[] { };
+            return new ServerServiceDefinition[] {
+                ProtoKeyValueStore.BindService(
+                    new AdvancedKVSService(incomingDispatcher)),
+                ReplicationServiceProto.BindService(
+                    new AdvancedReplicaCommunicationService(incomingDispatcher))
+            };
         }
     }
 }

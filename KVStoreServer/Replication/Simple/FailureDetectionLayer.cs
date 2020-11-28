@@ -6,7 +6,7 @@ using KVStoreServer.Grpc.Base;
 using KVStoreServer.Grpc.Simple;
 using KVStoreServer.Naming;
 
-namespace KVStoreServer.Replication {
+namespace KVStoreServer.Replication.Simple {
 
     /*
      * Layer responsible for the detection of server crashes
@@ -88,8 +88,8 @@ namespace KVStoreServer.Replication {
 
             if (!crashedUrls.Contains(serverId)) {
                 await SimpleNamingServiceLayer.Instance.Lock(
-                    serverId, 
-                    partitionId, 
+                    serverId,
+                    partitionId,
                     objectId);
             }
         }
@@ -102,15 +102,15 @@ namespace KVStoreServer.Replication {
 
             if (!crashedUrls.Contains(serverId)) {
                 await SimpleNamingServiceLayer.Instance.Write(
-                    serverId, 
-                    partitionId, 
-                    objectId, 
+                    serverId,
+                    partitionId,
+                    objectId,
                     objectValue);
             }
         }
 
         public void OnReplicaFailure(string serverId) {
-            lock(crashedUrls) {
+            lock (crashedUrls) {
                 if (!crashedUrls.Contains(serverId)) {
                     crashedUrls.Add(serverId);
                 }

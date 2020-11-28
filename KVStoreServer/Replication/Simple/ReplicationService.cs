@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 using KVStoreServer.Configuration;
 using KVStoreServer.Grpc.Base;
 using KVStoreServer.Grpc.Simple;
-using KVStoreServer.Storage;
+using KVStoreServer.Storage.Simple;
 
-namespace KVStoreServer.Replication {
+namespace KVStoreServer.Replication.Simple {
 
     /**
      * Class responsible for replication related operation
@@ -61,14 +61,14 @@ namespace KVStoreServer.Replication {
                     // Lock object in all replicas
                     Task[] tasks = otherReplicasIds.Select(
                         id => FailureDetectionLayer.Instance.Lock(
-                            id, 
-                            arguments.PartitionId, 
+                            id,
+                            arguments.PartitionId,
                             arguments.ObjectId))
                         .ToArray();
 
                     Task.WaitAll(tasks);
                 }
-                
+
                 store.Lock(
                     arguments.PartitionId,
                     arguments.ObjectId);

@@ -1,8 +1,8 @@
 ﻿using Common.Utils;
 using KVStoreServer.CausalConsistency;
 using KVStoreServer.Grpc.Advanced;
-using KVStoreServer.KVS;
 using KVStoreServer.Naming;
+using KVStoreServer.Storage.Advanced;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 
@@ -22,6 +22,12 @@ namespace KVStoreServer.Broadcast {
         private ReliableBroadcastLayer() {
             AdvancedNamingServiceLayer.Instance.BindBroadcastWriteHandler(OnBroadcastWriteDeliver);
             AdvancedNamingServiceLayer.Instance.BindBroadcastFailureHandler(OnBroadcastFailureDeliver);
+        }
+
+        public static ReliableBroadcastLayer Instance { get; } = new ReliableBroadcastLayer(); 
+
+        public void BindWriteHandler(WriteHandler handler) {
+            AdvancedNamingServiceLayer.Instance.BindWriteHandler(handler);
         }
 
         public void BindWriteMessageHandler(WriteMessageHandler handler) {

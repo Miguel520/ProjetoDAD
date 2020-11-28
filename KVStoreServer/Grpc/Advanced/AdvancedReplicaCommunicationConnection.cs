@@ -5,9 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-using KVStoreServer.KVS;
-
 using static Common.Protos.ReplicaCommunication.AdvancedReplicaCommunicationService;
+using KVStoreServer.Storage.Advanced;
 
 namespace KVStoreServer.Grpc.Advanced {
     class AdvancedReplicaCommunicationConnection {

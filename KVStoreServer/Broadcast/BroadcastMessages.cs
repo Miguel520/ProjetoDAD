@@ -1,8 +1,8 @@
 ﻿using KVStoreServer.CausalConsistency;
-using KVStoreServer.KVS;
+using KVStoreServer.Storage.Advanced;
 
 namespace KVStoreServer.Broadcast {
-    
+
     public class BroadcastWriteMessage {
 
         public string PartitionId { get; set; }

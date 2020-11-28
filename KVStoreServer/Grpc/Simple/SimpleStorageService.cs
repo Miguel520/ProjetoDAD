@@ -4,8 +4,7 @@ using Grpc.Core;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
-using KVStoreServer.Storage;
+using KVStoreServer.Storage.Simple;
 
 namespace KVStoreServer.Grpc.Simple {
     public class SimpleStorageService : SimpleKeyValueStoreService.SimpleKeyValueStoreServiceBase {

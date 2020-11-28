@@ -1,7 +1,7 @@
 ﻿using Common.Utils;
 using KVStoreServer.CausalConsistency;
 
-namespace KVStoreServer.KVS {
+namespace KVStoreServer.Storage.Advanced {
 
     /*
      * Immutable timestamped value to allow for

@@ -1,9 +1,8 @@
-﻿
-namespace KVStoreServer.Storage {
+﻿namespace KVStoreServer.Storage.Simple {
     public class StoredValueDto {
-    
+
         public string PartitionId { get; set; }
-        
+
         public string ObjectId { get; set; }
 
         public string Value { get; set; }

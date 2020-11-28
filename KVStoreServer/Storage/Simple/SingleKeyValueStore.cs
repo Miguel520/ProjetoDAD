@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 
-namespace KVStoreServer.Storage {
+namespace KVStoreServer.Storage.Simple {
 
     /*
      * Class responsible for the storage of objects within a server
@@ -14,7 +14,7 @@ namespace KVStoreServer.Storage {
         private ConcurrentDictionary<string, StoredValue> keyValuePairs =
             new ConcurrentDictionary<string, StoredValue>();
 
-        public SingleKeyValueStore() {}
+        public SingleKeyValueStore() { }
 
         /*
          * Locks the object with the given key (creates an empty object if necessary)
@@ -33,7 +33,7 @@ namespace KVStoreServer.Storage {
          */
         public void AddOrUpdate(string objectId, string value) {
             // If the object doesn't exist than it wasn't previously locked
-            if(!keyValuePairs.TryGetValue(objectId, out StoredValue storedValue)) {
+            if (!keyValuePairs.TryGetValue(objectId, out StoredValue storedValue)) {
                 throw new InvalidOperationException();
             }
             storedValue.Value = value;
@@ -53,13 +53,13 @@ namespace KVStoreServer.Storage {
                 return false;
             }
             value = storedValue.Value;
-            return (value != null);
+            return value != null;
         }
 
         public void TryGetAllObjects(out List<StoredValueDto> objects) {
             objects = new List<StoredValueDto>();
             StoredValueDto storedValueDto;
-          
+
             foreach (KeyValuePair<string, StoredValue> stored in keyValuePairs) {
                 storedValueDto = stored.Value.GetStoredValueDto();
                 storedValueDto.ObjectId = stored.Key;
