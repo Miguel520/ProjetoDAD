@@ -5,7 +5,7 @@ using KVStoreServer.Configuration;
 
 using ProtoServerConfiguration = Common.Protos.ServerConfiguration.ServerConfigurationService;
 using NamingServiceProto = Common.Protos.NamingService.NamingService;
-using KVStoreServer.Replication.Simple;
+using KVStoreServer.Replication.Base;
 
 namespace KVStoreServer.Grpc.Base {
 

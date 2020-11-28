@@ -109,7 +109,7 @@ namespace KVStoreServer.Replication.Simple {
             }
         }
 
-        public void OnReplicaFailure(string serverId) {
+        private void OnReplicaFailure(string serverId) {
             lock (crashedUrls) {
                 if (!crashedUrls.Contains(serverId)) {
                     crashedUrls.Add(serverId);

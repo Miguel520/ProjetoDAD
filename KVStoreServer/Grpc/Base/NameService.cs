@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using static Common.Protos.NamingService.NamingService;
-using KVStoreServer.Replication.Simple;
+using KVStoreServer.Replication.Base;
 
 namespace KVStoreServer.Grpc.Base {
     class NamingService : NamingServiceBase {

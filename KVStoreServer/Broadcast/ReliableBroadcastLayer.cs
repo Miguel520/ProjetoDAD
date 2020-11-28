@@ -1,6 +1,7 @@
 ﻿using Common.Utils;
 using KVStoreServer.CausalConsistency;
 using KVStoreServer.Grpc.Advanced;
+using KVStoreServer.Grpc.Base;
 using KVStoreServer.Naming;
 using KVStoreServer.Storage.Advanced;
 using System.Collections.Concurrent;
@@ -42,8 +43,40 @@ namespace KVStoreServer.Broadcast {
             failureMessageHandler = handler;
         }
 
+        public void BindJoinPartitionHandler(JoinPartitionHandler handler) {
+            AdvancedNamingServiceLayer.Instance.BindJoinPartitionHandler(handler);
+        }
+
+        public void BindLookupMasterHandler(LookupMasterHandler handler) {
+            AdvancedNamingServiceLayer.Instance.BindLookupMasterHandler(handler);
+        }
+
+        public void BindListPartitionsHandler(ListPartitionsHandler handler) {
+            AdvancedNamingServiceLayer.Instance.BindListPartitionsHandler(handler);
+        }
+
+        public void BindStatusHandler(StatusHandler handler) {
+            AdvancedNamingServiceLayer.Instance.BindStatusHandler(handler);
+        }
+
+        public void Start() {
+            AdvancedNamingServiceLayer.Instance.Start();
+        }
+
+        public void Shutdown() {
+            AdvancedNamingServiceLayer.Instance.Shutdown();
+        }
+
         public void RegisterSelfId(string selfId) {
             this.selfId = selfId;
+        }
+
+        public bool RegisterServer(string serverId, string serverUrl) {
+            return AdvancedNamingServiceLayer.Instance.RegisterServer(serverId, serverUrl);
+        }
+
+        public bool TryGetServer(string serverId, out string serverUrl) {
+            return AdvancedNamingServiceLayer.Instance.TryGetServer(serverId, out serverUrl);
         }
 
         public bool RegisterPartition(string partitionId, ImmutableHashSet<string> serverIds) {
