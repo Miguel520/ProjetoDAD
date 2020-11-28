@@ -2,12 +2,15 @@
 using KVStoreServer.CausalConsistency;
 using KVStoreServer.Configuration;
 using KVStoreServer.Grpc.Base;
+using KVStoreServer.Storage.Advanced;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace KVStoreServer.Grpc.Advanced {
     public class AdvancedIncomingDispatcher : BaseIncomingDispatcher {
 
         private WriteHandler writeHandler = null;
+        private ListServerHandler listServerHandler = null;
 
         private BroadcastWriteHandler broadcastWriteHandler = null;
         private BroadcastFailureHandler broadcastFailureHandler = null;
@@ -17,6 +20,11 @@ namespace KVStoreServer.Grpc.Advanced {
         public void BindWriteHandler(WriteHandler handler) {
             writeHandler = handler;
         }
+
+        public void BindListServerHandler(ListServerHandler handler) {
+            listServerHandler = handler;
+        }
+
         public void BindBroadcastWriteHandler(BroadcastWriteHandler handler) {
             broadcastWriteHandler = handler;
         }
@@ -30,6 +38,13 @@ namespace KVStoreServer.Grpc.Advanced {
             WaitFreeze();
             await WaitDelay();
             return writeHandler(arguments);
+        }
+
+        public async Task<IEnumerable<StoredObjectDto>> OnListServer() {
+            Conditions.AssertState(listServerHandler != null);
+            WaitFreeze();
+            await WaitDelay();
+            return listServerHandler();
         }
 
         public async Task OnBroadcastWrite(BroadcastWriteArguments arguments) {

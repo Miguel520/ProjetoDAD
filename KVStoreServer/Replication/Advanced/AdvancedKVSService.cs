@@ -3,6 +3,7 @@ using KVStoreServer.CausalConsistency;
 using KVStoreServer.Configuration;
 using KVStoreServer.Grpc.Advanced;
 using KVStoreServer.Storage.Advanced;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace KVStoreServer.Replication.Advanced {
@@ -20,6 +21,8 @@ namespace KVStoreServer.Replication.Advanced {
 
         public void Bind() {
             ReliableBroadcastLayer.Instance.BindWriteHandler(OnWriteRequest);
+            ReliableBroadcastLayer.Instance.BindListServerHandler(OnListServerRequest);
+            ReliableBroadcastLayer.Instance.BindWriteMessageHandler(OnBroadcastWriteMessage);
         }
 
         /*
@@ -49,6 +52,13 @@ namespace KVStoreServer.Replication.Advanced {
                 timestampToBroadcast);
 
             return timestampToBroadcast;
+        }
+
+        /*
+         * Handle list server request from client
+         */
+        public IEnumerable<StoredObjectDto> OnListServerRequest() {
+            return store.ListObjects();
         }
 
         /*

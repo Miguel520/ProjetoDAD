@@ -14,6 +14,7 @@ using ReplicationServiceProto = Common.Protos.ReplicaCommunication.AdvancedRepli
 namespace KVStoreServer.Grpc.Advanced {
 
     public delegate ImmutableVectorClock WriteHandler(WriteArguments writeArguments);
+    public delegate IEnumerable<StoredObjectDto> ListServerHandler();
 
     public delegate void BroadcastWriteHandler(BroadcastWriteArguments arguments);
     public delegate void BroadcastFailureHandler(BroadcastFailureArguments arguments);
@@ -51,6 +52,10 @@ namespace KVStoreServer.Grpc.Advanced {
 
         public void BindWriteHandler(WriteHandler handler) {
             incomingDispatcher.BindWriteHandler(handler);
+        }
+
+        public void BindListServerHandler(ListServerHandler handler) {
+            incomingDispatcher.BindListServerHandler(handler);
         }
 
         public void BindBroadcastWriteHandler(BroadcastWriteHandler handler) {

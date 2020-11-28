@@ -30,6 +30,10 @@ namespace KVStoreServer.Broadcast {
             AdvancedNamingServiceLayer.Instance.BindWriteHandler(handler);
         }
 
+        public void BindListServerHandler(ListServerHandler handler) {
+            AdvancedNamingServiceLayer.Instance.BindListServerHandler(handler);
+        }
+
         public void BindWriteMessageHandler(WriteMessageHandler handler) {
             writeMessageHandler = handler;
         }

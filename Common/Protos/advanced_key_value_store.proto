@@ -50,6 +50,7 @@ message StoredObject {
     string object_id = 2;
     string object_value = 3;
     VectorClock object_timestamp = 4;
+    string object_last_write_server_id = 5;
 }
 
 message VectorClock {

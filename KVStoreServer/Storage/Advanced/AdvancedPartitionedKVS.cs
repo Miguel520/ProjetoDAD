@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace KVStoreServer.Storage.Advanced {
@@ -22,6 +24,17 @@ namespace KVStoreServer.Storage.Advanced {
             ImmutableTimestampedValue value) {
 
             GetOrAddStore(partitionId).Write(objectId, value);
+        }
+
+        public IEnumerable<StoredObjectDto> ListObjects() {
+            lock (stores) {
+                return stores.SelectMany(pair => {
+                    return pair.Value.ListObjects().Select(objectDto => {
+                        objectDto.PartitionId = pair.Key;
+                        return objectDto;
+                    });
+                });
+            }
         }
 
         private AdvancedSingleKVS GetOrAddStore(string partitionId) {

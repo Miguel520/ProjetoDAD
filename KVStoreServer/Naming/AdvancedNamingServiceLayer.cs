@@ -18,6 +18,10 @@ namespace KVStoreServer.Naming {
             AdvancedGrpcMessageLayer.Instance.BindWriteHandler(handler);
         }
 
+        public void BindListServerHandler(ListServerHandler handler) {
+            AdvancedGrpcMessageLayer.Instance.BindListServerHandler(handler);
+        }
+
         public void BindBroadcastWriteHandler(BroadcastWriteHandler handler) {
             AdvancedGrpcMessageLayer.Instance.BindBroadcastWriteHandler(handler);
         }

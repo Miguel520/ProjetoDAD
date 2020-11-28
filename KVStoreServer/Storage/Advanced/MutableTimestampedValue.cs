@@ -69,5 +69,14 @@ namespace KVStoreServer.Storage.Advanced {
                 }
             }
         }
+
+        public ImmutableTimestampedValue ToImmutable() {
+            lock(this) {
+                return ImmutableTimestampedValue.BuildFrom(
+                    Value,
+                    Timestamp,
+                    LastWriteServerId);
+            }
+        }
     }
 }

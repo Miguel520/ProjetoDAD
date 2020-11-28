@@ -1,7 +1,9 @@
 ﻿
 using Common.Protos.AdvancedKeyValueStore;
 using Grpc.Core;
+using KVStoreServer.Storage.Advanced;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using static Common.Protos.AdvancedKeyValueStore.AdvancedKeyValueStoreService;
@@ -27,8 +29,11 @@ namespace KVStoreServer.Grpc.Advanced {
             };
         }
 
-        public override Task<ListResponse> List(ListRequest request, ServerCallContext context) {
-            return base.List(request, context);
+        public override async Task<ListResponse> List(ListRequest request, ServerCallContext context) {
+            IEnumerable<StoredObjectDto> objects = await dispatcher.OnListServer();
+            return new ListResponse {
+                Objects = { BuildObject(objects) }
+            };
         }
 
         private WriteArguments ParseWriteRequest(WriteRequest request) {
@@ -38,6 +43,18 @@ namespace KVStoreServer.Grpc.Advanced {
                 ObjectValue = request.ObjectValue,
                 Timestamp = BuildVectorClock(request.Timestamp)
             };
+        }
+
+        private IEnumerable<StoredObject> BuildObject(IEnumerable<StoredObjectDto> objectDtos) {
+            return objectDtos.Select(objectDto => {
+                return new StoredObject {
+                    PartitionId = objectDto.PartitionId,
+                    ObjectId = objectDto.ObjectId,
+                    ObjectValue = objectDto.TimestampedValue.Value,
+                    ObjectTimestamp = BuildClock(objectDto.TimestampedValue.Timestamp),
+                    ObjectLastWriteServerId = objectDto.TimestampedValue.LastWriteServerId
+                };
+            });
         }
 
         private CausalConsistency.ImmutableVectorClock BuildVectorClock(VectorClock vectorClock) {
