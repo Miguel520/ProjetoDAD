@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Protos\advanced_key_value_store.proto" />
     <None Remove="Protos\PCS\process_creation.proto" />
     <None Remove="Protos\process_creation.proto" />
     <None Remove="Protos\replica_communication_service.proto" />

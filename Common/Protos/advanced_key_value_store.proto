@@ -1,0 +1,58 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "Common.Protos.AdvancedKeyValueStore";
+
+service AdvancedKeyValueStoreService {
+    rpc Read(ReadRequest) returns (ReadResponse);
+    rpc Write(WriteRequest) returns (WriteResponse);
+    rpc List(ListRequest) returns (ListResponse);
+}
+
+message ReadRequest {
+    string partition_id = 1;
+    string object_id = 2;
+    // Client sends timestamp for the partition
+    VectorClock timestamp = 3;
+}
+
+message ReadResponse {
+    string object_value = 1;
+    // Server returns timestamp for partition for client to merge
+    VectorClock timestamp = 2;
+}
+
+message WriteRequest {
+    string partition_id = 1;
+    string object_id = 2;
+    string object_value = 3;
+    // Client sends timestamp for the partition
+    VectorClock timestamp = 4;
+}
+
+message WriteResponse {
+    // Client sends timestamp for the partition
+    VectorClock timestamp = 1;
+}
+
+/*
+ * List rpc is used for debug purposes
+ * No need to synchronize vector clocks as is not a main operation
+ */
+message ListRequest {
+}
+
+message ListResponse {
+    repeated StoredObject objects = 1;
+}
+
+message StoredObject {
+    string partition_id = 1;
+    string object_id = 2;
+    string object_value = 3;
+    VectorClock object_timestamp = 4;
+}
+
+message VectorClock {
+	repeated string server_ids = 1;
+	repeated int32 server_clocks = 2;
+}
