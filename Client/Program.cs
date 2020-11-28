@@ -5,7 +5,6 @@ using System.Collections.Immutable;
 
 using Client.Communications;
 using Client.Configuration;
-using Client.Grpc;
 using Client.Naming;
 using Client.Commands;
 
@@ -13,6 +12,9 @@ using ProtoClientConfiguration = Common.Protos.ClientConfiguration.ClientConfigu
 
 using static Client.Commands.CommandParser;
 using Client.KVS;
+using Client.Grpc.Base;
+using Client.Controller;
+using Client.Grpc.Simple;
 
 namespace Client {
     class Program {
@@ -34,11 +36,13 @@ namespace Client {
                 clientConfig.Url,
                 clientConfig.Version);
 
-            NamingService namingService = new NamingService(clientConfig.NamingServersUrls);
+            NamingService namingService = new NamingService(
+                clientConfig.NamingServersUrls,
+                SimpleGrpcMessageLayer.Instance);
 
-            KVSMessageLayer.SetContext(namingService);
+            SimpleKVSMessageLayer.SetContext(namingService);
 
-            ClientController controller = new ClientController(namingService);
+            SimpleClientController controller = new SimpleClientController(namingService);
 
             RequestsDispatcher dispatcher = new RequestsDispatcher(clientConfig);
 

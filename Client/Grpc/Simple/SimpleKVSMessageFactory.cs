@@ -1,9 +1,9 @@
 ﻿using Common.Protos.SimpleKeyValueStore;
 
-namespace Client.Grpc {
-    class KVStoreMessageFactory {
+namespace Client.Grpc.Simple {
+    class SimpleKVSMessageFactory {
 
-        public KVStoreMessageFactory() {
+        private SimpleKVSMessageFactory() {
         }
 
         public static WriteRequest BuildWriteRequest(
@@ -29,7 +29,7 @@ namespace Client.Grpc {
         }
 
         public static ListRequest BuildListRequest() {
-            return new ListRequest {};
+            return new ListRequest { };
         }
     }
 }

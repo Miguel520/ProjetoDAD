@@ -1,14 +1,12 @@
-﻿using Common.Exceptions;
-using Common.Grpc;
+﻿using Common.Grpc;
 using Common.Protos.NamingService;
 using Grpc.Core;
-using Grpc.Net.Client;
 using System;
 using System.Collections.Immutable;
 
 using static Common.Protos.NamingService.NamingService;
 
-namespace Client.Grpc {
+namespace Client.Grpc.Base {
 
     class NamingServiceConnection {
 
@@ -31,7 +29,7 @@ namespace Client.Grpc {
                 NamingServiceMessageFactory.BuildLookupRequest(serverId);
 
             LookupResponse response = client.Lookup(
-                request, 
+                request,
                 deadline: DateTime.UtcNow.AddSeconds(30));
             serverUrl = response.ServerUrl;
         }
@@ -62,8 +60,8 @@ namespace Client.Grpc {
                     partition.ServerIds);
 
                 Console.WriteLine(
-                    "[{0}] Found partition {1}", 
-                    DateTime.Now.ToString("HH:mm:ss"), 
+                    "[{0}] Found partition {1}",
+                    DateTime.Now.ToString("HH:mm:ss"),
                     partitionId);
 
                 builder.Add(partitionId, serverIds);

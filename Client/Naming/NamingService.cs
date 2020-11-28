@@ -1,13 +1,13 @@
 ﻿using Common.Exceptions;
-using System;
 using System.Collections.Immutable;
 using System.Collections.Generic;
 using System.Linq;
-using Client.Grpc;
-using System.Threading;
+using Client.Grpc.Base;
 
 namespace Client.Naming {
     public class NamingService {
+
+        private readonly BaseGrpcMessageLayer grpcLayer;
 
         private readonly HashSet<string> nameServersUrls;
         private readonly Dictionary<string, string> knownServers;
@@ -15,8 +15,13 @@ namespace Client.Naming {
         private readonly ImmutableDictionary<string, ImmutableHashSet<string>> partitions;
         private readonly HashSet<string> crashedUrls;
 
-        public NamingService(ImmutableList<string> receivedNameServersUrls) {
-            GrpcMessageLayer.ReplicaFailureEvent += AddCrashed;
+        public NamingService(
+            ImmutableList<string> receivedNameServersUrls,
+            BaseGrpcMessageLayer grpcLayer) {
+
+            this.grpcLayer = grpcLayer;
+            
+            BaseGrpcMessageLayer.ReplicaFailureEvent += AddCrashed;
             
             nameServersUrls = new HashSet<string>(receivedNameServersUrls);
             knownServers = new Dictionary<string, string>();
@@ -25,7 +30,7 @@ namespace Client.Naming {
             partitions = ImmutableDictionary.Create<string, ImmutableHashSet<string>>();
             
             foreach (string nameServerUrl in receivedNameServersUrls) {
-                if (GrpcMessageLayer.Instance.ListPartitions(nameServerUrl, out partitions)) {
+                if (grpcLayer.ListPartitions(nameServerUrl, out partitions)) {
                     break;
                 }
             }
@@ -66,7 +71,7 @@ namespace Client.Naming {
                 NamingServiceConnection connection =
                     new NamingServiceConnection(nameServerUrl);
 
-                if (GrpcMessageLayer.Instance.Lookup(nameServerUrl, serverId, out serverUrl)) {
+                if (grpcLayer.Lookup(nameServerUrl, serverId, out serverUrl)) {
                     knownServers.Add(serverId, serverUrl);
                     break;
                 }
@@ -86,7 +91,7 @@ namespace Client.Naming {
             }
 
             foreach (string nameServerUrl in nameServersUrls.ToList()) {
-                if (GrpcMessageLayer.Instance.LookupMaster(nameServerUrl, partitionId, out masterUrl)) {
+                if (grpcLayer.LookupMaster(nameServerUrl, partitionId, out masterUrl)) {
                     knownMasters.Add(partitionId, masterUrl);
                     break;
                 }
