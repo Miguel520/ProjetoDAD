@@ -46,7 +46,13 @@ namespace Client.Controller {
                 return;
             }
 
-            throw new NotImplementedException();
+            Console.WriteLine(
+                "[{0}] List Global",
+                DateTime.Now.ToString("HH:mm:ss"));
+
+            foreach (string serverId in namingService.ServersIds) {
+                ListServer(serverId);
+            }
         }
 
         public void OnListServerCommand(ListServerCommand command) {
@@ -56,34 +62,7 @@ namespace Client.Controller {
             }
             string serverId = command.ServerId.Replace(LOOPSTRING, currentRep.ToString());
 
-            if (!AdvancedKVSMessageLayer.Instance.ListServer(
-                serverId, 
-                out ImmutableList<StoredObject> storedObjects)) {
-                
-                Console.WriteLine(
-                    "[{0}] List server {1} failed",
-                    DateTime.Now.ToString("HH:mm:ss"),
-                    serverId);
-                return;
-            }
-
-            if (storedObjects.Count != 0) {
-                foreach (StoredObject obj in storedObjects) {
-                    Console.WriteLine("[{0}] Server {1}, object: <{2},{3}> = '{4}' ({5})",
-                        DateTime.Now.ToString("HH:mm:ss"),
-                        serverId,
-                        obj.PartitionId,
-                        obj.ObjectId,
-                        obj.ObjectValue,
-                        VectorClockToString(obj.ObjectTimestamp));
-                }
-            }
-            else {
-                Console.WriteLine(
-                    "[{0}] Server {1} empty",
-                    DateTime.Now.ToString("HH:mm:ss"),
-                    serverId);
-            }
+            ListServer(serverId);
         }
 
         public void OnReadCommand(ReadCommand command) {
@@ -134,6 +113,37 @@ namespace Client.Controller {
             string value = command.Value.Replace(LOOPSTRING, currentRep.ToString());
 
             throw new NotImplementedException();
+        }
+
+        private void ListServer(string serverId) {
+            if (!AdvancedKVSMessageLayer.Instance.ListServer(
+                serverId,
+                out ImmutableList<StoredObject> storedObjects)) {
+
+                Console.WriteLine(
+                    "[{0}] List server {1} failed",
+                    DateTime.Now.ToString("HH:mm:ss"),
+                    serverId);
+                return;
+            }
+
+            if (storedObjects.Count != 0) {
+                foreach (StoredObject obj in storedObjects) {
+                    Console.WriteLine("[{0}] Server {1}, object: <{2},{3}> = '{4}' ({5})",
+                        DateTime.Now.ToString("HH:mm:ss"),
+                        serverId,
+                        obj.PartitionId,
+                        obj.ObjectId,
+                        obj.ObjectValue,
+                        VectorClockToString(obj.ObjectTimestamp));
+                }
+            }
+            else {
+                Console.WriteLine(
+                    "[{0}] Server {1} empty",
+                    DateTime.Now.ToString("HH:mm:ss"),
+                    serverId);
+            }
         }
 
         private string VectorClockToString(VectorClock vectorClock) {
