@@ -1,7 +1,7 @@
-﻿using Common.Utils;
+﻿using Common.CausalConsistency;
+using Common.Utils;
 using Grpc.Core;
 using KVStoreServer.Broadcast;
-using KVStoreServer.CausalConsistency;
 using KVStoreServer.Configuration;
 using KVStoreServer.Grpc.Base;
 using KVStoreServer.Storage.Advanced;

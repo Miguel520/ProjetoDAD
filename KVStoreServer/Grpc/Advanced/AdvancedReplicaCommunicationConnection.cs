@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using static Common.Protos.ReplicaCommunication.AdvancedReplicaCommunicationService;
 using KVStoreServer.Storage.Advanced;
 
+using CausalConsistency = Common.CausalConsistency;
+
 namespace KVStoreServer.Grpc.Advanced {
     class AdvancedReplicaCommunicationConnection {
 
@@ -73,12 +75,8 @@ namespace KVStoreServer.Grpc.Advanced {
         }
 
         private VectorClock BuildClock(CausalConsistency.ImmutableVectorClock vectorClock) {
-            List<string> serverIds = new List<string>();
-            List<int> clocks = new List<int>();
-            foreach ((string serverId, int serverClock) in vectorClock.Clocks) {
-                serverIds.Add(serverId);
-                clocks.Add(serverClock);
-            }
+            (IList<string> serverIds, IList<int> clocks) = 
+                CausalConsistency.VectorClocks.ToIdsAndClocksList(vectorClock);
             return new VectorClock {
                 ServerIds = { serverIds },
                 ServerClocks = { clocks }

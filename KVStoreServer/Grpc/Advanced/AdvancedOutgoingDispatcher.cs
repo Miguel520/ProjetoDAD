@@ -1,6 +1,6 @@
-﻿using Grpc.Core;
+﻿using Common.CausalConsistency;
+using Grpc.Core;
 using KVStoreServer.Broadcast;
-using KVStoreServer.CausalConsistency;
 using KVStoreServer.Grpc.Base;
 using KVStoreServer.Storage.Advanced;
 using System.Threading.Tasks;

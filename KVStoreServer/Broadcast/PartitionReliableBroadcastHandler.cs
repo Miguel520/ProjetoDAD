@@ -1,4 +1,4 @@
-﻿using KVStoreServer.CausalConsistency;
+﻿using Common.CausalConsistency;
 using KVStoreServer.Grpc.Advanced;
 using KVStoreServer.Naming;
 using KVStoreServer.Storage.Advanced;
@@ -18,8 +18,10 @@ namespace KVStoreServer.Broadcast {
 
         private int messageCounter = 0;
 
-        private readonly ConcurrentDictionary<MessageId, BroadcastWriteMessage> pendingWrites = 
+        private readonly ConcurrentDictionary<MessageId, BroadcastWriteMessage> receivedWrites = 
             new ConcurrentDictionary<MessageId, BroadcastWriteMessage>();
+        private readonly ConcurrentDictionary<MessageId, int> writesAcks =
+            new ConcurrentDictionary<MessageId, int>();
 
         private readonly ConcurrentDictionary<MessageId, BroadcastFailureMessage> pendingFailures =
             new ConcurrentDictionary<MessageId, BroadcastFailureMessage>();
@@ -46,33 +48,60 @@ namespace KVStoreServer.Broadcast {
             MessageId messageId = NextMessageId();
 
             // Broadcast messages
+            receivedWrites.TryAdd(messageId, new BroadcastWriteMessage {
+                PartitionId = partitionId,
+                Key = key,
+                TimestampedValue = value,
+                ReplicaTimestamp = replicaTimestamp
+            });
+
             BroadcastWrite(messageId, key, value, replicaTimestamp);
+
             
-            lock(pendingWrites) {
-                // Wait for one ack
+            lock (this) {
+                // Wait for 2 acks
                 // First time message is reinserted is the first ack
-                while(!pendingWrites.ContainsKey(messageId)) {
-                    Monitor.Wait(pendingWrites);
+                while(!writesAcks.TryGetValue(messageId, out int numAcks)
+                    && numAcks == 2) {
+                    Monitor.Wait(this);
                 }
-                pendingWrites.TryGetValue(messageId, out BroadcastWriteMessage message);
+                receivedWrites.TryGetValue(messageId, out BroadcastWriteMessage message);
                 writeMessageHandler(message);
             }
         }
 
         public void OnBroadcastWriteDeliver(BroadcastWriteArguments arguments) {
-            lock(pendingWrites) {
-                if (!pendingWrites.ContainsKey(arguments.MessageId)
-                    && pendingWrites.TryAdd(
-                        arguments.MessageId, 
-                        BuildWriteMessage(arguments))) {
+            lock(this) {
+                // Add ack
+                MessageId messageId = arguments.MessageId;
+                writesAcks.AddOrUpdate(messageId, 1, (key, prev) => prev + 1);
 
+                // Broadcast if necessary
+                if (!receivedWrites.ContainsKey(arguments.MessageId)) {
+
+                    receivedWrites.TryAdd(messageId, BuildWriteMessage(arguments));
+
+                    // Other server received the request from client
+                    // Broadcast and wait
                     BroadcastWrite(
                         arguments.MessageId,
                         arguments.Key,
                         arguments.TimestampedValue,
                         arguments.ReplicaTimestamp);
+                    receivedWrites.TryGetValue(arguments.MessageId,
+                        out BroadcastWriteMessage message);
+                }
 
-                    Monitor.PulseAll(pendingWrites);
+                // Check if can deliver
+                if (writesAcks.TryGetValue(messageId, out int numAcks)
+                    && numAcks == 2) {
+
+                    if (messageId.SenderId == selfId) {
+                        Monitor.PulseAll(this);
+                    }
+                    else {
+                        writeMessageHandler(BuildWriteMessage(arguments));
+                    }
                 }
             }
         }
@@ -126,6 +155,7 @@ namespace KVStoreServer.Broadcast {
             ImmutableVectorClock replicaTimestamp) {
 
             foreach (string serverId in serverIds) {
+                System.Console.WriteLine("Sending message to {0}", serverId);
                 _ = AdvancedNamingServiceLayer.Instance.BroadcastWrite(
                     serverId,
                     partitionId,

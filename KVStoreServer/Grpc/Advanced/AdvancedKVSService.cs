@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 
 using static Common.Protos.AdvancedKeyValueStore.AdvancedKeyValueStoreService;
 
+using CausalConsistency = Common.CausalConsistency;
+
 namespace KVStoreServer.Grpc.Advanced {
     class AdvancedKVSService : AdvancedKeyValueStoreServiceBase {
 
@@ -58,23 +60,14 @@ namespace KVStoreServer.Grpc.Advanced {
         }
 
         private CausalConsistency.ImmutableVectorClock BuildVectorClock(VectorClock vectorClock) {
-            List<KeyValuePair<string, int>> clocks = new List<KeyValuePair<string, int>>();
-            for (int i = 0; i < vectorClock.ServerIds.Count; i++) {
-                clocks.Add(new KeyValuePair<string, int>(
-                    vectorClock.ServerIds[i],
-                    vectorClock.ServerClocks[i]
-                ));
-            }
-            return CausalConsistency.ImmutableVectorClock.FromClocks(clocks);
+            return CausalConsistency.VectorClocks.FromIdsAndClocksList(
+                vectorClock.ServerIds,
+                vectorClock.ServerClocks);
         }
 
         private VectorClock BuildClock(CausalConsistency.ImmutableVectorClock vectorClock) {
-            List<string> serverIds = new List<string>();
-            List<int> clocks = new List<int>();
-            foreach ((string serverId, int serverClock) in vectorClock.Clocks) {
-                serverIds.Add(serverId);
-                clocks.Add(serverClock);
-            }
+            (IList<string> serverIds, IList<int> clocks) =
+                CausalConsistency.VectorClocks.ToIdsAndClocksList(vectorClock);
             return new VectorClock {
                 ServerIds = { serverIds },
                 ServerClocks = { clocks }

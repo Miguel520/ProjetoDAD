@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace KVStoreServer.CausalConsistency {
+namespace Common.CausalConsistency {
 
     /*
      * Class to represent a Vector Clock

@@ -76,7 +76,7 @@ namespace Client.Controller {
             // Check if server id is null
             string serverId = command.ServerId?.Replace(LOOPSTRING, currentRep.ToString());
 
-            throw new NotImplementedException();
+            Console.WriteLine("WARNING: Read operation not implemented");
         }
 
         public void OnWaitCommand(WaitCommand command) {
@@ -112,7 +112,22 @@ namespace Client.Controller {
             string objectId = command.ObjectId.Replace(LOOPSTRING, currentRep.ToString());
             string value = command.Value.Replace(LOOPSTRING, currentRep.ToString());
 
-            throw new NotImplementedException();
+            if (AdvancedKVSMessageLayer.Instance.Write(partitionId, objectId, value)) {
+                Console.WriteLine(
+                    "[{0}] Write object <{1},{2}> with value {3} successfull",
+                    DateTime.Now.ToString("HH:mm:ss"),
+                    partitionId,
+                    objectId,
+                    value);
+            }
+            else {
+                Console.WriteLine(
+                    "[{0}] Write object <{1},{2}> with value {3} failed",
+                    DateTime.Now.ToString("HH:mm:ss"),
+                    partitionId,
+                    objectId,
+                    value);
+            }
         }
 
         private void ListServer(string serverId) {
@@ -157,7 +172,7 @@ namespace Client.Controller {
                     .Append(vectorClock.ServerClocks[i])
                     .Append(", ");
             }
-            sb.Remove(sb.Length - 3, 2);
+            sb.Remove(sb.Length - 2, 2);
             sb.Append("]");
 
             return sb.ToString();

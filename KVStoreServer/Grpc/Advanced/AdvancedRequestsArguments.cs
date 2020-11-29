@@ -1,5 +1,5 @@
-﻿using KVStoreServer.Broadcast;
-using KVStoreServer.CausalConsistency;
+﻿using Common.CausalConsistency;
+using KVStoreServer.Broadcast;
 using KVStoreServer.Storage.Advanced;
 
 namespace KVStoreServer.Grpc.Advanced {

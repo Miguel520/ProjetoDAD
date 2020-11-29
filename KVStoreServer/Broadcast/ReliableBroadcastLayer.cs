@@ -1,5 +1,5 @@
-﻿using Common.Utils;
-using KVStoreServer.CausalConsistency;
+﻿using Common.CausalConsistency;
+using Common.Utils;
 using KVStoreServer.Grpc.Advanced;
 using KVStoreServer.Grpc.Base;
 using KVStoreServer.Naming;

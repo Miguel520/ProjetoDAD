@@ -1,5 +1,5 @@
-﻿using KVStoreServer.Broadcast;
-using KVStoreServer.CausalConsistency;
+﻿using Common.CausalConsistency;
+using KVStoreServer.Broadcast;
 using KVStoreServer.Configuration;
 using KVStoreServer.Grpc.Advanced;
 using KVStoreServer.Grpc.Base;
@@ -82,6 +82,7 @@ namespace KVStoreServer.Replication.Advanced {
          */
         public void OnBroadcastWriteMessage(BroadcastWriteMessage message) {
             lock(this) {
+                Console.WriteLine("Received broadcast of value {0}", message.TimestampedValue.Value);
                 store.Write(message.PartitionId, message.Key, message.TimestampedValue);
                 MergeTimestamp(message.ReplicaTimestamp);
             }

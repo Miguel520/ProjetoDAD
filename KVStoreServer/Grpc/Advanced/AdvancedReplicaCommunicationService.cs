@@ -1,9 +1,11 @@
 ﻿using Common.Protos.ReplicaCommunication;
 using Grpc.Core;
 using KVStoreServer.Storage.Advanced;
-using System.Collections.Generic;
 using System.Threading.Tasks;
+
 using static Common.Protos.ReplicaCommunication.AdvancedReplicaCommunicationService;
+
+using CausalConsistency = Common.CausalConsistency;
 
 namespace KVStoreServer.Grpc.Advanced {
     class AdvancedReplicaCommunicationService : AdvancedReplicaCommunicationServiceBase {
@@ -60,14 +62,9 @@ namespace KVStoreServer.Grpc.Advanced {
         }
 
         private CausalConsistency.ImmutableVectorClock BuildVectorClock(VectorClock vectorClock) {
-            List<KeyValuePair<string, int>> clocks = new List<KeyValuePair<string, int>>();
-            for (int i = 0; i < vectorClock.ServerIds.Count; i++) {
-                clocks.Add(new KeyValuePair<string, int>(
-                    vectorClock.ServerIds[i],
-                    vectorClock.ServerClocks[i]
-                ));
-            }
-            return CausalConsistency.ImmutableVectorClock.FromClocks(clocks);
+            return CausalConsistency.VectorClocks.FromIdsAndClocksList(
+                vectorClock.ServerIds, 
+                vectorClock.ServerClocks);
         }
     }
 }

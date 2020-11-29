@@ -1,4 +1,4 @@
-﻿using KVStoreServer.CausalConsistency;
+﻿using Common.CausalConsistency;
 using KVStoreServer.Storage.Advanced;
 
 namespace KVStoreServer.Broadcast {

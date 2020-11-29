@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 
-namespace KVStoreServer.CausalConsistency {
+namespace Common.CausalConsistency {
     public class MutableVectorClock : VectorClock {
 
         private readonly ConcurrentDictionary<string, int> vc;
@@ -33,7 +33,7 @@ namespace KVStoreServer.CausalConsistency {
 
         public override ImmutableHashSet<string> Ids {
             get {
-                lock(this) {
+                lock (this) {
                     return vc.Keys.ToImmutableHashSet();
                 }
             }
@@ -41,7 +41,7 @@ namespace KVStoreServer.CausalConsistency {
 
         public override ImmutableDictionary<string, int> Clocks {
             get {
-                lock(this) {
+                lock (this) {
                     return vc.ToImmutableDictionary();
                 }
             }
@@ -58,11 +58,11 @@ namespace KVStoreServer.CausalConsistency {
         public void Merge(VectorClock other) {
             // Create immutable other to protect from concurrent accesses
             ImmutableVectorClock immutableOther = other.ToImmutable();
-            
+
             ImmutableHashSet<string> secondIds = immutableOther.Ids;
 
             // Dont let concurrent updates while merging
-            lock(this) {
+            lock (this) {
                 // Get all possible ids
                 HashSet<string> allIds = new HashSet<string>(vc.Keys);
                 allIds.UnionWith(secondIds);

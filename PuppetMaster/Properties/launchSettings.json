@@ -2,7 +2,7 @@
   "profiles": {
     "PuppetMaster": {
       "commandName": "Project",
-      "commandLineArgs": "localhost 1 ListTest.txt"
+      "commandLineArgs": "localhost 2 WriteTest2Servers.txt"
     }
   }
 }

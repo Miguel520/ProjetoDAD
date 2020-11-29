@@ -1,5 +1,5 @@
-﻿using Common.Utils;
-using KVStoreServer.CausalConsistency;
+﻿using Common.CausalConsistency;
+using Common.Utils;
 
 namespace KVStoreServer.Storage.Advanced {
 

@@ -1,9 +1,8 @@
 ﻿using Common.Utils;
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace KVStoreServer.CausalConsistency {
+namespace Common.CausalConsistency {
 
     /*
      * Immutable Vector Clock Class
@@ -33,7 +32,7 @@ namespace KVStoreServer.CausalConsistency {
 
         public override ImmutableHashSet<string> Ids { get { return vc.Keys.ToImmutableHashSet(); } }
 
-        public override ImmutableDictionary<string, int> Clocks { get { return vc; } } 
+        public override ImmutableDictionary<string, int> Clocks { get { return vc; } }
 
         public override int this[string key] {
             get => vc.GetValueOrDefault(key, 0);
