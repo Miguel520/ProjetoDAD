@@ -2,6 +2,7 @@
 using KVStoreServer.Grpc.Advanced;
 using KVStoreServer.Naming;
 using KVStoreServer.Storage.Advanced;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Threading;
@@ -11,7 +12,7 @@ namespace KVStoreServer.Broadcast {
 
         private readonly string selfId;
         private readonly string partitionId;
-        private readonly ImmutableHashSet<string> serverIds;
+        private ImmutableHashSet<string> serverIds;
 
         private readonly WriteMessageHandler writeMessageHandler;
         private readonly FailureMessageHandler failureMessageHandler;
@@ -23,7 +24,7 @@ namespace KVStoreServer.Broadcast {
         private readonly ConcurrentDictionary<MessageId, int> writesAcks =
             new ConcurrentDictionary<MessageId, int>();
 
-        private readonly ConcurrentDictionary<MessageId, BroadcastFailureMessage> pendingFailures =
+        private readonly ConcurrentDictionary<MessageId, BroadcastFailureMessage> receivedFailures =
             new ConcurrentDictionary<MessageId, BroadcastFailureMessage>();
 
         public PartitionReliableBroadcastHandler(
@@ -108,46 +109,39 @@ namespace KVStoreServer.Broadcast {
 
         public void BroadcastFailure(string failedServerId) {
 
+            if (!serverIds.Contains(failedServerId))
+                return;
+
             MessageId messageId = NextMessageId();
+
+            receivedFailures.TryAdd(messageId, new BroadcastFailureMessage {
+                PartitionId = partitionId,
+                FailedServerId = failedServerId
+            });
 
             // Broadcast messages
             BroadcastFailure(messageId, failedServerId);
 
-            lock (pendingFailures) {
-                // Wait for one ack
-                // First time message is reinserted is the first ack
-                while (!pendingFailures.ContainsKey(messageId)) {
-                    Monitor.Wait(pendingFailures);
-                }
-                pendingFailures.TryGetValue(messageId, out BroadcastFailureMessage message);
-                failureMessageHandler(message);
-            }
+            receivedFailures.TryGetValue(messageId, out BroadcastFailureMessage message);
+            failureMessageHandler(message);
+
         }
 
         public void OnBroadcastFailureDeliver(BroadcastFailureArguments arguments) {
-            lock (pendingFailures) {
-                if (!pendingFailures.ContainsKey(arguments.MessageId)
-                    && pendingFailures.TryAdd(
+            lock (receivedFailures) {
+         
+                if (!receivedFailures.ContainsKey(arguments.MessageId)) {
+
+                    receivedFailures.TryAdd(
                         arguments.MessageId,
-                        BuildFailureMessage(arguments))) {
+                        BuildFailureMessage(arguments));
 
                     BroadcastFailure(
                         arguments.MessageId,
                         arguments.FailedServerId);
-
-                    Monitor.PulseAll(pendingFailures);
                 }
             }
         }
-
-        private MessageId NextMessageId() {
-            lock (this) {
-                MessageId messageId = new MessageId(selfId, messageCounter);
-                messageCounter++;
-                return messageId;
-            }
-        }
-
         private void BroadcastWrite(
             MessageId messageId,
             string key,
@@ -165,16 +159,27 @@ namespace KVStoreServer.Broadcast {
             }
         }
 
-        public void BroadcastFailure(
+        private void BroadcastFailure(
             MessageId messageId,
-            string failedServerUrl) {
+            string failedServerId) {
+
+            serverIds = serverIds.Remove(failedServerId);
 
             foreach (string serverId in serverIds) {
                 _ = AdvancedNamingServiceLayer.Instance.BroadcastFailure(
                     serverId,
                     partitionId,
                     messageId,
-                    failedServerUrl);
+                    failedServerId);
+            }
+        }
+
+
+        private MessageId NextMessageId() {
+            lock (this) {
+                MessageId messageId = new MessageId(selfId, messageCounter);
+                messageCounter++;
+                return messageId;
             }
         }
 

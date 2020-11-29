@@ -16,7 +16,7 @@ namespace KVStoreServer.Replication.Simple {
         private readonly ConcurrentBag<string> crashedUrls = new ConcurrentBag<string>();
 
         private FailureDetectionLayer() {
-            SimpleNamingServiceLayer.Instance.BindFailureHandler(OnReplicaFailure);
+            SimpleNamingServiceLayer.Instance.BindFailureDetectionHandler(OnReplicaFailure);
         }
 
         public static FailureDetectionLayer Instance { get; } = new FailureDetectionLayer();

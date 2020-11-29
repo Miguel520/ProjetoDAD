@@ -12,8 +12,8 @@ namespace KVStoreServer.Grpc.Advanced {
         private WriteHandler writeHandler = null;
         private ListServerHandler listServerHandler = null;
 
-        private BroadcastWriteHandler broadcastWriteHandler = null;
-        private BroadcastFailureHandler broadcastFailureHandler = null;
+        private BroadcastWriteDeliveryHandler broadcastWriteHandler = null;
+        private BroadcastFailureDeliveryHandler broadcastFailureHandler = null;
         public AdvancedIncomingDispatcher(ServerConfiguration serverConfig) 
             : base(serverConfig) { }
 
@@ -25,11 +25,11 @@ namespace KVStoreServer.Grpc.Advanced {
             listServerHandler = handler;
         }
 
-        public void BindBroadcastWriteHandler(BroadcastWriteHandler handler) {
+        public void BindBroadcastWriteDeliveryHandler(BroadcastWriteDeliveryHandler handler) {
             broadcastWriteHandler = handler;
         }
 
-        public void BindBroadcastFailureHandler(BroadcastFailureHandler handler) {
+        public void BindBroadcastFailureDeliveryHandler(BroadcastFailureDeliveryHandler handler) {
             broadcastFailureHandler = handler;
         }
 

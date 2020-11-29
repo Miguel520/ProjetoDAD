@@ -4,11 +4,11 @@ using System;
 namespace KVStoreServer.Grpc.Base {
     public class BaseOutgoingDispatcher {
 
-        private UrlFailureHandler failureHandler = null;
+        private UrlFailureDetectionHandler failureHandler = null;
 
-        protected static readonly long DEFAULT_TIMEOUT = 30000;
+        protected static readonly long DEFAULT_TIMEOUT = 10000;
 
-        public void BindFailureHandler(UrlFailureHandler handler) {
+        public void BindFailureDetectionHandler(UrlFailureDetectionHandler handler) {
             failureHandler = handler;
         }
 
@@ -16,11 +16,11 @@ namespace KVStoreServer.Grpc.Base {
             if (exception.StatusCode == StatusCode.DeadlineExceeded ||
                 exception.StatusCode == StatusCode.Internal) {
 
-                failureHandler?.Invoke(serverUrl);
                 Console.WriteLine(
                     "[{0}] Replica {1} unavailable",
                     DateTime.Now.ToString("HH:mm:ss"),
                     serverUrl);
+                failureHandler?.Invoke(serverUrl);
             }
             else {
                 Console.WriteLine(

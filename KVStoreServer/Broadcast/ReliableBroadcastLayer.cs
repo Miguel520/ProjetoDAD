@@ -22,7 +22,8 @@ namespace KVStoreServer.Broadcast {
 
         private ReliableBroadcastLayer() {
             AdvancedNamingServiceLayer.Instance.BindBroadcastWriteHandler(OnBroadcastWriteDeliver);
-            AdvancedNamingServiceLayer.Instance.BindBroadcastFailureHandler(OnBroadcastFailureDeliver);
+            AdvancedNamingServiceLayer.Instance.BindFailureDetectionHandler(OnFailureDetection);
+            AdvancedNamingServiceLayer.Instance.BindBroadcastFailureDeliveryHandler(OnBroadcastFailureDeliver);
         }
 
         public static ReliableBroadcastLayer Instance { get; } = new ReliableBroadcastLayer(); 
@@ -115,12 +116,9 @@ namespace KVStoreServer.Broadcast {
             }
         }
 
-        public void BroadcastFailure(
-            string partitionId,
-            string failureServerId) {
-
-            if (partitionHandlers.TryGetValue(partitionId, out PartitionReliableBroadcastHandler handler)) {
-                handler.BroadcastFailure(failureServerId);
+        private void OnFailureDetection(string serverId) {
+            foreach (PartitionReliableBroadcastHandler handler in partitionHandlers.Values) {
+                handler.BroadcastFailure(serverId);
             }
         }
 
