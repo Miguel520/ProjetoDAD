@@ -76,7 +76,21 @@ namespace Client.Controller {
             // Check if server id is null
             string serverId = command.ServerId?.Replace(LOOPSTRING, currentRep.ToString());
 
-            Console.WriteLine("WARNING: Read operation not implemented");
+            if (AdvancedKVSMessageLayer.Instance.Read(
+                partitionId,
+                objectId,
+                serverId,
+                out string value)) {
+                Console.WriteLine(
+                    "[{0}] Read {1} from partition {2} returned {3}", 
+                    DateTime.Now.ToString("HH:mm:ss"),
+                    objectId, partitionId, value);
+            } else {
+                Console.WriteLine(
+                    "[{0}] Read {1} from partition {2} failed",
+                    DateTime.Now.ToString("HH:mm:ss"),
+                    objectId, partitionId);
+            }
         }
 
         public void OnWaitCommand(WaitCommand command) {

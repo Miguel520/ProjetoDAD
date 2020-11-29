@@ -73,6 +73,67 @@ namespace Client.KVS {
             return false;
         }
 
+        public bool Read(
+            string partitionId, 
+            string objectId,
+            string serverId,
+            out string value) {
+
+            value = null;
+            ImmutableVectorClock replicaTimestamp;
+
+            if (namingService.Lookup(serverId, out string serverUrl)) {
+                if (!timestamps.TryGetValue(partitionId, out MutableVectorClock timestamp)) {
+                    timestamp = MutableVectorClock.Empty();
+                    timestamps.Add(partitionId, timestamp);
+                }
+
+                if (AdvancedGrpcMessageLayer.Instance.Read(
+                        serverUrl,
+                        partitionId,
+                        objectId,
+                        out value,
+                        timestamp.ToImmutable(),
+                        out replicaTimestamp) && value != null) {
+                    timestamp.Merge(replicaTimestamp);
+                    return true;
+                }
+            } else {
+                if (!namingService.ListPartition(partitionId, out ImmutableHashSet<string> serverIds)) {
+                    return false;
+                }
+
+                if (!timestamps.TryGetValue(partitionId, out MutableVectorClock timestamp)) {
+                    timestamp = MutableVectorClock.Empty();
+                    timestamps.Add(partitionId, timestamp);
+                }
+
+                foreach (string partitionServerId in serverIds)
+                {
+                    replicaTimestamp = null;
+
+                    if (namingService.Lookup(partitionServerId, out serverUrl))
+                    {
+                        if (AdvancedGrpcMessageLayer.Instance.Read(
+                            serverUrl,
+                            partitionId,
+                            objectId,
+                            out value,
+                            timestamp.ToImmutable(),
+                            out replicaTimestamp
+                        ) && value != null) {
+                            timestamp.Merge(replicaTimestamp);
+                            return true;
+                        }
+                    }
+                }
+
+            }
+
+            
+            return false;
+        }
+
         public bool ListServer(string serverId, out ImmutableList<StoredObject> objects) {
             objects = default;
             return namingService.Lookup(serverId, out string serverUrl)
