@@ -14,6 +14,7 @@ namespace Client.Controller {
 
         // Loop variables
         private static readonly string LOOPSTRING = "$i";
+        private static readonly string NO_FALLBACK_SERVER = "-1";
         private bool insideLoop;
         private readonly List<ICommand> loopCommands = new List<ICommand>();
         private int numReps = 0;
@@ -75,8 +76,33 @@ namespace Client.Controller {
             string objectId = command.ObjectId.Replace(LOOPSTRING, currentRep.ToString());
             // Check if server id is null
             string serverId = command.ServerId?.Replace(LOOPSTRING, currentRep.ToString());
+            string value;
+            bool success = false;
 
-            Console.WriteLine("WARNING: Read operation not implemented");
+
+            if (serverId == NO_FALLBACK_SERVER) {
+                success = AdvancedKVSMessageLayer.Instance.Read(
+                        partitionId,
+                        objectId,
+                        out value);
+            } else {
+                success = AdvancedKVSMessageLayer.Instance.ReadFallback(
+                        partitionId,
+                        objectId,
+                        serverId,
+                        out value);
+            }
+
+            if (success) {
+                Console.WriteLine(
+                    "[{0}] Object <{1},{2}> has value '{3}'",
+                    DateTime.Now.ToString("HH:mm:ss"),
+                    partitionId, objectId, value);
+            } else {
+                Console.WriteLine(
+                    "[{0}] N/A",
+                    DateTime.Now.ToString("HH:mm:ss"));
+            }
         }
 
         public void OnWaitCommand(WaitCommand command) {

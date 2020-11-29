@@ -35,6 +35,32 @@ namespace Client.Grpc.Advanced {
             }
         }
 
+        public bool Read(
+            string serverUrl,
+            string partitionId,
+            string objectId,
+            out string value,
+            ImmutableVectorClock timestamp,
+            out ImmutableVectorClock replicaTimeStamp) {
+
+            value = default;
+            replicaTimeStamp = default;
+
+            try {
+                AdvancedGrpcConnection connection = new AdvancedGrpcConnection(serverUrl);
+                replicaTimeStamp = connection.Read(
+                    partitionId,
+                    objectId,
+                    out value,
+                    timestamp);
+                return true;
+            }
+            catch (RpcException e) {
+                HandleRpcException(serverUrl, e);
+                return false;
+            }
+        }
+
         public bool ListServer(
             string serverUrl,
             out ImmutableList<StoredObject> storedObjects) {

@@ -42,6 +42,27 @@ namespace Client.Grpc.Advanced {
             return BuildVectorClock(response.Timestamp);
         }
 
+        public CausalConsistency.ImmutableVectorClock Read(
+            string partitionId,
+            string objectId,
+            out string value,
+            CausalConsistency.ImmutableVectorClock timestamp) {
+
+            ReadRequest request = new ReadRequest {
+                PartitionId = partitionId,
+                ObjectId = objectId,
+                Timestamp = BuildGrpcClock(timestamp)
+            };
+
+            ReadResponse response = client.Read(
+                request,
+                deadline: DateTime.UtcNow.AddSeconds(60));
+
+            value = !response.Missing ? response.ObjectValue : null;
+            
+            return BuildVectorClock(response.Timestamp);
+        }
+
         public ImmutableList<StoredObject> ListServer() {
             ListRequest request = new ListRequest { };
 
