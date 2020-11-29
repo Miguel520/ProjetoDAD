@@ -82,7 +82,6 @@ namespace KVStoreServer.Replication.Advanced {
          */
         public void OnBroadcastWriteMessage(BroadcastWriteMessage message) {
             lock(this) {
-                Console.WriteLine("Received broadcast of value {0}", message.TimestampedValue.Value);
                 store.Write(message.PartitionId, message.Key, message.TimestampedValue);
                 MergeTimestamp(message.ReplicaTimestamp);
             }

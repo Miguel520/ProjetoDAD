@@ -1,0 +1,11 @@
+﻿ReplicationFactor 3
+Partition 3 p1 12 13 14
+Server 12 http://localhost:13456 0 0
+Server 13 http://localhost:13457 0 0
+Server 14 http://localhost:13458 0 0
+Wait 1000
+Freeze 13
+Client cli http://localhost:12346 WriteTest.txt
+Wait 5000
+Unfreeze 13
+Wait 60000

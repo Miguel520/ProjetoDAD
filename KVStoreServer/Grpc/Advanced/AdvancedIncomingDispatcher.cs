@@ -42,8 +42,8 @@ namespace KVStoreServer.Grpc.Advanced {
 
         public async Task<IEnumerable<StoredObjectDto>> OnListServer() {
             Conditions.AssertState(listServerHandler != null);
-            WaitFreeze();
-            await WaitDelay();
+            //WaitFreeze();
+            //await WaitDelay();
             return listServerHandler();
         }
 

@@ -62,7 +62,7 @@ namespace KVStoreServer.Broadcast {
                 // Wait for 2 acks
                 // First time message is reinserted is the first ack
                 while(!writesAcks.TryGetValue(messageId, out int numAcks)
-                    && numAcks == 2) {
+                    && numAcks < 2) {
                     Monitor.Wait(this);
                 }
                 receivedWrites.TryGetValue(messageId, out BroadcastWriteMessage message);
@@ -155,7 +155,6 @@ namespace KVStoreServer.Broadcast {
             ImmutableVectorClock replicaTimestamp) {
 
             foreach (string serverId in serverIds) {
-                System.Console.WriteLine("Sending message to {0}", serverId);
                 _ = AdvancedNamingServiceLayer.Instance.BroadcastWrite(
                     serverId,
                     partitionId,
