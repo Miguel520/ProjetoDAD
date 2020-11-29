@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace KVStoreServer.Replication.Simple {
+namespace KVStoreServer.Replication.Base {
     public class PartitionServersDto {
         public string PartitionId { get; set; }
 

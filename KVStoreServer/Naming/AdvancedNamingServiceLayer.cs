@@ -30,6 +30,14 @@ namespace KVStoreServer.Naming {
             AdvancedGrpcMessageLayer.Instance.BindBroadcastFailureHandler(handler);
         }
 
+        public void Start() {
+            AdvancedGrpcMessageLayer.Instance.Start();
+        }
+
+        public void Shutdown() {
+            AdvancedGrpcMessageLayer.Instance.Shutdown();
+        }
+
         public async Task BroadcastWrite(
             string serverId,
             string partitionId,

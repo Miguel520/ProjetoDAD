@@ -2,12 +2,18 @@
 using KVStoreServer.CausalConsistency;
 using KVStoreServer.Configuration;
 using KVStoreServer.Grpc.Advanced;
+using KVStoreServer.Grpc.Base;
+using KVStoreServer.Replication.Base;
 using KVStoreServer.Storage.Advanced;
+using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading;
 
 namespace KVStoreServer.Replication.Advanced {
-    public class AdvancedKVSService {
+    public class AdvancedReplicationService {
+
+        private readonly AdvancedPartitionsDB partitionsDB;
 
         private readonly ServerConfiguration serverConfig;
 
@@ -15,14 +21,24 @@ namespace KVStoreServer.Replication.Advanced {
 
         private readonly AdvancedPartitionedKVS store = new AdvancedPartitionedKVS();
 
-        public AdvancedKVSService(ServerConfiguration serverConfig) {
+        public AdvancedReplicationService(
+            AdvancedPartitionsDB partitionsDB,
+            ServerConfiguration serverConfig) {
+
+            this.partitionsDB = partitionsDB;
             this.serverConfig = serverConfig;
+            ReliableBroadcastLayer.Instance.RegisterSelfId(this.serverConfig.ServerId);
         }
 
         public void Bind() {
             ReliableBroadcastLayer.Instance.BindWriteHandler(OnWriteRequest);
             ReliableBroadcastLayer.Instance.BindListServerHandler(OnListServerRequest);
             ReliableBroadcastLayer.Instance.BindWriteMessageHandler(OnBroadcastWriteMessage);
+            ReliableBroadcastLayer.Instance.BindStatusHandler(OnStatus);
+
+            ReliableBroadcastLayer.Instance.BindJoinPartitionHandler(OnJoinPartitionRequest);
+            ReliableBroadcastLayer.Instance.BindLookupMasterHandler(TryGetMasterUrl);
+            ReliableBroadcastLayer.Instance.BindListPartitionsHandler(ListPartitionsWithServerIds);
         }
 
         /*
@@ -69,6 +85,40 @@ namespace KVStoreServer.Replication.Advanced {
                 store.Write(message.PartitionId, message.Key, message.TimestampedValue);
                 MergeTimestamp(message.ReplicaTimestamp);
             }
+        }
+
+        public void OnJoinPartitionRequest(JoinPartitionArguments arguments) {
+            string partitionId = arguments.PartitionId;
+            partitionsDB.JoinPartition(arguments);
+            partitionsDB.TryGetPartition(partitionId, out ImmutableHashSet<string> serverIds);
+            
+            // Only register partitions that the server belongs to for broadcast
+            if (serverIds.Contains(serverConfig.ServerId)) {
+                ReliableBroadcastLayer.Instance.RegisterPartition(partitionId, serverIds);
+            }
+        }
+
+        public bool TryGetMasterUrl(string partitionId, out string masterUrl) {
+            masterUrl = default;
+            return partitionsDB.TryGetMasterUrl(partitionId, out string masterId)
+                && ReliableBroadcastLayer.Instance.TryGetServer(masterId, out masterUrl);
+        }
+
+        public ImmutableList<PartitionServersDto> ListPartitionsWithServerIds() {
+            return partitionsDB.ListPartitionsWithServerIds();
+        }
+
+        public void OnStatus() {
+            Console.WriteLine(
+                "[{0}] Server with id {1} running at {2}",
+                 DateTime.Now.ToString("HH:mm:ss"),
+                 serverConfig.ServerId,
+                 serverConfig.Url);
+
+            Console.WriteLine(
+                "[{0}]  Partitions: {1}",
+                DateTime.Now.ToString("HH:mm:ss"),
+                string.Join(", ", partitionsDB.ListPartitions()));
         }
 
         private void WaitHappensBeforeTimestamp(ImmutableVectorClock otherTimestamp) {

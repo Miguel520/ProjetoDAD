@@ -3,9 +3,11 @@ using Common.Utils;
 using System;
 
 using KVStoreServer.Configuration;
-using System.Threading;
 using KVStoreServer.Grpc.Simple;
 using KVStoreServer.Replication.Simple;
+using KVStoreServer.Grpc.Advanced;
+using KVStoreServer.Replication.Advanced;
+using KVStoreServer.Broadcast;
 
 namespace KVStoreServer {
     class Program {
@@ -19,10 +21,23 @@ namespace KVStoreServer {
 
             ServerConfiguration serverConfig = ParseArgs(args, out bool file);
 
+            switch (serverConfig.Version) {
+                case 1:
+                    RunSimpleVersion(serverConfig, file);
+                    break;
+                case 2:
+                    RunAdvancedVersion(serverConfig);
+                    break;
+                default:
+                    throw new InvalidOperationException("Unknown Version");
+            }
+        }
+
+        private static void RunSimpleVersion(ServerConfiguration serverConfig, bool file) {
             SimpleGrpcMessageLayer.SetContext(serverConfig);
 
             // Add self id so that server knows itself
-            PartitionsDB partitionsDB = new PartitionsDB(
+            SimplePartitionsDB partitionsDB = new SimplePartitionsDB(
                 serverConfig.ServerId,
                 HttpURLs.FromHostAndPort(serverConfig.Host, serverConfig.Port));
 
@@ -38,17 +53,39 @@ namespace KVStoreServer {
             service.Bind();
 
             FailureDetectionLayer.Instance.Start();
-            
+
             Console.WriteLine(
-                "[{0}] Server {1} running at {2} with version {3}",
+                "[{0}] Server {1} running at {2} with simple version",
                 DateTime.Now.ToString("HH:mm:ss"),
                 serverConfig.ServerId,
-                serverConfig.Url,
-                serverConfig.Version);
+                serverConfig.Url);
             Console.WriteLine("Press any key to stop the server...");
             Console.ReadKey();
 
             FailureDetectionLayer.Instance.Shutdown();
+        }
+
+        private static void RunAdvancedVersion(ServerConfiguration serverConfig) {
+            AdvancedGrpcMessageLayer.SetContext(serverConfig);
+
+            AdvancedPartitionsDB partitionsDB = new AdvancedPartitionsDB(
+                serverConfig.ServerId,
+                HttpURLs.FromHostAndPort(serverConfig.Host, serverConfig.Port));
+
+            AdvancedReplicationService service = new AdvancedReplicationService(partitionsDB, serverConfig);
+            service.Bind();
+
+            ReliableBroadcastLayer.Instance.Start();
+
+            Console.WriteLine(
+                "[{0}] Server {1} running at {2} with advanced version",
+                DateTime.Now.ToString("HH:mm:ss"),
+                serverConfig.ServerId,
+                serverConfig.Url);
+            Console.WriteLine("Press any key to stop the server...");
+            Console.ReadKey();
+
+            ReliableBroadcastLayer.Instance.Shutdown();
         }
 
         private static ServerConfiguration ParseArgs(string[] args, out bool file) {

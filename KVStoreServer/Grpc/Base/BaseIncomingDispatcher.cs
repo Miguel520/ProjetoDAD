@@ -1,6 +1,6 @@
 ﻿using Common.Utils;
 using KVStoreServer.Configuration;
-using KVStoreServer.Replication.Simple;
+using KVStoreServer.Replication.Base;
 using System;
 using System.Collections.Generic;
 using System.Threading;

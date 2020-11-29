@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using KVStoreServer.Configuration;
 using KVStoreServer.Grpc.Base;
 using KVStoreServer.Grpc.Simple;
+using KVStoreServer.Replication.Base;
 using KVStoreServer.Storage.Simple;
 
 namespace KVStoreServer.Replication.Simple {
@@ -18,13 +19,13 @@ namespace KVStoreServer.Replication.Simple {
 
         private readonly object writeLock = new object();
 
-        private readonly PartitionsDB partitionsDB;
+        private readonly SimplePartitionsDB partitionsDB;
         private readonly PartitionedKeyValueStore store =
             new PartitionedKeyValueStore();
         private readonly ServerConfiguration config;
 
         public ReplicationService(
-            PartitionsDB partitionsDB,
+            SimplePartitionsDB partitionsDB,
             ServerConfiguration config) {
 
             this.partitionsDB = partitionsDB;
