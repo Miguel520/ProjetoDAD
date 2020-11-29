@@ -4,6 +4,15 @@ using KVStoreServer.Storage.Advanced;
 
 namespace KVStoreServer.Grpc.Advanced {
 
+    public class ReadArguments {
+
+        public string PartitionId { get; set; }
+
+        public string ObjectId { get; set; }
+
+        public ImmutableVectorClock Timestamp { get; set; }
+    }
+
     public class WriteArguments {
 
         public string PartitionId { get; set; }

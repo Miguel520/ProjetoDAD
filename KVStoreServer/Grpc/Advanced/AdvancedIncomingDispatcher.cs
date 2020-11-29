@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 namespace KVStoreServer.Grpc.Advanced {
     public class AdvancedIncomingDispatcher : BaseIncomingDispatcher {
 
+        private ReadHandler readHandler = null;
         private WriteHandler writeHandler = null;
         private ListServerHandler listServerHandler = null;
 
@@ -16,6 +17,10 @@ namespace KVStoreServer.Grpc.Advanced {
         private BroadcastFailureHandler broadcastFailureHandler = null;
         public AdvancedIncomingDispatcher(ServerConfiguration serverConfig) 
             : base(serverConfig) { }
+
+        public void BindReadHandler(ReadHandler handler) {
+            readHandler = handler;
+        }
 
         public void BindWriteHandler(WriteHandler handler) {
             writeHandler = handler;
@@ -31,6 +36,13 @@ namespace KVStoreServer.Grpc.Advanced {
 
         public void BindBroadcastFailureHandler(BroadcastFailureHandler handler) {
             broadcastFailureHandler = handler;
+        }
+
+        public async Task<(string, ImmutableVectorClock)> OnRead(ReadArguments arguments) {
+            Conditions.AssertState(readHandler != null);
+            WaitFreeze();
+            await WaitDelay();
+            return readHandler(arguments);
         }
 
         public async Task<ImmutableVectorClock> OnWrite(WriteArguments arguments) {

@@ -19,15 +19,29 @@ namespace KVStoreServer.Grpc.Advanced {
             this.dispatcher = dispatcher;
         }
 
-        public override Task<ReadResponse> Read(ReadRequest request, ServerCallContext context) {
-            return base.Read(request, context);
+        public override async Task<ReadResponse> Read(ReadRequest request, ServerCallContext context) {
+            (string value, CausalConsistency.ImmutableVectorClock timestamp) =
+                await dispatcher.OnRead(ParseReadRequest(request));
+            if (value == null) {
+                return new ReadResponse {
+                    Missing = true,
+                    Timestamp = BuildGrpcClock(timestamp)
+                };
+            }
+            else {
+                return new ReadResponse {
+                    Missing = false,
+                    ObjectValue = value,
+                    Timestamp = BuildGrpcClock(timestamp)
+                };
+            }
         }
 
         public override async Task<WriteResponse> Write(WriteRequest request, ServerCallContext context) {
             CausalConsistency.ImmutableVectorClock timestamp =
                 await dispatcher.OnWrite(ParseWriteRequest(request));
             return new WriteResponse {
-                Timestamp = BuildClock(timestamp)
+                Timestamp = BuildGrpcClock(timestamp)
             };
         }
 
@@ -35,6 +49,14 @@ namespace KVStoreServer.Grpc.Advanced {
             IEnumerable<StoredObjectDto> objects = await dispatcher.OnListServer();
             return new ListResponse {
                 Objects = { BuildObject(objects) }
+            };
+        }
+
+        private ReadArguments ParseReadRequest(ReadRequest request) {
+            return new ReadArguments {
+                PartitionId = request.PartitionId,
+                ObjectId = request.ObjectId,
+                Timestamp = BuildVectorClock(request.Timestamp)
             };
         }
 
@@ -53,7 +75,7 @@ namespace KVStoreServer.Grpc.Advanced {
                     PartitionId = objectDto.PartitionId,
                     ObjectId = objectDto.ObjectId,
                     ObjectValue = objectDto.TimestampedValue.Value,
-                    ObjectTimestamp = BuildClock(objectDto.TimestampedValue.Timestamp),
+                    ObjectTimestamp = BuildGrpcClock(objectDto.TimestampedValue.Timestamp),
                     ObjectLastWriteServerId = objectDto.TimestampedValue.LastWriteServerId
                 };
             });
@@ -65,7 +87,7 @@ namespace KVStoreServer.Grpc.Advanced {
                 vectorClock.ServerClocks);
         }
 
-        private VectorClock BuildClock(CausalConsistency.ImmutableVectorClock vectorClock) {
+        private VectorClock BuildGrpcClock(CausalConsistency.ImmutableVectorClock vectorClock) {
             (IList<string> serverIds, IList<int> clocks) =
                 CausalConsistency.VectorClocks.ToIdsAndClocksList(vectorClock);
             return new VectorClock {
