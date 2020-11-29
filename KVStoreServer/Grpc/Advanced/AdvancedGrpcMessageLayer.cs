@@ -14,6 +14,7 @@ using ReplicationServiceProto = Common.Protos.ReplicaCommunication.AdvancedRepli
 
 namespace KVStoreServer.Grpc.Advanced {
 
+    public delegate (string, ImmutableVectorClock) ReadHandler(ReadArguments arguments);
     public delegate ImmutableVectorClock WriteHandler(WriteArguments writeArguments);
     public delegate IEnumerable<StoredObjectDto> ListServerHandler();
 
@@ -49,6 +50,10 @@ namespace KVStoreServer.Grpc.Advanced {
                 Conditions.AssertState(instance == null);
                 instance = new AdvancedGrpcMessageLayer(serverConfig);
             }
+        }
+
+        public void BindReadHandler(ReadHandler handler) {
+            incomingDispatcher.BindReadHandler(handler);
         }
 
         public void BindWriteHandler(WriteHandler handler) {

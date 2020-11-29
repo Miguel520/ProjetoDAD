@@ -28,6 +28,10 @@ namespace KVStoreServer.Broadcast {
 
         public static ReliableBroadcastLayer Instance { get; } = new ReliableBroadcastLayer(); 
 
+        public void BindReadHandler(ReadHandler handler) {
+            AdvancedNamingServiceLayer.Instance.BindReadHandler(handler);
+        }
+
         public void BindWriteHandler(WriteHandler handler) {
             AdvancedNamingServiceLayer.Instance.BindWriteHandler(handler);
         }

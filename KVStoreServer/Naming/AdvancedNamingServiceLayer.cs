@@ -14,6 +14,10 @@ namespace KVStoreServer.Naming {
 
         // Bind handlers for incoming messages
 
+        public void BindReadHandler(ReadHandler handler) {
+            AdvancedGrpcMessageLayer.Instance.BindReadHandler(handler);
+        }
+
         public void BindWriteHandler(WriteHandler handler) {
             AdvancedGrpcMessageLayer.Instance.BindWriteHandler(handler);
         }

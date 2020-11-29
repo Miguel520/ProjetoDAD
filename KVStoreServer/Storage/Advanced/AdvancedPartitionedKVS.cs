@@ -8,6 +8,10 @@ namespace KVStoreServer.Storage.Advanced {
         private readonly ConcurrentDictionary<string, AdvancedSingleKVS> stores =
             new ConcurrentDictionary<string, AdvancedSingleKVS>();
 
+        public bool Read(string partitionId, string objectId, out string objectValue) {
+            return GetOrAddStore(partitionId).Read(objectId, out objectValue);
+        }
+
         public ImmutableTimestampedValue PrepareWrite(
             string partitionId,
             string objectId,

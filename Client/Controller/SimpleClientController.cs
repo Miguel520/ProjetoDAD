@@ -155,7 +155,6 @@ namespace Client.Controller {
                 Console.WriteLine(
                     "[{0}] N/A",
                     DateTime.Now.ToString("HH:mm:ss"));
-                return;
             }
         }
 

@@ -11,6 +11,7 @@ namespace Client.KVS {
 
         private static AdvancedKVSMessageLayer instance = null;
         private static readonly object instanceLock = new object();
+        private string attachedId = null;
 
         private readonly NamingService namingService = null;
 
@@ -73,10 +74,119 @@ namespace Client.KVS {
             return false;
         }
 
+        public bool Read(
+            string partitionId, 
+            string objectId,
+            out string value) {
+
+            return ReadAttached(partitionId, objectId, out value)
+                || ResolveRead(partitionId, objectId, out value);
+        }
+
+        public bool ReadFallback(
+            string partitionId,
+            string objectId,
+            string fallbackServerId,
+            out string value) {
+
+            return ReadAttached(partitionId, objectId, out value)
+                || ReadSpecificServer(partitionId, objectId, fallbackServerId, out value)
+                || ResolveRead(partitionId, objectId, out value);
+        }
+
         public bool ListServer(string serverId, out ImmutableList<StoredObject> objects) {
             objects = default;
             return namingService.Lookup(serverId, out string serverUrl)
                 && AdvancedGrpcMessageLayer.Instance.ListServer(serverUrl, out objects);
+        }
+
+        private bool ReadAttached(
+            string partitionId,
+            string objectId,
+            out string value) {
+
+            value = default;
+            if (attachedId != null
+                && ReadSpecificServer(partitionId, objectId, attachedId, out value)) {
+
+                return true;
+            }
+            attachedId = null;
+            return false;
+        }
+
+        private bool ReadSpecificServer(
+            string partitionId,
+            string objectId,
+            string serverId,
+            out string value) {
+
+            value = default;
+            return namingService.IsInPartition(partitionId, serverId)
+                && namingService.Lookup(serverId, out string serverUrl)
+                && ReadAndAttach(
+                    partitionId,
+                    objectId,
+                    serverId,
+                    serverUrl,
+                    out value);
+        }
+
+        private bool ResolveRead(
+            string partitionId,
+            string objectId,
+            out string value) {
+
+            value = default;
+            if (!namingService.ListPartition(
+                    partitionId,
+                    out ImmutableHashSet<string> partitionServerIds)) {
+
+                return false;
+            }
+
+            foreach (string serverId in partitionServerIds)
+            {
+                if (namingService.Lookup(serverId, out string serverUrl)
+                    && ReadAndAttach(
+                        partitionId,
+                        objectId,
+                        serverId,
+                        serverUrl,
+                        out value)) {
+                    return true;
+                }
+            }
+            attachedId = null;
+            return false;
+        }
+
+        private bool ReadAndAttach(
+            string partitionId,
+            string objectId,
+            string serverId,
+            string serverUrl,
+            out string value) {
+
+            if (!timestamps.TryGetValue(partitionId, out MutableVectorClock timestamp)) {
+                timestamp = MutableVectorClock.Empty();
+                timestamps.Add(partitionId, timestamp);
+            }
+
+            if (AdvancedGrpcMessageLayer.Instance.Read(
+                        serverUrl,
+                        partitionId,
+                        objectId,
+                        out value,
+                        timestamp.ToImmutable(),
+                        out ImmutableVectorClock replicaTimestamp) 
+                    && value != null) {
+                timestamp.Merge(replicaTimestamp);
+                attachedId = serverId;
+                return true;
+            }
+
+            return false;
         }
     }
 }
