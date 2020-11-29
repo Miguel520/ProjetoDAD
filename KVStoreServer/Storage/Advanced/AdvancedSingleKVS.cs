@@ -14,6 +14,11 @@ namespace KVStoreServer.Storage.Advanced {
         private ConcurrentDictionary<string, MutableTimestampedValue> keyValuePairs =
             new ConcurrentDictionary<string, MutableTimestampedValue>();
 
+        public bool Read(string objectId, out string objectValue) {
+            objectValue = GetOrAddValue(objectId).Value;
+            return objectValue != null;
+        }
+
         public ImmutableTimestampedValue PrepareWrite(string objectId, string newValue, string serverId) {
             return GetOrAddValue(objectId).PrepareMerge(newValue, serverId);
         }

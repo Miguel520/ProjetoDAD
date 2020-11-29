@@ -31,6 +31,7 @@ namespace KVStoreServer.Replication.Advanced {
         }
 
         public void Bind() {
+            ReliableBroadcastLayer.Instance.BindReadHandler(OnReadRequest);
             ReliableBroadcastLayer.Instance.BindWriteHandler(OnWriteRequest);
             ReliableBroadcastLayer.Instance.BindListServerHandler(OnListServerRequest);
             ReliableBroadcastLayer.Instance.BindWriteMessageHandler(OnBroadcastWriteMessage);
@@ -39,6 +40,17 @@ namespace KVStoreServer.Replication.Advanced {
             ReliableBroadcastLayer.Instance.BindJoinPartitionHandler(OnJoinPartitionRequest);
             ReliableBroadcastLayer.Instance.BindLookupMasterHandler(TryGetMasterUrl);
             ReliableBroadcastLayer.Instance.BindListPartitionsHandler(ListPartitionsWithServerIds);
+        }
+
+        /*
+         * Handle read request from client
+         */
+        public (string, ImmutableVectorClock) OnReadRequest(ReadArguments arguments) {
+            WaitHappensBeforeTimestamp(arguments.Timestamp);
+
+            store.Read(arguments.PartitionId, arguments.ObjectId, out string value);
+
+            return (value, timestamp.ToImmutable());
         }
 
         /*

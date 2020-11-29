@@ -16,9 +16,10 @@ message ReadRequest {
 }
 
 message ReadResponse {
-    string object_value = 1;
+    bool missing = 1;
+    string object_value = 2;
     // Server returns timestamp for partition for client to merge
-    VectorClock timestamp = 2;
+    VectorClock timestamp = 3;
 }
 
 message WriteRequest {
