@@ -97,12 +97,14 @@ namespace Client.Controller {
 
             if (storedObjects.Count != 0) {
                 foreach (StoredObject obj in storedObjects) {
-                    Console.WriteLine($"[{DateTime.Now.ToString("HH:mm:ss")}]" +
-                        $" Object id: {obj.ObjectId}" +
-                        $" {(obj.IsLocked ? "is Locked" : $" has the value {obj.Value}")} " +
-                        $" from partition  {obj.PartitionId}" +
-                        $" and server {serverId}" +
-                        $" {(obj.IsMaster ? "is" : "is not")} the master of this partition.");
+                    Console.WriteLine("[{0}] Server {1} ({2}), object: <{3},{4}> = '{5}' ({6})",
+                        DateTime.Now.ToString("HH:mm:ss"),
+                        serverId,
+                        obj.IsMaster ? "Master" : "Not Master",
+                        obj.PartitionId,
+                        obj.ObjectId,
+                        obj.Value,
+                        obj.IsLocked ? "Locked" : "Unlocked");
                 }
             }
             else {
