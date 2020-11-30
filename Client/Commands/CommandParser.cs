@@ -12,6 +12,8 @@ namespace Client.Commands
         private const string WAIT_COMMAND = "wait";
         private const string BEGIN_REPEAT_COMMAND = "begin-repeat";
         private const string END_REPEAT_COMMAND = "end-repeat";
+        private const string BEGIN_TIMER_COMMAND = "begin-timer";
+        private const string END_TIMER_COMMAND = "end-timer";
 
         public static bool TryParse(string line, out ICommand command) {
             command = null;
@@ -36,6 +38,10 @@ namespace Client.Commands
                     return TryParseBeginRepeatCommand(inputArguments, out command);
                 case END_REPEAT_COMMAND:
                     return TryParseEndRepeatCommand(inputArguments, out command);
+                case BEGIN_TIMER_COMMAND:
+                    return TryParseBeginTimerCommand(inputArguments, out command);
+                case END_TIMER_COMMAND:
+                    return TryParseEndTimerCommand(inputArguments, out command);
                 default:
                     return false;
             }
@@ -127,7 +133,7 @@ namespace Client.Commands
             return true;
         }
 
-        public static bool TryParseBeginRepeatCommand(string[] arguments, out ICommand command) {
+        private static bool TryParseBeginRepeatCommand(string[] arguments, out ICommand command) {
             command = null;
 
             if (arguments.Length != 1) return false;
@@ -141,12 +147,32 @@ namespace Client.Commands
             return true;
         }
 
-        public static bool TryParseEndRepeatCommand(string[] arguments, out ICommand command) {
+        private static bool TryParseEndRepeatCommand(string[] arguments, out ICommand command) {
             command = null;
 
             if (arguments.Length != 0) return false;
 
             command = new EndRepeatCommand { };
+
+            return true;
+        }
+
+        private static bool TryParseBeginTimerCommand(string[] arguments, out ICommand command) {
+            command = default;
+
+            if (arguments.Length != 0) return false;
+
+            command = new BeginTimerCommand { };
+
+            return true;
+        }
+
+        private static bool TryParseEndTimerCommand(string[] arguments, out ICommand command) {
+            command = default;
+
+            if (arguments.Length != 0) return false;
+
+            command = new EndTimerCommand { };
 
             return true;
         }

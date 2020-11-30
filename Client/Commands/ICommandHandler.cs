@@ -16,5 +16,9 @@ namespace Client.Commands
         void OnBeginRepeatCommand(BeginRepeatCommand command);
 
         void OnEndRepeatCommand(EndRepeatCommand command);
+
+        void OnBeginTimerCommand(BeginTimerCommand command);
+
+        void OnEndTimerCommand(EndTimerCommand command);
     }
 }

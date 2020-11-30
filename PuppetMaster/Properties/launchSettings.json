@@ -2,7 +2,7 @@
   "profiles": {
     "PuppetMaster": {
       "commandName": "Project",
-      "commandLineArgs": "localhost 2 WriteTest2Servers.txt"
+      "commandLineArgs": "localhost 2 SingleClientWritePerformanceTest.txt"
     }
   }
 }

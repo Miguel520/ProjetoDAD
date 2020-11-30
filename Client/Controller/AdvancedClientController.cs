@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 
@@ -20,6 +21,9 @@ namespace Client.Controller {
         private int numReps = 0;
         private int currentRep = -1;
         private readonly NamingService namingService;
+
+        // Current stopwatch
+        private Stopwatch stopwatch = null;
 
         public AdvancedClientController(NamingService namingService) {
             this.namingService = namingService;
@@ -153,6 +157,49 @@ namespace Client.Controller {
                     partitionId,
                     objectId,
                     value);
+            }
+        }
+
+        public void OnBeginTimerCommand(BeginTimerCommand command) {
+            if (insideLoop) {
+                loopCommands.Add(command);
+                return;
+            }
+
+            // Already timer running
+            if (stopwatch != null) {
+                Console.WriteLine(
+                    "[{0}] Timer already running",
+                    DateTime.Now.ToString("HH:mm:ss"));
+            }
+            else {
+                Console.WriteLine(
+                    "[{0}] Timer started",
+                    DateTime.Now.ToString("HH:mm:ss"));
+                stopwatch = Stopwatch.StartNew();
+            }
+        }
+
+        public void OnEndTimerCommand(EndTimerCommand command) {
+            if (insideLoop) {
+                loopCommands.Add(command);
+                return;
+            }
+
+            // No timer running
+            if (stopwatch == null) {
+                Console.WriteLine(
+                    "[{0}] No Timer was running",
+                    DateTime.Now.ToString("HH:mm:ss"));
+            }
+            else {
+                stopwatch.Stop();
+                Console.WriteLine(
+                    "[{0}] Timer finished: {1} miliseconds elapsed",
+                    DateTime.Now.ToString("HH:mm:ss"),
+                    stopwatch.Elapsed);
+                // Unset timer
+                stopwatch = null;
             }
         }
 
