@@ -5,3 +5,4 @@ read p1 2 12
 write p1 3 "with quotes multiple words"
 read p1 3 12
 listServer 12
+listGlobal
