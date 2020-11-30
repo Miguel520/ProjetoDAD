@@ -1,4 +1,5 @@
 ﻿using Common.CausalConsistency;
+using Common.Utils;
 using KVStoreServer.Broadcast;
 using KVStoreServer.Configuration;
 using KVStoreServer.Grpc.Advanced;
@@ -6,6 +7,7 @@ using KVStoreServer.Grpc.Base;
 using KVStoreServer.Replication.Base;
 using KVStoreServer.Storage.Advanced;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
@@ -17,7 +19,8 @@ namespace KVStoreServer.Replication.Advanced {
 
         private readonly ServerConfiguration serverConfig;
 
-        private readonly MutableVectorClock timestamp = MutableVectorClock.Empty();
+        private readonly ConcurrentDictionary<string, MutableVectorClock> timestamps =
+            new ConcurrentDictionary<string, MutableVectorClock>();
 
         private readonly AdvancedPartitionedKVS store = new AdvancedPartitionedKVS();
 
@@ -46,10 +49,14 @@ namespace KVStoreServer.Replication.Advanced {
          * Handle read request from client
          */
         public (string, ImmutableVectorClock) OnReadRequest(ReadArguments arguments) {
-            WaitHappensBeforeTimestamp(arguments.Timestamp);
+            WaitHappensBeforeTimestamp(arguments.PartitionId, arguments.Timestamp);
 
             store.Read(arguments.PartitionId, arguments.ObjectId, out string value);
 
+            // Should always have timestamp for partition, because should already be registered
+            Conditions.AssertState(
+                timestamps.TryGetValue(arguments.PartitionId, out MutableVectorClock timestamp));
+            
             return (value, timestamp.ToImmutable());
         }
 
@@ -60,7 +67,7 @@ namespace KVStoreServer.Replication.Advanced {
             ImmutableTimestampedValue valueToBroadcast;
             ImmutableVectorClock timestampToBroadcast;
 
-            WaitHappensBeforeTimestamp(arguments.Timestamp);
+            WaitHappensBeforeTimestamp(arguments.PartitionId, arguments.Timestamp);
             
             lock(this) {
                 valueToBroadcast = store.PrepareWrite(
@@ -68,6 +75,10 @@ namespace KVStoreServer.Replication.Advanced {
                     arguments.ObjectId,
                     arguments.ObjectValue,
                     serverConfig.ServerId);
+                
+                Conditions.AssertState(
+                    timestamps.TryGetValue(arguments.PartitionId, out MutableVectorClock timestamp));
+                
                 timestamp.Increment(serverConfig.ServerId);
                 timestampToBroadcast = timestamp.ToImmutable();
             }
@@ -95,7 +106,7 @@ namespace KVStoreServer.Replication.Advanced {
         public void OnBroadcastWriteMessage(BroadcastWriteMessage message) {
             lock(this) {
                 store.Write(message.PartitionId, message.Key, message.TimestampedValue);
-                MergeTimestamp(message.ReplicaTimestamp);
+                MergeTimestamp(message.PartitionId, message.ReplicaTimestamp);
             }
         }
 
@@ -106,6 +117,7 @@ namespace KVStoreServer.Replication.Advanced {
             
             // Only register partitions that the server belongs to for broadcast
             if (serverIds.Contains(serverConfig.ServerId)) {
+                timestamps.TryAdd(partitionId, MutableVectorClock.Empty());
                 ReliableBroadcastLayer.Instance.RegisterPartition(partitionId, serverIds);
             }
         }
@@ -133,18 +145,24 @@ namespace KVStoreServer.Replication.Advanced {
                 string.Join(", ", partitionsDB.ListPartitions()));
         }
 
-        private void WaitHappensBeforeTimestamp(ImmutableVectorClock otherTimestamp) {
-            lock(timestamp) {
+        private void WaitHappensBeforeTimestamp(string partitionId, ImmutableVectorClock otherTimestamp) {
+            lock(timestamps) {
+                Conditions.AssertState(
+                    timestamps.TryGetValue(partitionId, out MutableVectorClock timestamp));
+                
                 while (VectorClock.HappensBefore(timestamp, otherTimestamp)) {
-                    Monitor.Wait(timestamp);
+                    Monitor.Wait(timestamps);
                 }
             }
         }
 
-        private void MergeTimestamp(ImmutableVectorClock otherTimestamp) {
-            lock(timestamp) {
+        private void MergeTimestamp(string partitionId, ImmutableVectorClock otherTimestamp) {
+            lock(timestamps) {
+                Conditions.AssertState(
+                    timestamps.TryGetValue(partitionId, out MutableVectorClock timestamp));
+                
                 timestamp.Merge(otherTimestamp);
-                Monitor.PulseAll(timestamp);
+                Monitor.PulseAll(timestamps);
             }
         }
     }

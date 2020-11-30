@@ -1,7 +1,9 @@
 ﻿write P1 1 funcionei
-wait 1000
-read P1 1 2
+read P1 1 3
 listGlobal
 write P1 1 funcionei2
-read P1 1 2
+read P1 1 1
+begin-repeat 5
 listGlobal
+wait 1000
+end-repeat

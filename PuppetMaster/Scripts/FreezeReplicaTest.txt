@@ -1,8 +1,9 @@
-﻿ReplicationFactor 2
+﻿ReplicationFactor 3
 Server 1 http://localhost:12345 0 0
 Server 2 http://localhost:23456 0 0
+Server 3 http://localhost:23457 0 0
 Wait 3000
-Partition 2 P1 1 2
+Partition 3 P1 1 2 3
 Wait 3000
 Freeze 2
 Wait 3000

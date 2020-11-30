@@ -6,7 +6,7 @@ namespace KVStoreServer.Grpc.Base {
 
         private UrlFailureDetectionHandler failureHandler = null;
 
-        protected static readonly long DEFAULT_TIMEOUT = 10000;
+        protected static readonly long DEFAULT_TIMEOUT = 30000;
 
         public void BindFailureDetectionHandler(UrlFailureDetectionHandler handler) {
             failureHandler = handler;
