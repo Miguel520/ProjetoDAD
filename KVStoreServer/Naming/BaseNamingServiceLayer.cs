@@ -4,10 +4,10 @@ using System.Linq;
 
 namespace KVStoreServer.Naming {
 
-    public delegate void IdFailureHandler(string serverId);
+    public delegate void IdFailureDetectionHandler(string serverId);
     public abstract class BaseNamingServiceLayer {
 
-        private IdFailureHandler failureHandler = null;
+        private IdFailureDetectionHandler failureHandler = null;
 
         // Mappings for server ids and urls
         private readonly ConcurrentDictionary<string, string> urls =
@@ -15,7 +15,7 @@ namespace KVStoreServer.Naming {
 
         protected BaseNamingServiceLayer() {
             GetGrpcLayer().BindLookup(TryGetServer);
-            GetGrpcLayer().BindFailureHandler(OnReplicaFailure);
+            GetGrpcLayer().BindFailureDetectionHandler(OnReplicaFailureDetection);
         }
 
         public bool RegisterServer(
@@ -56,13 +56,13 @@ namespace KVStoreServer.Naming {
             GetGrpcLayer().BindStatusHandler(handler);
         }
 
-        public void BindFailureHandler(IdFailureHandler handler) {
+        public void BindFailureDetectionHandler(IdFailureDetectionHandler handler) {
             failureHandler = handler;
         }
 
         protected abstract BaseGrpcMessageLayer GetGrpcLayer();
 
-        private void OnReplicaFailure(string serverUrl) {
+        private void OnReplicaFailureDetection(string serverUrl) {
             lock (urls) {
                 string serverId = urls.First(pair => pair.Value.Equals(serverUrl)).Key;
                 failureHandler?.Invoke(serverId);

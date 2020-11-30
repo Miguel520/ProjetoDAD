@@ -1,0 +1,11 @@
+﻿ReplicationFactor 3
+Server 1 http://localhost:12345 0 0
+Server 2 http://localhost:23456 0 0
+Server 3 http://localhost:23457 0 0
+Server 4 http://localhost:23458 0 0
+Partition 3 P1 1 2 3
+Partition 3 P2 1 2 4 
+Wait 1000
+Crash 1
+Wait 1000
+Client Cli1 http://localhost:34567 FailureBroadcastTest.txt

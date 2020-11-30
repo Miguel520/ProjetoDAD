@@ -1,0 +1,3 @@
+﻿write P1 1 value1
+wait 20000
+write P2 2 value2

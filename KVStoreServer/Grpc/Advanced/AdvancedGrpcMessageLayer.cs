@@ -5,6 +5,7 @@ using KVStoreServer.Broadcast;
 using KVStoreServer.Configuration;
 using KVStoreServer.Grpc.Base;
 using KVStoreServer.Storage.Advanced;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -17,8 +18,8 @@ namespace KVStoreServer.Grpc.Advanced {
     public delegate ImmutableVectorClock WriteHandler(WriteArguments writeArguments);
     public delegate IEnumerable<StoredObjectDto> ListServerHandler();
 
-    public delegate void BroadcastWriteHandler(BroadcastWriteArguments arguments);
-    public delegate void BroadcastFailureHandler(BroadcastFailureArguments arguments);
+    public delegate void BroadcastWriteDeliveryHandler(BroadcastWriteArguments arguments);
+    public delegate void BroadcastFailureDeliveryHandler(BroadcastFailureArguments arguments);
     public class AdvancedGrpcMessageLayer : BaseGrpcMessageLayer {
 
         private static AdvancedGrpcMessageLayer instance = null;
@@ -63,12 +64,15 @@ namespace KVStoreServer.Grpc.Advanced {
             incomingDispatcher.BindListServerHandler(handler);
         }
 
-        public void BindBroadcastWriteHandler(BroadcastWriteHandler handler) {
-            incomingDispatcher.BindBroadcastWriteHandler(handler);
+        public void BindBroadcastWriteDeliveryHandler(BroadcastWriteDeliveryHandler handler) {
+            incomingDispatcher.BindBroadcastWriteDeliveryHandler(handler);
         }
 
-        public void BindBroadcastFailureHandler(BroadcastFailureHandler handler) {
-            incomingDispatcher.BindBroadcastFailureHandler(handler);
+        /*
+         * Received message of failed replica. 
+         */
+        public void BindBroadcastFailureDeliveryHandler(BroadcastFailureDeliveryHandler handler) {
+            incomingDispatcher.BindBroadcastFailureDeliveryHandler(handler);
         }
 
         public async Task BroadcastWrite(

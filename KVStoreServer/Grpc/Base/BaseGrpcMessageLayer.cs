@@ -18,7 +18,7 @@ namespace KVStoreServer.Grpc.Base {
     public delegate void JoinPartitionHandler(JoinPartitionArguments arguments);
     public delegate void StatusHandler();
 
-    public delegate void UrlFailureHandler(string crashedUrl);
+    public delegate void UrlFailureDetectionHandler(string crashedUrl);
     public abstract class BaseGrpcMessageLayer {
 
         private readonly ServerConfiguration serverConfig;
@@ -77,8 +77,11 @@ namespace KVStoreServer.Grpc.Base {
             GetIncomingDispatcher().BindStatusHandler(handler);
         }
 
-        public void BindFailureHandler(UrlFailureHandler handler) {
-            GetOutgoingDispatcher().BindFailureHandler(handler);
+        /*
+         * Bind event handler for when a crash is detected when sending a message.
+         */
+        public void BindFailureDetectionHandler(UrlFailureDetectionHandler handler) {
+            GetOutgoingDispatcher().BindFailureDetectionHandler(handler);
         }
 
         protected abstract BaseIncomingDispatcher GetIncomingDispatcher();

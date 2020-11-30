@@ -26,12 +26,12 @@ namespace KVStoreServer.Naming {
             AdvancedGrpcMessageLayer.Instance.BindListServerHandler(handler);
         }
 
-        public void BindBroadcastWriteHandler(BroadcastWriteHandler handler) {
-            AdvancedGrpcMessageLayer.Instance.BindBroadcastWriteHandler(handler);
+        public void BindBroadcastWriteHandler(BroadcastWriteDeliveryHandler handler) {
+            AdvancedGrpcMessageLayer.Instance.BindBroadcastWriteDeliveryHandler(handler);
         }
 
-        public void BindBroadcastFailureHandler(BroadcastFailureHandler handler) {
-            AdvancedGrpcMessageLayer.Instance.BindBroadcastFailureHandler(handler);
+        public void BindBroadcastFailureDeliveryHandler(BroadcastFailureDeliveryHandler handler) {
+            AdvancedGrpcMessageLayer.Instance.BindBroadcastFailureDeliveryHandler(handler);
         }
 
         public void Start() {
