@@ -1,0 +1,14 @@
+﻿begin-timer
+write p1 1 funcionei
+begin-repeat 5
+wait 1000
+listGlobal
+end-repeat
+end-timer
+begin-timer
+begin-repeat 5
+write p1 $1 value-$i
+listGlobal
+wait 1000
+end-repeat
+end-timer

@@ -55,4 +55,18 @@
             handler.OnEndRepeatCommand(this);
         }
     }
+
+    public class BeginTimerCommand : ICommand {
+
+        public void Accept(ICommandHandler handler) {
+            handler.OnBeginTimerCommand(this);
+        }
+    }
+
+    public class EndTimerCommand : ICommand {
+
+        public void Accept(ICommandHandler handler) {
+            handler.OnEndTimerCommand(this);
+        }
+    }
 }
