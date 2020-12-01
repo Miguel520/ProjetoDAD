@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using Common.Utils;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,20 +12,31 @@ namespace KVStoreServer.Storage.Advanced {
      */
     public class AdvancedSingleKVS {
 
-        private ConcurrentDictionary<string, MutableTimestampedValue> keyValuePairs =
-            new ConcurrentDictionary<string, MutableTimestampedValue>();
+        private readonly ConcurrentDictionary<string, StoredValue> keyValuePairs =
+            new ConcurrentDictionary<string, StoredValue>();
 
         public bool Read(string objectId, out string objectValue) {
-            objectValue = GetOrAddValue(objectId).Value;
+            objectValue = GetOrAdd(objectId).Value;
             return objectValue != null;
         }
 
-        public ImmutableTimestampedValue PrepareWrite(string objectId, string newValue, string serverId) {
-            return GetOrAddValue(objectId).PrepareMerge(newValue, serverId);
-        }
-
-        public void Write(string objectId, ImmutableTimestampedValue other) {
-            GetOrAddValue(objectId).Merge(other);
+        /*
+         * Updates a value with a new write
+         * Only updates if new server id is less then the last server to write
+         * or if force is true
+         */
+        public void Write(string objectId, string value, string serverId, bool force) {
+            StoredValue storedValue = GetOrAdd(objectId);
+            lock (value) {
+                if (force 
+                    || storedValue.LastWriteServerId == null
+                    || storedValue.LastWriteServerId == serverId
+                    || Strings.LessThan(serverId, storedValue.LastWriteServerId)) {
+                    
+                    storedValue.Value = value;
+                    storedValue.LastWriteServerId = serverId;
+                }
+            }
         }
 
         public IEnumerable<StoredObjectDto> ListObjects() {
@@ -32,16 +44,21 @@ namespace KVStoreServer.Storage.Advanced {
                 return keyValuePairs.Select(pair => {
                     return new StoredObjectDto {
                         ObjectId = pair.Key,
-                        TimestampedValue = pair.Value.ToImmutable()
+                        Value = pair.Value.Value
                     };
                 });
             }
         }
 
-        private MutableTimestampedValue GetOrAddValue(string objectId) {
-            return keyValuePairs.GetOrAdd(
-                objectId,
-                (key) => new MutableTimestampedValue());
+        private StoredValue GetOrAdd(string objectId) {
+            return keyValuePairs.GetOrAdd(objectId, (key) => new StoredValue { });
+        }
+
+        class StoredValue {
+
+            public string Value { get; set; }
+
+            public string LastWriteServerId { get; set; }
         }
     }
 }

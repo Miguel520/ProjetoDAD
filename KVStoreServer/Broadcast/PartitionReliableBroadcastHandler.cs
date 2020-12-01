@@ -1,8 +1,6 @@
 ﻿using Common.CausalConsistency;
 using KVStoreServer.Grpc.Advanced;
 using KVStoreServer.Naming;
-using KVStoreServer.Storage.Advanced;
-using System;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Threading;
@@ -40,7 +38,7 @@ namespace KVStoreServer.Broadcast {
 
         public void BroadcastWrite(
             string key,
-            ImmutableTimestampedValue value,
+            string value,
             ImmutableVectorClock replicaTimestamp) {
 
             MessageId messageId = NextMessageId();
@@ -49,11 +47,12 @@ namespace KVStoreServer.Broadcast {
             receivedWrites.TryAdd(messageId, new BroadcastWriteMessage {
                 PartitionId = partitionId,
                 Key = key,
-                TimestampedValue = value,
+                Value = value,
+                WriteServerId = selfId,
                 ReplicaTimestamp = replicaTimestamp
             });
 
-            BroadcastWrite(messageId, key, value, replicaTimestamp);
+            BroadcastWrite(messageId, key, value, replicaTimestamp, selfId);
 
             
             lock (this) {
@@ -84,8 +83,9 @@ namespace KVStoreServer.Broadcast {
                     BroadcastWrite(
                         arguments.MessageId,
                         arguments.Key,
-                        arguments.TimestampedValue,
-                        arguments.ReplicaTimestamp);
+                        arguments.Value,
+                        arguments.ReplicaTimestamp,
+                        arguments.WriteServerId);
                     receivedWrites.TryGetValue(arguments.MessageId,
                         out BroadcastWriteMessage message);
                 }
@@ -139,8 +139,9 @@ namespace KVStoreServer.Broadcast {
         private void BroadcastWrite(
             MessageId messageId,
             string key,
-            ImmutableTimestampedValue value,
-            ImmutableVectorClock replicaTimestamp) {
+            string value,
+            ImmutableVectorClock replicaTimestamp,
+            string writeServerId) {
 
             foreach (string serverId in serverIds) {
                 _ = AdvancedNamingServiceLayer.Instance.BroadcastWrite(
@@ -149,7 +150,8 @@ namespace KVStoreServer.Broadcast {
                     messageId,
                     key,
                     value,
-                    replicaTimestamp);
+                    replicaTimestamp,
+                    writeServerId);
             }
         }
 
@@ -187,7 +189,8 @@ namespace KVStoreServer.Broadcast {
             return new BroadcastWriteMessage {
                 PartitionId = arguments.PartitionId,
                 Key = arguments.Key,
-                TimestampedValue = arguments.TimestampedValue,
+                Value = arguments.Value,
+                WriteServerId = arguments.WriteServerId,
                 ReplicaTimestamp = arguments.ReplicaTimestamp
             };
         }

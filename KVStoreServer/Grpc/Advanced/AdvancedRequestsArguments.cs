@@ -1,6 +1,5 @@
 ﻿using Common.CausalConsistency;
 using KVStoreServer.Broadcast;
-using KVStoreServer.Storage.Advanced;
 
 namespace KVStoreServer.Grpc.Advanced {
 
@@ -32,10 +31,11 @@ namespace KVStoreServer.Grpc.Advanced {
 
         public string Key { get; set; }
 
-        public ImmutableTimestampedValue TimestampedValue { get; set; }
+        public string Value { get; set; }
 
         public ImmutableVectorClock ReplicaTimestamp { get; set; }
 
+        public string WriteServerId { get; set; }
     }
 
     public class BroadcastFailureArguments {

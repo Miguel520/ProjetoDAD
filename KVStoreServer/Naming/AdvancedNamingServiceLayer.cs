@@ -47,8 +47,9 @@ namespace KVStoreServer.Naming {
             string partitionId,
             MessageId messageId,
             string key,
-            ImmutableTimestampedValue value,
-            ImmutableVectorClock replicaTimestamp) {
+            string value,
+            ImmutableVectorClock replicaTimestamp,
+            string writeServerId) {
 
             if (TryGetServer(serverId, out string serverUrl)) {
                 await AdvancedGrpcMessageLayer.Instance.BroadcastWrite(
@@ -57,7 +58,8 @@ namespace KVStoreServer.Naming {
                     messageId,
                     key,
                     value,
-                    replicaTimestamp);
+                    replicaTimestamp,
+                    writeServerId);
             }
         }
 

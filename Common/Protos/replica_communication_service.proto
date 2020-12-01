@@ -31,8 +31,9 @@ message BroadcastWriteRequest {
 	string partition_id = 1;
 	MessageId message_id = 2;
 	string key = 3;
-	TimestampedValue timestamped_value = 4;
+	string value = 4;
 	VectorClock replicaTimestamp = 5;
+	string writeServerId = 6;
 }
 
 message BroadcastWriteResponse {}
@@ -40,12 +41,6 @@ message BroadcastWriteResponse {}
 message MessageId {
 	string server_id = 1;
 	int32 server_counter = 2;
-}
-
-message TimestampedValue {
-	string object_value = 1;
-	VectorClock timestamp = 2;
-	string last_write_server_id = 3;
 }
 
 message VectorClock {

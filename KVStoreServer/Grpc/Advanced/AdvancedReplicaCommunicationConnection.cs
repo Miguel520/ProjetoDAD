@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using static Common.Protos.ReplicaCommunication.AdvancedReplicaCommunicationService;
-using KVStoreServer.Storage.Advanced;
 
 using CausalConsistency = Common.CausalConsistency;
 
@@ -29,8 +28,9 @@ namespace KVStoreServer.Grpc.Advanced {
             string partitionId,
             Broadcast.MessageId messageId,
             string key,
-            ImmutableTimestampedValue value,
+            string value,
             CausalConsistency.ImmutableVectorClock replicaTimestamp,
+            string writeServerId,
             long timeout) {
 
             await client.BroadcastWriteAsync(
@@ -38,8 +38,9 @@ namespace KVStoreServer.Grpc.Advanced {
                     PartitionId = partitionId,
                     MessageId = BuildMessageId(messageId),
                     Key = key,
-                    TimestampedValue = BuildValue(value),
-                    ReplicaTimestamp = BuildClock(replicaTimestamp)
+                    Value = value,
+                    ReplicaTimestamp = BuildClock(replicaTimestamp),
+                    WriteServerId = writeServerId
                 },
                 deadline: DateTime.UtcNow.AddMilliseconds(timeout));
         }
@@ -63,14 +64,6 @@ namespace KVStoreServer.Grpc.Advanced {
             return new MessageId {
                 ServerId = messageId.SenderId,
                 ServerCounter = messageId.SenderCounter
-            };
-        }
-
-        private TimestampedValue BuildValue(ImmutableTimestampedValue value) {
-            return new TimestampedValue {
-                ObjectValue = value.Value,
-                Timestamp = BuildClock(value.Timestamp),
-                LastWriteServerId = value.LastWriteServerId
             };
         }
 

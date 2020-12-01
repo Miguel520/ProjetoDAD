@@ -63,12 +63,14 @@ namespace Client.Grpc.Advanced {
 
         public bool ListServer(
             string serverUrl,
-            out ImmutableList<StoredObject> storedObjects) {
+            out ImmutableList<StoredObject> storedObjects,
+            out ImmutableList<PartitionTimestamp> partitionTimestamps) {
 
             storedObjects = default;
+            partitionTimestamps = default;
             try {
                 AdvancedGrpcConnection connection = new AdvancedGrpcConnection(serverUrl);
-                storedObjects = connection.ListServer();
+                (storedObjects, partitionTimestamps) = connection.ListServer();
                 return true;
             }
             catch (RpcException e) {

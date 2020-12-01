@@ -2,6 +2,7 @@
 using Common.Utils;
 using KVStoreServer.Configuration;
 using KVStoreServer.Grpc.Base;
+using KVStoreServer.Replication.Advanced;
 using KVStoreServer.Storage.Advanced;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -52,7 +53,7 @@ namespace KVStoreServer.Grpc.Advanced {
             return writeHandler(arguments);
         }
 
-        public async Task<IEnumerable<StoredObjectDto>> OnListServer() {
+        public async Task<(IEnumerable<StoredObjectDto>, IEnumerable<PartitionTimestampDto>)> OnListServer() {
             Conditions.AssertState(listServerHandler != null);
             //WaitFreeze();
             //await WaitDelay();

@@ -10,6 +10,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using System.Threading;
 
 namespace KVStoreServer.Replication.Advanced {
@@ -51,31 +52,26 @@ namespace KVStoreServer.Replication.Advanced {
         public (string, ImmutableVectorClock) OnReadRequest(ReadArguments arguments) {
             WaitHappensBeforeTimestamp(arguments.PartitionId, arguments.Timestamp);
 
-            store.Read(arguments.PartitionId, arguments.ObjectId, out string value);
+            lock (this) {
+                store.Read(arguments.PartitionId, arguments.ObjectId, out string value);
 
-            // Should always have timestamp for partition, because should already be registered
-            Conditions.AssertState(
-                timestamps.TryGetValue(arguments.PartitionId, out MutableVectorClock timestamp));
+                // Should always have timestamp for partition, because should already be registered
+                Conditions.AssertState(
+                    timestamps.TryGetValue(arguments.PartitionId, out MutableVectorClock timestamp));
             
-            return (value, timestamp.ToImmutable());
+                return (value, timestamp.ToImmutable());
+            }
         }
 
         /*
          * Handle write request from client
          */
         public ImmutableVectorClock OnWriteRequest(WriteArguments arguments) {
-            ImmutableTimestampedValue valueToBroadcast;
             ImmutableVectorClock timestampToBroadcast;
 
             WaitHappensBeforeTimestamp(arguments.PartitionId, arguments.Timestamp);
             
             lock(this) {
-                valueToBroadcast = store.PrepareWrite(
-                    arguments.PartitionId,
-                    arguments.ObjectId,
-                    arguments.ObjectValue,
-                    serverConfig.ServerId);
-                
                 Conditions.AssertState(
                     timestamps.TryGetValue(arguments.PartitionId, out MutableVectorClock timestamp));
                 
@@ -87,7 +83,7 @@ namespace KVStoreServer.Replication.Advanced {
             ReliableBroadcastLayer.Instance.BroadcastWrite(
                 arguments.PartitionId,
                 arguments.ObjectId,
-                valueToBroadcast,
+                arguments.ObjectValue,
                 timestampToBroadcast);
 
             return timestampToBroadcast;
@@ -96,8 +92,17 @@ namespace KVStoreServer.Replication.Advanced {
         /*
          * Handle list server request from client
          */
-        public IEnumerable<StoredObjectDto> OnListServerRequest() {
-            return store.ListObjects();
+        public (IEnumerable<StoredObjectDto>, IEnumerable<PartitionTimestampDto>) OnListServerRequest() {
+            lock(this) {
+                IEnumerable<PartitionTimestampDto> partitionTimestampDtos = timestamps.Select(pair =>{
+                    return new PartitionTimestampDto {
+                        PartitionId = pair.Key,
+                        PartitionTimestamp = pair.Value.ToImmutable()
+                    };
+                });
+
+                return (store.ListObjects(), partitionTimestampDtos);
+            }
         }
 
         /*
@@ -105,8 +110,21 @@ namespace KVStoreServer.Replication.Advanced {
          */
         public void OnBroadcastWriteMessage(BroadcastWriteMessage message) {
             lock(this) {
-                store.Write(message.PartitionId, message.Key, message.TimestampedValue);
-                MergeTimestamp(message.PartitionId, message.ReplicaTimestamp);
+                Conditions.AssertState(
+                    timestamps.TryGetValue(message.PartitionId, out MutableVectorClock timestamp));
+
+                // More recent update should update value
+                if (VectorClock.HappensBefore(timestamp, message.ReplicaTimestamp)) {
+                    // Force write
+                    store.Write(message.PartitionId, message.Key, message.Value, message.WriteServerId, true);
+                    timestamp.Merge(message.ReplicaTimestamp);
+                }
+                // Concurrent operations (keep value with smaller server id)
+                else if (!VectorClock.HappensAfter(timestamp, message.ReplicaTimestamp)) {
+                    // Do not force write. Only update if smaller server id so that replicas converge values
+                    store.Write(message.PartitionId, message.Key, message.Value, message.WriteServerId, false);
+                    timestamp.Merge(message.ReplicaTimestamp);
+                }
             }
         }
 

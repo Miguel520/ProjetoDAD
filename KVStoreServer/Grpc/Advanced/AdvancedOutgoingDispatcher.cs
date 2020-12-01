@@ -2,7 +2,6 @@
 using Grpc.Core;
 using KVStoreServer.Broadcast;
 using KVStoreServer.Grpc.Base;
-using KVStoreServer.Storage.Advanced;
 using System.Threading.Tasks;
 
 namespace KVStoreServer.Grpc.Advanced {
@@ -13,12 +12,13 @@ namespace KVStoreServer.Grpc.Advanced {
             string partitionId,
             MessageId messageId,
             string key,
-            ImmutableTimestampedValue value,
-            ImmutableVectorClock replicaTimestamp) {
+            string value,
+            ImmutableVectorClock replicaTimestamp,
+            string writeServerId) {
 
             try {
                 AdvancedReplicaCommunicationConnection connection = new AdvancedReplicaCommunicationConnection(serverUrl);
-                await connection.BroadcastWrite(partitionId, messageId, key, value, replicaTimestamp, DEFAULT_TIMEOUT);
+                await connection.BroadcastWrite(partitionId, messageId, key, value, replicaTimestamp, writeServerId, DEFAULT_TIMEOUT);
             }
             catch (RpcException exception) {
                 HandleRpcException(serverUrl, exception);

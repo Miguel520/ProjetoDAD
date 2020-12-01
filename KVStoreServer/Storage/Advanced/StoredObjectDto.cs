@@ -5,6 +5,6 @@
 
         public string ObjectId { get; set; }
 
-        public ImmutableTimestampedValue TimestampedValue { get; set; }
+        public string Value { get; set; }
     }
 }

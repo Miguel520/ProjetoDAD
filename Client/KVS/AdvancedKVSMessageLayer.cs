@@ -94,10 +94,15 @@ namespace Client.KVS {
                 || ResolveRead(partitionId, objectId, out value);
         }
 
-        public bool ListServer(string serverId, out ImmutableList<StoredObject> objects) {
+        public bool ListServer(
+            string serverId, 
+            out ImmutableList<StoredObject> objects,
+            out ImmutableList<PartitionTimestamp> partitionTimestamps) {
+            
             objects = default;
+            partitionTimestamps = default;
             return namingService.Lookup(serverId, out string serverUrl)
-                && AdvancedGrpcMessageLayer.Instance.ListServer(serverUrl, out objects);
+                && AdvancedGrpcMessageLayer.Instance.ListServer(serverUrl, out objects, out partitionTimestamps);
         }
 
         private bool ReadAttached(

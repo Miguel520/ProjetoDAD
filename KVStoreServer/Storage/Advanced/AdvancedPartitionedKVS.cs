@@ -12,20 +12,14 @@ namespace KVStoreServer.Storage.Advanced {
             return GetOrAddStore(partitionId).Read(objectId, out objectValue);
         }
 
-        public ImmutableTimestampedValue PrepareWrite(
-            string partitionId,
-            string objectId,
-            string newValue,
-            string serverId) {
-
-            return GetOrAddStore(partitionId).PrepareWrite(objectId, newValue, serverId);
-        }
         public void Write(
             string partitionId,
             string objectId,
-            ImmutableTimestampedValue value) {
+            string value,
+            string serverId,
+            bool force) {
 
-            GetOrAddStore(partitionId).Write(objectId, value);
+            GetOrAddStore(partitionId).Write(objectId, value, serverId, force);
         }
 
         public IEnumerable<StoredObjectDto> ListObjects() {

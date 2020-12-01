@@ -81,9 +81,7 @@ namespace Client.Controller {
             // Check if server id is null
             string serverId = command.ServerId?.Replace(LOOPSTRING, currentRep.ToString());
             string value;
-            bool success = false;
-
-
+            bool success;
             if (serverId == NO_FALLBACK_SERVER) {
                 success = AdvancedKVSMessageLayer.Instance.Read(
                         partitionId,
@@ -206,7 +204,8 @@ namespace Client.Controller {
         private void ListServer(string serverId) {
             if (!AdvancedKVSMessageLayer.Instance.ListServer(
                 serverId,
-                out ImmutableList<StoredObject> storedObjects)) {
+                out ImmutableList<StoredObject> storedObjects,
+                out ImmutableList<PartitionTimestamp> partitionTimestamps)) {
 
                 Console.WriteLine(
                     "[{0}] List server {1} failed",
@@ -217,13 +216,12 @@ namespace Client.Controller {
 
             if (storedObjects.Count != 0) {
                 foreach (StoredObject obj in storedObjects) {
-                    Console.WriteLine("[{0}] Server {1}, object: <{2},{3}> = '{4}' ({5})",
+                    Console.WriteLine("[{0}] Server {1}, object: <{2},{3}> = '{4}'",
                         DateTime.Now.ToString("HH:mm:ss"),
                         serverId,
                         obj.PartitionId,
                         obj.ObjectId,
-                        obj.ObjectValue,
-                        VectorClockToString(obj.ObjectTimestamp));
+                        obj.ObjectValue);
                 }
             }
             else {
@@ -232,6 +230,14 @@ namespace Client.Controller {
                     DateTime.Now.ToString("HH:mm:ss"),
                     serverId);
             }
+
+            foreach (PartitionTimestamp partitionTimestamp in partitionTimestamps) {
+                Console.WriteLine("[{0}] Server {1}, Partition: '{2}', Timestamp: {3}",
+                        DateTime.Now.ToString("HH:mm:ss"),
+                        serverId,
+                        partitionTimestamp.PartitionId,
+                        VectorClockToString(partitionTimestamp.Timestamp));
+            }
         }
 
         private string VectorClockToString(VectorClock vectorClock) {
@@ -239,13 +245,18 @@ namespace Client.Controller {
 
             StringBuilder sb = new StringBuilder("[");
             
-            for (int i = 0; i < numEntries; i++) {
-                sb.Append(vectorClock.ServerIds[i])
-                    .Append(": ")
-                    .Append(vectorClock.ServerClocks[i])
-                    .Append(", ");
+            if (numEntries != 0) {
+                for (int i = 0; i < numEntries; i++) {
+                    sb.Append(vectorClock.ServerIds[i])
+                        .Append(": ")
+                        .Append(vectorClock.ServerClocks[i])
+                        .Append(", ");
+                }
+                sb.Remove(sb.Length - 2, 2);
             }
-            sb.Remove(sb.Length - 2, 2);
+            else {
+                sb.Append(' ');
+            }
             sb.Append("]");
 
             return sb.ToString();

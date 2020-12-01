@@ -44,14 +44,18 @@ message ListRequest {
 
 message ListResponse {
     repeated StoredObject objects = 1;
+    repeated PartitionTimestamp partition_timestamps = 2;
 }
 
 message StoredObject {
     string partition_id = 1;
     string object_id = 2;
     string object_value = 3;
-    VectorClock object_timestamp = 4;
-    string object_last_write_server_id = 5;
+}
+
+message PartitionTimestamp {
+    string partition_id = 1;
+    VectorClock timestamp = 2;
 }
 
 message VectorClock {

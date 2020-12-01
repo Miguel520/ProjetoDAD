@@ -4,8 +4,8 @@ using Grpc.Core;
 using KVStoreServer.Broadcast;
 using KVStoreServer.Configuration;
 using KVStoreServer.Grpc.Base;
+using KVStoreServer.Replication.Advanced;
 using KVStoreServer.Storage.Advanced;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -16,7 +16,7 @@ namespace KVStoreServer.Grpc.Advanced {
 
     public delegate (string, ImmutableVectorClock) ReadHandler(ReadArguments arguments);
     public delegate ImmutableVectorClock WriteHandler(WriteArguments writeArguments);
-    public delegate IEnumerable<StoredObjectDto> ListServerHandler();
+    public delegate (IEnumerable<StoredObjectDto>, IEnumerable<PartitionTimestampDto>) ListServerHandler();
 
     public delegate void BroadcastWriteDeliveryHandler(BroadcastWriteArguments arguments);
     public delegate void BroadcastFailureDeliveryHandler(BroadcastFailureArguments arguments);
@@ -80,8 +80,9 @@ namespace KVStoreServer.Grpc.Advanced {
             string partitionId,
             MessageId messageId,
             string key,
-            ImmutableTimestampedValue value,
-            ImmutableVectorClock replicaTimestamp) {
+            string value,
+            ImmutableVectorClock replicaTimestamp,
+            string writeServerId) {
 
             await outgoingDispatcher.BroadcastWrite(
                 serverUrl,
@@ -89,7 +90,8 @@ namespace KVStoreServer.Grpc.Advanced {
                 messageId,
                 key,
                 value,
-                replicaTimestamp);
+                replicaTimestamp,
+                writeServerId);
         }
 
         public async Task BroadcastFailure(
