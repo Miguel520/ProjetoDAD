@@ -15,7 +15,6 @@ namespace KVStoreServer.Broadcast {
         private ImmutableHashSet<string> serverIds;
 
         private readonly WriteMessageHandler writeMessageHandler;
-        private readonly FailureMessageHandler failureMessageHandler;
 
         private int messageCounter = 0;
 
@@ -31,14 +30,12 @@ namespace KVStoreServer.Broadcast {
             string selfId,
             string partitionId,
             ImmutableHashSet<string> serverIds,
-            WriteMessageHandler writeMessageHandler,
-            FailureMessageHandler failureMessageHandler) {
+            WriteMessageHandler writeMessageHandler) {
 
             this.selfId = selfId;
             this.partitionId = partitionId;
             this.serverIds = serverIds;
             this.writeMessageHandler = writeMessageHandler;
-            this.failureMessageHandler = failureMessageHandler;
         }
 
         public void BroadcastWrite(
@@ -63,7 +60,7 @@ namespace KVStoreServer.Broadcast {
                 // Wait for 2 acks
                 // First time message is reinserted is the first ack
                 while(!writesAcks.TryGetValue(messageId, out int numAcks)
-                    && numAcks < 2) {
+                    && numAcks < 2 && serverIds.Count >= 2) {
                     Monitor.Wait(this);
                 }
                 receivedWrites.TryGetValue(messageId, out BroadcastWriteMessage message);
@@ -121,10 +118,6 @@ namespace KVStoreServer.Broadcast {
 
             // Broadcast messages
             BroadcastFailure(messageId, failedServerId);
-
-            receivedFailures.TryGetValue(messageId, out BroadcastFailureMessage message);
-            failureMessageHandler(message);
-
         }
 
         public void OnBroadcastFailureDeliver(BroadcastFailureArguments arguments) {
@@ -142,6 +135,7 @@ namespace KVStoreServer.Broadcast {
                 }
             }
         }
+
         private void BroadcastWrite(
             MessageId messageId,
             string key,
@@ -164,6 +158,12 @@ namespace KVStoreServer.Broadcast {
             string failedServerId) {
 
             serverIds = serverIds.Remove(failedServerId);
+
+            lock(this){
+                if (serverIds.Count < 2) {
+                    Monitor.PulseAll(this);
+                }
+            }
 
             foreach (string serverId in serverIds) {
                 _ = AdvancedNamingServiceLayer.Instance.BroadcastFailure(

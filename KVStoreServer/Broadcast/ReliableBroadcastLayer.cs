@@ -10,11 +10,9 @@ using System.Collections.Immutable;
 namespace KVStoreServer.Broadcast {
 
     public delegate void WriteMessageHandler(BroadcastWriteMessage message);
-    public delegate void FailureMessageHandler(BroadcastFailureMessage serverId);
     public class ReliableBroadcastLayer {
 
         private WriteMessageHandler writeMessageHandler = null;
-        private FailureMessageHandler failureMessageHandler = null;
 
         private string selfId;
         private readonly ConcurrentDictionary<string, PartitionReliableBroadcastHandler> partitionHandlers =
@@ -42,10 +40,6 @@ namespace KVStoreServer.Broadcast {
 
         public void BindWriteMessageHandler(WriteMessageHandler handler) {
             writeMessageHandler = handler;
-        }
-
-        public void BindFailureMessageHandler(FailureMessageHandler handler) {
-            failureMessageHandler = handler;
         }
 
         public void BindJoinPartitionHandler(JoinPartitionHandler handler) {
@@ -93,8 +87,7 @@ namespace KVStoreServer.Broadcast {
                     selfId, 
                     partitionId, 
                     serverIds, 
-                    writeMessageHandler,
-                    failureMessageHandler));
+                    writeMessageHandler));
         }
 
         public void BroadcastWrite(
