@@ -27,12 +27,8 @@ namespace KVStoreServer.Storage.Advanced {
          */
         public void Write(string objectId, string value, string serverId, bool force) {
             StoredValue storedValue = GetOrAdd(objectId);
-            lock (value) {
-                if (force 
-                    || storedValue.LastWriteServerId == null
-                    || storedValue.LastWriteServerId == serverId
-                    || Strings.LessThan(serverId, storedValue.LastWriteServerId)) {
-                    
+            lock (storedValue) {
+                if (force || Strings.LessThan(serverId, storedValue.LastWriteServerId)) {
                     storedValue.Value = value;
                     storedValue.LastWriteServerId = serverId;
                 }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Text;
 
 namespace Common.CausalConsistency {
 
@@ -76,5 +77,26 @@ namespace Common.CausalConsistency {
         public abstract int this[string key] { get; }
 
         public abstract ImmutableVectorClock ToImmutable();
+
+        public override string ToString() {
+            ImmutableDictionary<string, int> vc = Clocks;
+
+            StringBuilder sb = new StringBuilder("[");
+            if (!vc.IsEmpty) {
+                foreach ((string serverId, int clock) in vc) {
+                    sb.Append(serverId)
+                        .Append(": ")
+                        .Append(clock)
+                        .Append(", ");
+                }
+                sb.Remove(sb.Length - 2, 2);
+            }
+            else {
+                sb.Append(' ');
+            }
+            sb.Append("]");
+
+            return sb.ToString();
+        }
     }
 }
