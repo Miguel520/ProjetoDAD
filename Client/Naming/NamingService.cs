@@ -27,13 +27,13 @@ namespace Client.Naming {
             knownServers = new Dictionary<string, string>();
             knownMasters = new Dictionary<string, string>();
             crashedUrls = new HashSet<string>();
-            partitions = ImmutableDictionary.Create<string, ImmutableHashSet<string>>();
             
             foreach (string nameServerUrl in receivedNameServersUrls) {
                 if (grpcLayer.ListPartitions(nameServerUrl, out partitions)) {
-                    break;
+                    return;
                 }
             }
+            partitions = ImmutableDictionary.Create<string, ImmutableHashSet<string>>();
         }
 
         public ImmutableList<string> ServersIds {

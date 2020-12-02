@@ -26,7 +26,7 @@ namespace KVStoreServer {
                     RunSimpleVersion(serverConfig, file);
                     break;
                 case 2:
-                    RunAdvancedVersion(serverConfig);
+                    RunAdvancedVersion(serverConfig, file);
                     break;
                 default:
                     throw new InvalidOperationException("Unknown Version");
@@ -44,7 +44,7 @@ namespace KVStoreServer {
             if (file) {
                 if (!partitionsDB.ConfigurePartitions(serverConfig.Filename)) {
                     Console.Error.WriteLine("Couldn't configure server from file.");
-                    DisplayFileSyntax();
+                    DisplaySimpleFileSyntax();
                 }
             }
 
@@ -65,12 +65,19 @@ namespace KVStoreServer {
             FailureDetectionLayer.Instance.Shutdown();
         }
 
-        private static void RunAdvancedVersion(ServerConfiguration serverConfig) {
+        private static void RunAdvancedVersion(ServerConfiguration serverConfig, bool file) {
             AdvancedGrpcMessageLayer.SetContext(serverConfig);
 
             AdvancedPartitionsDB partitionsDB = new AdvancedPartitionsDB(
                 serverConfig.ServerId,
                 HttpURLs.FromHostAndPort(serverConfig.Host, serverConfig.Port));
+
+            if (file) {
+                if (!partitionsDB.ConfigurePartitions(serverConfig.Filename)) {
+                    Console.Error.WriteLine("Couldn't configure server from file.");
+                    DisplayAdvacnedFileSyntax();
+                }
+            }
 
             AdvancedReplicationService service = new AdvancedReplicationService(partitionsDB, serverConfig);
             service.Bind();
@@ -127,7 +134,7 @@ namespace KVStoreServer {
             Console.WriteLine("Usage: Server server_id host port min_delay max_delay version [config_file]");
         }
 
-        private static void DisplayFileSyntax() {
+        private static void DisplaySimpleFileSyntax() {
             Console.WriteLine("File must be in KVStoreServer/ConfigFiles. Example:");
             Console.WriteLine("Nservers Mpartitions");
             Console.WriteLine("Server_id_1, server_url_1");
@@ -136,6 +143,17 @@ namespace KVStoreServer {
             Console.WriteLine("Partition_id_1,server_master,server_id,server_id,...");
             Console.WriteLine("...");
             Console.WriteLine("Partition_id_m,server_master,server_id,server_id,...");
+        }
+
+        private static void DisplayAdvacnedFileSyntax() {
+            Console.WriteLine("File must be in KVStoreServer/ConfigFiles. Example:");
+            Console.WriteLine("Nservers Mpartitions");
+            Console.WriteLine("Server_id_1, server_url_1");
+            Console.WriteLine("...");
+            Console.WriteLine("Server_id_n,server_url_n");
+            Console.WriteLine("Partition_id_1,server_id,server_id,server_id,...");
+            Console.WriteLine("...");
+            Console.WriteLine("Partition_id_m,server_id,server_id,server_id,...");
         }
     }
 }
