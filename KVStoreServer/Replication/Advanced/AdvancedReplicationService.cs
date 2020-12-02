@@ -21,14 +21,17 @@ namespace KVStoreServer.Replication.Advanced {
         private readonly ServerConfiguration serverConfig;
 
         // One timestamp for each partition
-        private readonly ConcurrentDictionary<string, MutableVectorClock> timestamps =
+        private readonly ConcurrentDictionary<string, MutableVectorClock> valueTimestamps =
             new ConcurrentDictionary<string, MutableVectorClock>();
 
         private readonly AdvancedPartitionedKVS store = new AdvancedPartitionedKVS();
 
-        // One write lock for each partition
-        private readonly ConcurrentDictionary<string, object> writeLocks = 
-            new ConcurrentDictionary<string, object>();
+        // Timestamps for accepted writes that are not yet executed
+        // Are sent for broadcast and will be executed when broadcasted
+        // These timestamps are always equal to the correspondig timestamp in valueTimestamps
+        // except for the server id entry where they can be higher
+        private readonly ConcurrentDictionary<string, MutableVectorClock> emitedWritesTimestamps = 
+            new ConcurrentDictionary<string, MutableVectorClock>();
 
         public AdvancedReplicationService(
             AdvancedPartitionsDB partitionsDB,
@@ -55,7 +58,7 @@ namespace KVStoreServer.Replication.Advanced {
          * Handle read request from client
          */
         public (string, ImmutableVectorClock) OnReadRequest(ReadArguments arguments) {
-            timestamps.TryGetValue(arguments.PartitionId, out MutableVectorClock timestamp);
+            valueTimestamps.TryGetValue(arguments.PartitionId, out MutableVectorClock timestamp);
             lock (timestamp) {
                 while (VectorClock.HappensBefore(timestamp, arguments.Timestamp)) {
                     Monitor.Wait(timestamp);
@@ -73,29 +76,31 @@ namespace KVStoreServer.Replication.Advanced {
         public ImmutableVectorClock OnWriteRequest(WriteArguments arguments) {
             ImmutableVectorClock timestampToBroadcast;
 
-            timestamps.TryGetValue(arguments.PartitionId, out MutableVectorClock timestamp);
+            valueTimestamps.TryGetValue(arguments.PartitionId, out MutableVectorClock timestamp);
 
+            // Wait for unreceived updates
             lock (timestamp) {
                 while (VectorClock.HappensBefore(timestamp, arguments.Timestamp)) {
                     Monitor.Wait(timestamp);
                 }
             }
 
-            writeLocks.TryGetValue(arguments.PartitionId, out object writeLock);
+            emitedWritesTimestamps.TryGetValue(
+                arguments.PartitionId, 
+                out MutableVectorClock emitedWriteTimestamp);
 
-            lock(writeLock) {
-
-                MutableVectorClock mutBroadcast = MutableVectorClock.CopyOf(timestamp);
-                mutBroadcast.Increment(serverConfig.ServerId);
-                timestampToBroadcast = mutBroadcast.ToImmutable();
-
-                // This waits for deliver and executes write
-                ReliableBroadcastLayer.Instance.BroadcastWrite(
-                    arguments.PartitionId,
-                    arguments.ObjectId,
-                    arguments.ObjectValue,
-                    timestampToBroadcast);
+            // Prepare to emit one write
+            lock(emitedWriteTimestamp) {
+                emitedWriteTimestamp.Increment(serverConfig.ServerId);
+                timestampToBroadcast = emitedWriteTimestamp.ToImmutable();
             }
+
+            // This waits for deliver and executes write
+            ReliableBroadcastLayer.Instance.BroadcastWrite(
+                arguments.PartitionId,
+                arguments.ObjectId,
+                arguments.ObjectValue,
+                timestampToBroadcast);
 
             return timestampToBroadcast;
         }
@@ -104,8 +109,8 @@ namespace KVStoreServer.Replication.Advanced {
          * Handle list server request from client
          */
         public (IEnumerable<StoredObjectDto>, IEnumerable<PartitionTimestampDto>) OnListServerRequest() {
-            lock(timestamps) {
-                IEnumerable<PartitionTimestampDto> partitionTimestampDtos = timestamps.Select(pair =>{
+            lock(this) {
+                IEnumerable<PartitionTimestampDto> partitionTimestampDtos = valueTimestamps.Select(pair =>{
                     return new PartitionTimestampDto {
                         PartitionId = pair.Key,
                         PartitionTimestamp = pair.Value.ToImmutable()
@@ -121,20 +126,27 @@ namespace KVStoreServer.Replication.Advanced {
          */
         public void OnBroadcastWriteMessage(BroadcastWriteMessage message) {
 
-            timestamps.TryGetValue(message.PartitionId, out MutableVectorClock timestamp);
+            valueTimestamps.TryGetValue(message.PartitionId, out MutableVectorClock timestamp);
+            emitedWritesTimestamps.TryGetValue(message.PartitionId, out MutableVectorClock emitedWriteTimestamp);
             lock (timestamp) {
                 // More recent update, should update value
                 if (VectorClock.HappensBefore(timestamp, message.ReplicaTimestamp)) {
+                    Console.WriteLine("Happens before: {0}, {1}", timestamp, message.ReplicaTimestamp);
                     // Force write
                     store.Write(message.PartitionId, message.Key, message.Value, message.WriteServerId, true);
+                    // Update both timestamps to reflect write
                     timestamp.Merge(message.ReplicaTimestamp);
+                    emitedWriteTimestamp.Merge(message.ReplicaTimestamp);
                     Monitor.PulseAll(timestamp);
                 }
                 // Concurrent operations (keep value with smaller server id)
                 else if (!VectorClock.HappensAfter(timestamp, message.ReplicaTimestamp)) {
+                    Console.WriteLine("Concurrent: {0}, {1}", timestamp, message.ReplicaTimestamp);
                     // Do not force write. Only update if smaller server id so that replicas converge values
                     store.Write(message.PartitionId, message.Key, message.Value, message.WriteServerId, false);
+                    // Update both timestamps to reflect write
                     timestamp.Merge(message.ReplicaTimestamp);
+                    emitedWriteTimestamp.Merge(message.ReplicaTimestamp);
                     Monitor.PulseAll(timestamp);
                 }
             }
@@ -147,8 +159,8 @@ namespace KVStoreServer.Replication.Advanced {
             
             // Only register partitions that the server belongs to for broadcast
             if (serverIds.Contains(serverConfig.ServerId)) {
-                timestamps.TryAdd(partitionId, MutableVectorClock.Empty());
-                writeLocks.TryAdd(partitionId, new object());
+                valueTimestamps.TryAdd(partitionId, MutableVectorClock.Empty());
+                emitedWritesTimestamps.TryAdd(partitionId, MutableVectorClock.Empty());
                 ReliableBroadcastLayer.Instance.RegisterPartition(partitionId, serverIds);
             }
         }
