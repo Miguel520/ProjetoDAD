@@ -33,8 +33,9 @@ namespace KVStoreServer.Grpc.Advanced {
                 PartitionId = request.PartitionId,
                 Key = request.Key,
                 MessageId = BuildMessageId(request.MessageId),
-                TimestampedValue = BuildTimestampedValue(request.TimestampedValue),
-                ReplicaTimestamp = BuildVectorClock(request.ReplicaTimestamp)
+                Value = request.Value,
+                ReplicaTimestamp = BuildVectorClock(request.ReplicaTimestamp),
+                WriteServerId = request.WriteServerId
             };
         }
 
@@ -50,15 +51,6 @@ namespace KVStoreServer.Grpc.Advanced {
 
         private Broadcast.MessageId BuildMessageId(MessageId messageId) {
             return new Broadcast.MessageId(messageId.ServerId, messageId.ServerCounter);
-        }
-
-        private ImmutableTimestampedValue BuildTimestampedValue(
-            TimestampedValue timestampedValue) {
-
-            return ImmutableTimestampedValue.BuildFrom(
-                timestampedValue.ObjectValue,
-                BuildVectorClock(timestampedValue.Timestamp),
-                timestampedValue.LastWriteServerId);
         }
 
         private CausalConsistency.ImmutableVectorClock BuildVectorClock(VectorClock vectorClock) {

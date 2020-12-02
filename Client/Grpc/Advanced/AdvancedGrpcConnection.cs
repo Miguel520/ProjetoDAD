@@ -35,7 +35,6 @@ namespace Client.Grpc.Advanced {
                 ObjectValue = value,
                 Timestamp = BuildGrpcClock(timestamp)
             };
-
             WriteResponse response = client.Write(
                 request,
                 deadline: DateTime.UtcNow.AddSeconds(60));
@@ -63,13 +62,13 @@ namespace Client.Grpc.Advanced {
             return BuildVectorClock(response.Timestamp);
         }
 
-        public ImmutableList<StoredObject> ListServer() {
+        public (ImmutableList<StoredObject>, ImmutableList<PartitionTimestamp>) ListServer() {
             ListRequest request = new ListRequest { };
 
             ListResponse response = client.List(
                 request,
                 deadline: DateTime.UtcNow.AddSeconds(60));
-            return response.Objects.ToImmutableList();
+            return (response.Objects.ToImmutableList(), response.PartitionTimestamps.ToImmutableList());
         }
 
         private VectorClock BuildGrpcClock(CausalConsistency.ImmutableVectorClock vectorClock) {

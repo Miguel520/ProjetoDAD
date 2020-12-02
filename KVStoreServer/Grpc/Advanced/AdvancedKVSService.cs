@@ -1,6 +1,7 @@
 ﻿
 using Common.Protos.AdvancedKeyValueStore;
 using Grpc.Core;
+using KVStoreServer.Replication.Advanced;
 using KVStoreServer.Storage.Advanced;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,9 +47,11 @@ namespace KVStoreServer.Grpc.Advanced {
         }
 
         public override async Task<ListResponse> List(ListRequest request, ServerCallContext context) {
-            IEnumerable<StoredObjectDto> objects = await dispatcher.OnListServer();
+            (IEnumerable<StoredObjectDto> objects, IEnumerable<PartitionTimestampDto> timestamp) = 
+                await dispatcher.OnListServer();
             return new ListResponse {
-                Objects = { BuildObject(objects) }
+                Objects = { BuildObject(objects) },
+                PartitionTimestamps = { BuildPartitionTimestamps(timestamp) }
             };
         }
 
@@ -74,9 +77,18 @@ namespace KVStoreServer.Grpc.Advanced {
                 return new StoredObject {
                     PartitionId = objectDto.PartitionId,
                     ObjectId = objectDto.ObjectId,
-                    ObjectValue = objectDto.TimestampedValue.Value,
-                    ObjectTimestamp = BuildGrpcClock(objectDto.TimestampedValue.Timestamp),
-                    ObjectLastWriteServerId = objectDto.TimestampedValue.LastWriteServerId
+                    ObjectValue = objectDto.Value
+                };
+            });
+        }
+
+        private IEnumerable<PartitionTimestamp> BuildPartitionTimestamps(
+            IEnumerable<PartitionTimestampDto> partitionTimestampDtos) {
+
+            return partitionTimestampDtos.Select(dto => {
+                return new PartitionTimestamp {
+                    PartitionId = dto.PartitionId,
+                    Timestamp = BuildGrpcClock(dto.PartitionTimestamp)
                 };
             });
         }

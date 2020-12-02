@@ -3,7 +3,6 @@ using Common.Utils;
 using KVStoreServer.Grpc.Advanced;
 using KVStoreServer.Grpc.Base;
 using KVStoreServer.Naming;
-using KVStoreServer.Storage.Advanced;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 
@@ -93,7 +92,7 @@ namespace KVStoreServer.Broadcast {
         public void BroadcastWrite(
             string partitionId,
             string key,
-            ImmutableTimestampedValue value,
+            string value,
             ImmutableVectorClock replicaTimestamp) {
 
             if (partitionHandlers.TryGetValue(partitionId, out PartitionReliableBroadcastHandler handler)) {
