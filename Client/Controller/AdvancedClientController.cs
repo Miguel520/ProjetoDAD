@@ -55,7 +55,7 @@ namespace Client.Controller {
                 "[{0}] List Global",
                 DateTime.Now.ToString("HH:mm:ss"));
 
-            foreach (string serverId in namingService.ServersIds) {
+            foreach (string serverId in namingService.ServersIds.Sort()) {
                 ListServer(serverId);
             }
         }

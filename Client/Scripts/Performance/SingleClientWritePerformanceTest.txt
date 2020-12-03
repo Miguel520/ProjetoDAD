@@ -1,5 +1,5 @@
 ﻿begin-timer
 begin-repeat 1000
-write p1 obj-$i value $i
+write p1 obj-$i value-$i
 end-repeat
 end-timer

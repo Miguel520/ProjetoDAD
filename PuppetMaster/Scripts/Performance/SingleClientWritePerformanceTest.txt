@@ -4,7 +4,7 @@ Server 12 http://localhost:13456 0 0
 Server 13 http://localhost:13457 0 0
 Server 14 http://localhost:13458 0 0
 Wait 1000
-Client cli http://localhost:12346 SingleClientWritePerformanceTest.txt
+Client cli http://localhost:12346 Performance/SingleClientWritePerformanceTest.txt
 Freeze 13
 Wait 500
 Unfreeze 13

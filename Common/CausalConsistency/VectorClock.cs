@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Text;
 
 namespace Common.CausalConsistency {
 
@@ -69,6 +70,23 @@ namespace Common.CausalConsistency {
             return oneGreater;
         }
 
+        public static bool Equal(VectorClock first, VectorClock second) {
+            // Create immutable other to protect from concurrent accesses
+            ImmutableVectorClock immutableFirst = first.ToImmutable();
+            ImmutableVectorClock immutableSecond = second.ToImmutable();
+
+            // Get all possible ids
+            ImmutableHashSet<string> firstIds = immutableFirst.Ids;
+            ImmutableHashSet<string> secondIds = immutableSecond.Ids;
+
+            if (firstIds.Count != secondIds.Count) return false;
+
+            foreach (string id in firstIds) {
+                if (immutableFirst[id] != immutableSecond[id]) return false;
+            }
+            return true;
+        }
+
         public abstract ImmutableHashSet<string> Ids { get; }
 
         public abstract ImmutableDictionary<string, int> Clocks { get; }
@@ -76,5 +94,26 @@ namespace Common.CausalConsistency {
         public abstract int this[string key] { get; }
 
         public abstract ImmutableVectorClock ToImmutable();
+
+        public override string ToString() {
+            ImmutableDictionary<string, int> vc = Clocks;
+
+            StringBuilder sb = new StringBuilder("[");
+            if (!vc.IsEmpty) {
+                foreach ((string serverId, int clock) in vc) {
+                    sb.Append(serverId)
+                        .Append(": ")
+                        .Append(clock)
+                        .Append(", ");
+                }
+                sb.Remove(sb.Length - 2, 2);
+            }
+            else {
+                sb.Append(' ');
+            }
+            sb.Append("]");
+
+            return sb.ToString();
+        }
     }
 }

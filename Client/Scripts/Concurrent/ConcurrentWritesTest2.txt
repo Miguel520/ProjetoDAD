@@ -1,0 +1,8 @@
+﻿begin-timer
+begin-repeat 5
+write p1 obj-1 value-1-2-$i
+end-repeat
+end-timer
+listGlobal
+wait 10000
+listGlobal

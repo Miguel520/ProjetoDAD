@@ -1,0 +1,12 @@
+﻿begin-timer
+begin-repeat 200
+write p1 obj-2 value-2-$i
+read p1 obj-1 12
+read p1 obj-2 13
+read p1 obj-3 14
+read p1 obj-4 -1
+end-repeat
+end-timer
+listGlobal
+wait 10000
+listGlobal
