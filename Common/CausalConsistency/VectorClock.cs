@@ -70,6 +70,23 @@ namespace Common.CausalConsistency {
             return oneGreater;
         }
 
+        public static bool Equal(VectorClock first, VectorClock second) {
+            // Create immutable other to protect from concurrent accesses
+            ImmutableVectorClock immutableFirst = first.ToImmutable();
+            ImmutableVectorClock immutableSecond = second.ToImmutable();
+
+            // Get all possible ids
+            ImmutableHashSet<string> firstIds = immutableFirst.Ids;
+            ImmutableHashSet<string> secondIds = immutableSecond.Ids;
+
+            if (firstIds.Count != secondIds.Count) return false;
+
+            foreach (string id in firstIds) {
+                if (immutableFirst[id] != immutableSecond[id]) return false;
+            }
+            return true;
+        }
+
         public abstract ImmutableHashSet<string> Ids { get; }
 
         public abstract ImmutableDictionary<string, int> Clocks { get; }

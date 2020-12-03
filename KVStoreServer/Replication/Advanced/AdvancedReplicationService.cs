@@ -60,7 +60,10 @@ namespace KVStoreServer.Replication.Advanced {
         public (string, ImmutableVectorClock) OnReadRequest(ReadArguments arguments) {
             valueTimestamps.TryGetValue(arguments.PartitionId, out MutableVectorClock timestamp);
             lock (timestamp) {
-                while (VectorClock.HappensBefore(timestamp, arguments.Timestamp)) {
+
+                while (!(VectorClock.Equal(timestamp, arguments.Timestamp)
+                    || VectorClock.HappensAfter(timestamp, arguments.Timestamp))) {
+                    
                     Monitor.Wait(timestamp);
                 }
 
@@ -129,21 +132,7 @@ namespace KVStoreServer.Replication.Advanced {
             valueTimestamps.TryGetValue(message.PartitionId, out MutableVectorClock timestamp);
             emitedWritesTimestamps.TryGetValue(message.PartitionId, out MutableVectorClock emitedWriteTimestamp);
             lock (timestamp) {
-                // More recent update, should update value
-                if (VectorClock.HappensBefore(timestamp, message.ReplicaTimestamp)) {
-                    Console.WriteLine("Happens before: {0}, {1}", timestamp, message.ReplicaTimestamp);
-                    // Force write
-                    store.Write(message.PartitionId, message.Key, message.Value, message.WriteServerId, true);
-                    // Update both timestamps to reflect write
-                    timestamp.Merge(message.ReplicaTimestamp);
-                    emitedWriteTimestamp.Merge(message.ReplicaTimestamp);
-                    Monitor.PulseAll(timestamp);
-                }
-                // Concurrent operations (keep value with smaller server id)
-                else if (!VectorClock.HappensAfter(timestamp, message.ReplicaTimestamp)) {
-                    Console.WriteLine("Concurrent: {0}, {1}", timestamp, message.ReplicaTimestamp);
-                    // Do not force write. Only update if smaller server id so that replicas converge values
-                    store.Write(message.PartitionId, message.Key, message.Value, message.WriteServerId, false);
+                if (store.Write(message.PartitionId, message.Key, message.Value, message.WriteServerId, timestamp, message.ReplicaTimestamp)) {
                     // Update both timestamps to reflect write
                     timestamp.Merge(message.ReplicaTimestamp);
                     emitedWriteTimestamp.Merge(message.ReplicaTimestamp);

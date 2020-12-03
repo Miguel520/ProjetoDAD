@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using Common.CausalConsistency;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,14 +13,15 @@ namespace KVStoreServer.Storage.Advanced {
             return GetOrAddStore(partitionId).Read(objectId, out objectValue);
         }
 
-        public void Write(
+        public bool Write(
             string partitionId,
             string objectId,
             string value,
             string serverId,
-            bool force) {
+            VectorClock selfTimestamp,
+            VectorClock otherTimestamp) {
 
-            GetOrAddStore(partitionId).Write(objectId, value, serverId, force);
+            return GetOrAddStore(partitionId).Write(objectId, value, serverId, selfTimestamp, otherTimestamp);
         }
 
         public IEnumerable<StoredObjectDto> ListObjects() {
